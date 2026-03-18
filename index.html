@@ -2,7 +2,14 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#1e3a5f">
+<meta name="description" content="منصة المعلم الذكية — مدارس البشرى الأهلية">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="البشرى">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" id="pwaManifest">
 <title>مدارس البشرى — منصة المعلم الذكية</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -1000,9 +1007,487 @@ body.dark .dark-toggle::after { content:'🌙'; transform:translateX(20px); }
 #cmdOverlay { position:fixed; inset:0; z-index:599; display:none; }
 #cmdOverlay.open { display:block; }
 
-@media(max-width:960px) { .sidebar { display: none; } .content { padding: 20px 16px; } .topbar { padding: 0 16px; } }
-@media(max-width:640px) { .kpi-grid { grid-template-columns: 1fr 1fr; } .student-cards-grid { grid-template-columns: 1fr; } .planner-grid { grid-template-columns:1fr; } }
-@media(max-width:700px){ .login-grid{grid-template-columns:1fr;} .login-hero{display:none;} }
+/* ══════════════════════════════════════════════
+   🗺️ TREASURE MAP — خريطة الكنز
+══════════════════════════════════════════════ */
+
+/* Journey road */
+.tm-road {
+  display:flex; align-items:center; gap:0;
+  overflow-x:auto; padding:20px 8px 28px;
+  scrollbar-width:thin;
+  position:relative;
+}
+.tm-road::before {
+  content:''; position:absolute; top:50%; left:0; right:0; height:6px;
+  background:repeating-linear-gradient(90deg,#d4a017 0,#d4a017 12px,transparent 12px,transparent 20px);
+  opacity:0.35; transform:translateY(-50%); pointer-events:none; z-index:0;
+}
+
+/* Station node */
+.tm-station {
+  display:flex; flex-direction:column; align-items:center;
+  flex-shrink:0; position:relative; z-index:1; cursor:none;
+  width:90px;
+}
+.tm-connector {
+  width:32px; height:6px; flex-shrink:0; z-index:0;
+  border-radius:99px;
+}
+.tm-node {
+  width:52px; height:52px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-size:22px; font-weight:900; border:3px solid white;
+  box-shadow:0 4px 16px rgba(0,0,0,0.18);
+  transition:transform 0.2s, box-shadow 0.2s;
+  position:relative;
+}
+.tm-node:hover { transform:scale(1.18); box-shadow:0 8px 28px rgba(0,0,0,0.25); }
+.tm-node.done   { background:linear-gradient(135deg,#059669,#10b981); }
+.tm-node.partial{ background:linear-gradient(135deg,#d97706,#f59e0b); }
+.tm-node.locked { background:linear-gradient(135deg,#94a3b8,#cbd5e1); }
+.tm-node.start  { background:linear-gradient(135deg,#1e3a5f,#1565c0); }
+.tm-node.finish { background:linear-gradient(135deg,#7c3aed,#a78bfa);
+  animation:glowFinish 2s ease-in-out infinite alternate; }
+@keyframes glowFinish {
+  from { box-shadow:0 4px 16px rgba(124,58,237,0.4); }
+  to   { box-shadow:0 8px 32px rgba(124,58,237,0.8),0 0 0 8px rgba(124,58,237,0.15); }
+}
+.tm-label {
+  font-size:0.65rem; font-weight:800; text-align:center;
+  color:var(--ink); margin-top:7px; max-width:80px;
+  line-height:1.25; word-break:break-word;
+}
+.tm-pct {
+  font-size:0.60rem; font-weight:900; margin-top:2px;
+}
+.tm-pct.done    { color:#059669; }
+.tm-pct.partial { color:#d97706; }
+.tm-pct.locked  { color:#94a3b8; }
+
+/* Student selector */
+.tm-student-pill {
+  display:flex; align-items:center; gap:9px;
+  padding:9px 14px; border-radius:99px; cursor:none;
+  border:2px solid var(--border2); background:var(--card);
+  transition:all 0.15s; white-space:nowrap;
+}
+.tm-student-pill:hover { border-color:var(--sky3); background:var(--surface); }
+.tm-student-pill.active {
+  border-color:var(--sky); background:linear-gradient(135deg,var(--ink2),var(--sky));
+  color:white;
+}
+.tm-student-pill.active .tm-pill-name { color:white; }
+.tm-pill-name { font-weight:800; font-size:0.85rem; color:var(--ink); }
+.tm-pill-pct  { font-size:0.74rem; font-weight:900; }
+
+/* Class overview heatmap */
+.tm-class-row {
+  display:grid; gap:5px; margin-bottom:6px; align-items:center;
+}
+.tm-class-cell {
+  height:28px; border-radius:7px; position:relative;
+  transition:transform 0.15s; cursor:none;
+}
+.tm-class-cell:hover { transform:scaleY(1.25); }
+.tm-class-cell.c-done    { background:linear-gradient(135deg,#059669,#10b981); }
+.tm-class-cell.c-partial { background:linear-gradient(135deg,#d97706,#f59e0b); }
+.tm-class-cell.c-none    { background:#e2e8f8; }
+
+/* Badges strip */
+.tm-badge-strip { display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
+.tm-badge {
+  display:flex; flex-direction:column; align-items:center;
+  gap:4px; padding:10px 14px; border-radius:14px;
+  background:var(--card); border:1.5px solid var(--border);
+  transition:transform 0.15s; cursor:none;
+}
+.tm-badge:hover { transform:translateY(-3px); box-shadow:var(--shadow); }
+.tm-badge.earned { border-color:var(--gold); background:linear-gradient(135deg,#fef9c3,#fef3c7); }
+.tm-badge-icon { font-size:28px; }
+.tm-badge-name { font-size:0.68rem; font-weight:800; color:var(--ink2); text-align:center; }
+.tm-badge.earned .tm-badge-name { color:#b45309; }
+.tm-badge.locked { opacity:0.4; filter:grayscale(1); }
+
+/* Popup tooltip on station click */
+.tm-popup {
+  position:fixed; z-index:600;
+  background:var(--card); border-radius:16px;
+  box-shadow:var(--shadow-lg); border:1px solid var(--border2);
+  padding:18px 20px; min-width:220px; max-width:280px;
+  animation:mIn 0.2s cubic-bezier(0.34,1.56,0.64,1);
+  pointer-events:none;
+}
+.tm-popup-title { font-weight:900; color:var(--ink2); font-size:0.95rem; margin-bottom:8px; }
+.tm-popup-skill {
+  display:flex; align-items:center; gap:7px;
+  padding:5px 0; border-bottom:1px solid var(--border);
+  font-size:0.82rem;
+}
+.tm-popup-skill:last-child { border-bottom:none; }
+
+/* Subject tabs for treasure map */
+.tm-sub-tabs { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:18px; }
+.tm-sub-tab {
+  padding:8px 18px; border-radius:99px; border:2px solid var(--border2);
+  font-family:'Tajawal',sans-serif; font-size:0.88rem; font-weight:800;
+  cursor:none; color:var(--muted); transition:all 0.15s; background:var(--card);
+}
+.tm-sub-tab:hover { border-color:var(--sky3); color:var(--sky); }
+.tm-sub-tab.active {
+  background:linear-gradient(135deg,var(--ink2),var(--sky));
+  border-color:transparent; color:white;
+  box-shadow:0 4px 16px rgba(21,101,192,0.30);
+}
+
+/* Print certificate */
+@media print {
+  .tm-no-print { display:none !important; }
+  .tm-print-cert { display:block !important; }
+}
+.tm-print-cert { display:none; }
+
+/* ── PWA INSTALL BANNER ──────────────────────── */
+  position:fixed; bottom:20px; right:20px; z-index:800;
+  background:linear-gradient(135deg,var(--ink2),var(--sky));
+  color:white; border-radius:16px; padding:14px 18px;
+  display:flex; align-items:center; gap:12px;
+  box-shadow:var(--shadow-lg); max-width:340px;
+  animation:slideUp 0.4s cubic-bezier(0.34,1.56,0.64,1);
+  display:none;
+}
+#pwaInstallBanner.show { display:flex; }
+.pwa-icon { font-size:28px; flex-shrink:0; }
+.pwa-text { flex:1; }
+.pwa-title { font-weight:800; font-size:0.92rem; margin-bottom:2px; }
+.pwa-sub { font-size:0.76rem; opacity:0.80; }
+.pwa-btns { display:flex; gap:7px; margin-top:10px; }
+.pwa-btn-install {
+  background:white; color:var(--ink2); border:none; border-radius:8px;
+  padding:7px 14px; font-family:'Tajawal',sans-serif;
+  font-weight:800; font-size:0.82rem; cursor:none; transition:all 0.15s;
+}
+.pwa-btn-install:hover { transform:translateY(-1px); box-shadow:0 4px 12px rgba(0,0,0,0.2); }
+.pwa-btn-dismiss {
+  background:rgba(255,255,255,0.15); color:white; border:none;
+  border-radius:8px; padding:7px 12px; font-family:'Tajawal',sans-serif;
+  font-weight:700; font-size:0.82rem; cursor:none;
+}
+
+/* ── OFFLINE INDICATOR ───────────────────────── */
+#offlineBadge {
+  position:fixed; top:68px; left:50%; transform:translateX(-50%);
+  background:#dc2626; color:white; padding:8px 20px; border-radius:0 0 12px 12px;
+  font-size:0.82rem; font-weight:800; z-index:500;
+  display:none; align-items:center; gap:7px;
+  box-shadow:0 4px 16px rgba(220,38,38,0.30);
+}
+#offlineBadge.show { display:flex; }
+#syncBadge {
+  position:fixed; top:68px; left:50%; transform:translateX(-50%);
+  background:var(--mint); color:white; padding:8px 20px; border-radius:0 0 12px 12px;
+  font-size:0.82rem; font-weight:800; z-index:500;
+  display:none; align-items:center; gap:7px;
+  box-shadow:0 4px 16px rgba(16,185,129,0.30);
+  animation:fadeInOut 3s ease forwards;
+}
+#syncBadge.show { display:flex; }
+@keyframes fadeInOut { 0%{opacity:0;transform:translateX(-50%) translateY(-10px)} 15%{opacity:1;transform:translateX(-50%) translateY(0)} 75%{opacity:1} 100%{opacity:0;transform:translateX(-50%) translateY(-10px)} }
+
+/* ── CHANGELOG ───────────────────────────────── */
+.cl-item {
+  display:flex; gap:13px; padding:12px 0;
+  border-bottom:1px solid var(--border);
+}
+.cl-item:last-child { border-bottom:none; }
+.cl-dot {
+  width:10px; height:10px; border-radius:50%;
+  flex-shrink:0; margin-top:5px;
+}
+.cl-dot.add { background:var(--mint); }
+.cl-dot.edit { background:var(--sky3); }
+.cl-dot.del { background:var(--ember); }
+.cl-dot.eval { background:var(--plum); }
+.cl-dot.att { background:var(--gold); }
+.cl-meta { font-size:0.78rem; color:var(--muted2); margin-top:2px; }
+.cl-action { font-size:0.88rem; color:var(--ink); font-weight:600; }
+
+/* ── GOOGLE CLASSROOM ────────────────────────── */
+.gc-card {
+  background:linear-gradient(135deg,rgba(66,133,244,0.08),rgba(52,168,83,0.06));
+  border:1.5px solid rgba(66,133,244,0.20); border-radius:var(--r);
+  padding:20px 22px; margin-bottom:16px;
+}
+.gc-header { display:flex; align-items:center; gap:12px; margin-bottom:14px; }
+.gc-logo { font-size:28px; }
+.gc-title { font-weight:800; color:#1a73e8; font-size:1rem; }
+.gc-sub { font-size:0.80rem; color:var(--muted); margin-top:2px; }
+.gc-steps { display:flex; flex-direction:column; gap:10px; }
+.gc-step {
+  display:flex; align-items:flex-start; gap:10px;
+  padding:10px 14px; background:white; border-radius:10px;
+  border:1px solid rgba(66,133,244,0.15); font-size:0.86rem;
+}
+.gc-step-num {
+  width:24px; height:24px; border-radius:50%;
+  background:#1a73e8; color:white; font-size:0.72rem; font-weight:900;
+  display:flex; align-items:center; justify-content:center; flex-shrink:0;
+}
+.gc-import-result {
+  background:#f0fdf4; border:1px solid #bbf7d0; border-radius:10px;
+  padding:12px 16px; margin-top:12px; font-size:0.86rem; color:#166534;
+  display:none;
+}
+
+
+/* ── STUDENT PHOTOS ──────────────────────────── */
+.stu-photo {
+  border-radius:50%; object-fit:cover; flex-shrink:0;
+  border:2px solid white; box-shadow:0 2px 8px rgba(0,0,0,0.15);
+}
+.stu-photo-wrap {
+  position:relative; display:inline-flex;
+  align-items:center; justify-content:center; flex-shrink:0;
+}
+.stu-photo-edit {
+  position:absolute; bottom:-2px; right:-2px;
+  width:18px; height:18px; border-radius:50%;
+  background:var(--sky); border:2px solid white;
+  display:flex; align-items:center; justify-content:center;
+  font-size:9px; cursor:none; opacity:0;
+  transition:opacity 0.15s; color:white; font-weight:900;
+}
+.stu-photo-wrap:hover .stu-photo-edit { opacity:1; }
+
+/* Photo upload modal */
+.photo-upload-zone {
+  border:2.5px dashed var(--border2); border-radius:var(--r);
+  padding:28px; text-align:center; cursor:none;
+  transition:all 0.2s; background:var(--surface);
+}
+.photo-upload-zone:hover,
+.photo-upload-zone.drag-over {
+  border-color:var(--sky3); background:rgba(66,165,245,0.05);
+}
+.photo-upload-zone .upload-icon { font-size:42px; margin-bottom:10px; }
+.photo-upload-zone h4 { font-size:1rem; font-weight:800; color:var(--ink2); margin-bottom:5px; }
+.photo-upload-zone p { font-size:0.82rem; color:var(--muted); }
+.photo-preview-wrap {
+  position:relative; width:110px; height:110px; margin:0 auto 16px;
+}
+.photo-preview-wrap img {
+  width:110px; height:110px; border-radius:50%;
+  object-fit:cover; border:3px solid var(--sky3);
+  box-shadow:var(--shadow);
+}
+.photo-preview-wrap .rm-photo {
+  position:absolute; top:-4px; right:-4px;
+  width:24px; height:24px; background:var(--ember);
+  border-radius:50%; border:2px solid white; color:white;
+  font-size:12px; cursor:none; display:flex;
+  align-items:center; justify-content:center; font-weight:900;
+}
+.photo-class-grid {
+  display:grid; grid-template-columns:repeat(auto-fill,minmax(100px,1fr));
+  gap:12px; padding:4px;
+}
+.photo-class-item {
+  display:flex; flex-direction:column; align-items:center; gap:6px;
+  padding:10px 6px; border-radius:12px; border:1.5px solid var(--border);
+  background:var(--card); cursor:none; transition:all 0.15s;
+}
+.photo-class-item:hover { border-color:var(--sky3); box-shadow:var(--shadow-sm); }
+.photo-class-item .pc-name { font-size:0.72rem; font-weight:800; color:var(--ink2); text-align:center; }
+
+@media(max-width:960px) {
+  .sidebar { display: none; }
+  .content { padding: 16px 14px; }
+  .topbar { padding: 0 14px; }
+}
+@media(max-width:640px) {
+  .kpi-grid { grid-template-columns: 1fr 1fr; }
+  .student-cards-grid { grid-template-columns: 1fr; }
+  .planner-grid { grid-template-columns:1fr; }
+}
+@media(max-width:700px){
+  .login-grid{grid-template-columns:1fr;}
+  .login-hero{display:none;}
+}
+
+/* ══════════════════════════════════════════════
+   📱 FULL MOBILE SUPPORT
+══════════════════════════════════════════════ */
+
+/* Disable custom cursor on touch devices */
+@media (hover: none) and (pointer: coarse) {
+  * { cursor: auto !important; }
+  #cursor, #cursor-ring, #bg-canvas { display: none !important; }
+}
+
+/* Bottom Navigation Bar — mobile only */
+#bottomNav {
+  display: none;
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 300;
+  background: var(--card);
+  border-top: 1px solid var(--border);
+  padding: 6px 4px;
+  padding-bottom: calc(6px + env(safe-area-inset-bottom));
+  box-shadow: 0 -4px 20px rgba(13,27,42,0.10);
+  grid-template-columns: repeat(5, 1fr);
+  align-items: center;
+}
+.bn-item {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 3px; padding: 7px 4px; border-radius: 12px;
+  border: none; background: none; color: var(--muted2);
+  font-family: 'Tajawal', sans-serif; font-size: 0.60rem;
+  font-weight: 800; cursor: pointer; transition: all 0.15s;
+  position: relative; min-width: 0;
+}
+.bn-item .bn-icon { font-size: 20px; line-height: 1; }
+.bn-item.active { color: var(--sky); }
+.bn-item.active .bn-dot {
+  position: absolute; top: 4px; width: 4px; height: 4px;
+  border-radius: 50%; background: var(--sky);
+}
+.bn-item .bn-badge {
+  position: absolute; top: 2px; right: 6px;
+  background: var(--ember); color: white;
+  font-size: 0.55rem; font-weight: 900;
+  width: 14px; height: 14px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  border: 1.5px solid var(--card);
+}
+
+/* More menu sheet */
+#moreSheet {
+  display: none; position: fixed; inset: 0; z-index: 500;
+  background: rgba(13,27,42,0.55); backdrop-filter: blur(4px);
+}
+#moreSheet.open { display: block; }
+#moreSheetContent {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  background: var(--card); border-radius: 24px 24px 0 0;
+  padding: 12px 16px calc(20px + env(safe-area-inset-bottom));
+  max-height: 75vh; overflow-y: auto;
+  animation: sheetUp 0.28s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes sheetUp { from{transform:translateY(100%);opacity:0} to{transform:none;opacity:1} }
+.sheet-handle {
+  width: 40px; height: 4px; border-radius: 99px;
+  background: var(--border2); margin: 0 auto 16px;
+}
+.sheet-title { font-size: 0.80rem; font-weight: 900; color: var(--muted2);
+  letter-spacing: 1px; text-transform: uppercase; margin-bottom: 10px; }
+.sheet-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.sheet-item {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  padding: 14px 8px; border-radius: 14px; border: none;
+  background: var(--surface); color: var(--ink); cursor: pointer;
+  font-family: 'Tajawal', sans-serif; font-size: 0.70rem; font-weight: 800;
+  transition: all 0.12s; text-align: center;
+}
+.sheet-item:hover, .sheet-item:active { background: var(--border); transform: scale(0.96); }
+.sheet-item .si-icon { font-size: 24px; }
+
+/* Floating Action Button */
+#fab {
+  display: none; position: fixed; bottom: calc(76px + env(safe-area-inset-bottom));
+  left: 16px; width: 52px; height: 52px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--ink2), var(--sky));
+  color: white; font-size: 24px; border: none; cursor: pointer;
+  box-shadow: 0 6px 20px rgba(21,101,192,0.40); z-index: 299;
+  align-items: center; justify-content: center;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+#fab:active { transform: scale(0.92); }
+#fab.show { display: flex; }
+
+/* Add bottom padding to content on mobile so bottom nav doesn't cover */
+@media (max-width: 960px) {
+  #app { padding-bottom: 0; }
+  .content {
+    padding-bottom: calc(80px + env(safe-area-inset-bottom)) !important;
+  }
+  #bottomNav { display: grid; }
+  #fab { display: flex; }
+
+  /* Topbar mobile adjustments */
+  .tb-save { display: none; }
+  .tb-brand .tb-sub { display: none; }
+  .tb-brand h2, .tb-title { font-size: 0.88rem; }
+  .tb-username { display: none; }
+  .tb-logout { display: none; }
+  .dark-toggle { display: none; }
+
+  /* Page header stack on mobile */
+  .ph { flex-direction: column; gap: 10px; }
+  .ph-actions { width: 100%; flex-wrap: wrap; }
+  .ph-actions .btn { flex: 1; justify-content: center; min-width: 100px; }
+
+  /* KPI grid 2 col on mobile */
+  .kpi-grid { grid-template-columns: 1fr 1fr; }
+
+  /* Cards full width */
+  .modal { border-radius: 20px 20px 0 0 !important; }
+  .modal-bg { align-items: flex-end !important; padding: 0 !important; }
+
+  /* Tables scrollable */
+  .tbl-wrap { -webkit-overflow-scrolling: touch; }
+
+  /* Forms full width */
+  .form-row { flex-direction: column; }
+
+  /* Charts smaller height */
+  .chart-h-280 { height: 200px; }
+  .chart-h-220 { height: 180px; }
+
+  /* Seat map smaller */
+  .seat-cell { min-height: 58px; }
+  .seat-node { width: 44px; height: 44px; font-size: 18px; }
+
+  /* Eval items compact */
+  .eval-item { padding: 9px 10px; }
+  .eval-btns { gap: 5px; }
+  .ev-btn { padding: 5px 10px; font-size: 0.74rem; }
+
+  /* Behavior grid single col */
+  .beh-grid { grid-template-columns: 1fr; }
+
+  /* Hide some columns in tables */
+  .hide-mobile { display: none !important; }
+
+  /* Quick eval bar bigger on mobile */
+  .qe-bar { bottom: calc(80px + env(safe-area-inset-bottom)); width: 95vw; }
+
+  /* Toast above bottom nav */
+  .toast-wrap { bottom: calc(80px + env(safe-area-inset-bottom)); }
+
+  /* PWA banner above bottom nav */
+  #pwaInstallBanner { bottom: calc(80px + env(safe-area-inset-bottom)); right: 8px; left: 8px; }
+}
+
+/* Safe area for iPhone notch/home indicator */
+@supports (padding: env(safe-area-inset-bottom)) {
+  .topbar {
+    padding-top: env(safe-area-inset-top);
+  }
+}
+
+/* Landscape mobile */
+@media (max-width: 960px) and (orientation: landscape) {
+  .content { padding-bottom: calc(64px + env(safe-area-inset-bottom)) !important; }
+  #bottomNav { padding-bottom: calc(4px + env(safe-area-inset-bottom)); }
+  .chart-h-280 { height: 160px; }
+}
+
+/* Small phones */
+@media (max-width: 375px) {
+  .kpi-val { font-size: 1.6rem; }
+  .ph-title { font-size: 1.2rem; }
+  .btn { font-size: 0.80rem; padding: 9px 12px; }
+  .sheet-grid { grid-template-columns: repeat(3, 1fr); }
+}
 </style>
 </head>
 <body>
@@ -1115,6 +1600,10 @@ body.dark .dark-toggle::after { content:'🌙'; transform:translateX(20px); }
       <button class="nav-btn" id="nav-notes" onclick="showPage('notes')"><span class="nav-icon">📝</span> الملاحظات <span class="nav-badge gold" id="nb-notes">0</span></button>
       <div class="sb-divider"></div>
       <div class="sb-section">أدوات الفصل</div>
+      <button class="nav-btn" id="nav-treasuremap" onclick="showPage('treasuremap')" style="position:relative;overflow:hidden;">
+        <span class="nav-icon">🗺️</span> خريطة الكنز
+        <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);background:linear-gradient(135deg,#f59e0b,#ef4444);color:white;font-size:0.62rem;font-weight:900;padding:2px 7px;border-radius:99px;">جديد</span>
+      </button>
       <button class="nav-btn" id="nav-seatmap" onclick="showPage('seatmap')"><span class="nav-icon">🪑</span> خريطة المقاعد</button>
       <button class="nav-btn" id="nav-behavior" onclick="showPage('behavior')"><span class="nav-icon">⭐</span> تقييم السلوك</button>
       <button class="nav-btn" id="nav-goals" onclick="showPage('goals')"><span class="nav-icon">🎯</span> الأهداف والخطط <span class="nav-badge" id="nb-goals" style="background:var(--sky);color:white;">0</span></button>
@@ -1124,6 +1613,9 @@ body.dark .dark-toggle::after { content:'🌙'; transform:translateX(20px); }
       <div class="sb-divider"></div>
       <div class="sb-section">الإعدادات</div>
       <button class="nav-btn" id="nav-curriculum" onclick="showPage('curriculum')"><span class="nav-icon">📚</span> إدارة المواد والمهارات</button>
+      <button class="nav-btn" id="nav-changelog" onclick="showPage('changelog')"><span class="nav-icon">📜</span> سجل التغييرات <span class="nav-badge" id="nb-changelog" style="background:var(--muted2);color:white;">0</span></button>
+      <button class="nav-btn" id="nav-classroom" onclick="showPage('classroom')"><span class="nav-icon">🎓</span> استيراد Classroom</button>
+      <button class="nav-btn" id="nav-photos" onclick="showPage('photos')"><span class="nav-icon">📷</span> صور الطلاب</button>
       <button class="nav-btn" id="nav-profile" onclick="showPage('profile')"><span class="nav-icon">⚙️</span> الملف الشخصي</button>
 
       <div class="sb-teacher-card" id="sbTeacherCard">
@@ -1151,6 +1643,17 @@ body.dark .dark-toggle::after { content:'🌙'; transform:translateX(20px); }
       <div class="fg"><label>الجنس</label><select id="an4"><option value="m">ذكر</option><option value="f">أنثى</option></select></div>
     </div>
     <div class="fg"><label>رقم واتساب الولي</label><input type="text" id="an3" placeholder="+966XXXXXXXXX" /></div>
+    <div class="fg"><label>📷 صورة الطالب (اختياري)</label>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div id="addModalPhotoPreview" style="width:52px;height:52px;border-radius:50%;background:var(--border);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;overflow:hidden;border:2px solid var(--border2);">👤</div>
+        <div style="flex:1;">
+          <input type="file" id="an6" accept="image/*" style="display:none" onchange="previewAddPhoto(this)" />
+          <button class="btn btn-ghost btn-sm" onclick="document.getElementById('an6').click()">📷 اختر صورة</button>
+          <input type="file" id="an6cam" accept="image/*" capture="user" style="display:none" onchange="previewAddPhoto(this)" />
+          <button class="btn btn-ghost btn-sm" onclick="document.getElementById('an6cam').click()">📸 كاميرا</button>
+        </div>
+      </div>
+    </div>
     <div class="fg"><label>ملاحظة أولية (اختياري)</label><textarea id="an5" placeholder="أي ملاحظة خاصة..."></textarea></div>
   </div>
   <div class="modal-footer">
@@ -1160,9 +1663,19 @@ body.dark .dark-toggle::after { content:'🌙'; transform:translateX(20px); }
 </div></div>
 
 <div class="modal-bg" id="mbEval"><div class="modal" id="mEval">
-  <div class="modal-hdr"><div><h3 id="evalTitle">تقييم الطالب</h3><div class="modal-sub" id="evalSub">تقييم المهارات</div></div><button class="modal-x" onclick="closeM('mbEval')">✕</button></div>
+  <div class="modal-hdr">
+    <div>
+      <h3 id="evalTitle">تقييم الطالب</h3>
+      <div class="modal-sub" id="evalSub">تقييم المهارات</div>
+    </div>
+    <button class="modal-x" onclick="closeM('mbEval')">✕</button>
+  </div>
   <div class="modal-body">
-    <div class="m-tabs" id="evalModalTabs"></div>
+    <!-- Subject selector — shown only when multiple subjects exist -->
+    <div id="evalSubjectSelector" style="display:none;margin-bottom:12px;"></div>
+    <!-- Section tabs for current subject -->
+    <div class="m-tabs" id="evalModalTabs" style="margin-bottom:16px;"></div>
+    <!-- Section content panels -->
     <div id="evalSectionsWrap"></div>
   </div>
   <div class="modal-footer">
@@ -1285,6 +1798,128 @@ body.dark .dark-toggle::after { content:'🌙'; transform:translateX(20px); }
   </div>
 </div></div>
 
+<!-- PWA INSTALL BANNER -->
+<div id="pwaInstallBanner">
+  <div class="pwa-icon">📲</div>
+  <div class="pwa-text">
+    <div class="pwa-title">ثبّت التطبيق على جهازك</div>
+    <div class="pwa-sub">يعمل بدون إنترنت ويحفظ بياناتك محلياً</div>
+    <div class="pwa-btns">
+      <button class="pwa-btn-install" onclick="installPWA()">⬇️ تثبيت</button>
+      <button class="pwa-btn-dismiss" onclick="dismissPWA()">لاحقاً</button>
+    </div>
+  </div>
+</div>
+
+<!-- OFFLINE INDICATOR -->
+<div id="offlineBadge">📵 لا يوجد اتصال — يعمل بوضع عدم الاتصال</div>
+<div id="syncBadge">☁️ تمت المزامنة بنجاح ✅</div>
+
+<!-- PHOTO UPLOAD MODAL -->
+<div class="modal-bg" id="mbPhoto"><div class="modal sm" id="mPhoto">
+  <div class="modal-hdr">
+    <div><h3>📷 صورة الطالب</h3><div class="modal-sub" id="photoStudentName"></div></div>
+    <button class="modal-x" onclick="closeM('mbPhoto')">✕</button>
+  </div>
+  <div class="modal-body">
+    <!-- Current photo preview -->
+    <div id="photoPreviewWrap" style="display:none;margin-bottom:16px;">
+      <div class="photo-preview-wrap">
+        <img id="photoPreviewImg" src="" alt="" />
+        <button class="rm-photo" onclick="removePhoto()">✕</button>
+      </div>
+      <div style="text-align:center;font-size:0.82rem;color:var(--muted)">الصورة الحالية</div>
+    </div>
+
+    <!-- Upload zone -->
+    <div class="photo-upload-zone" id="photoDropZone"
+      ondragover="event.preventDefault();this.classList.add('drag-over')"
+      ondragleave="this.classList.remove('drag-over')"
+      ondrop="handlePhotoDrop(event)"
+      onclick="document.getElementById('photoFileInput').click()">
+      <div class="upload-icon">📷</div>
+      <h4>اسحب صورة هنا أو اضغط للرفع</h4>
+      <p>JPG, PNG, WEBP — حجم أقصى 2MB</p>
+      <input type="file" id="photoFileInput" accept="image/*" style="display:none" onchange="handlePhotoFile(this)" />
+    </div>
+
+    <!-- Camera capture (mobile) -->
+    <div style="display:flex;gap:10px;margin-top:12px;">
+      <button class="btn btn-ghost btn-sm" style="flex:1" onclick="document.getElementById('photoCameraInput').click()">
+        📸 التقاط بالكاميرا
+      </button>
+      <input type="file" id="photoCameraInput" accept="image/*" capture="user" style="display:none" onchange="handlePhotoFile(this)" />
+      <button class="btn btn-ghost btn-sm" style="flex:1" onclick="document.getElementById('photoUrlInput').style.display=document.getElementById('photoUrlInput').style.display==='none'?'':'none'">
+        🔗 رابط URL
+      </button>
+    </div>
+    <input type="text" id="photoUrlInput" placeholder="https://..." style="display:none;width:100%;margin-top:10px;padding:10px 12px;border:1.5px solid var(--border2);border-radius:10px;font-family:'Tajawal',sans-serif;font-size:.9rem;outline:none;direction:ltr;text-align:left" onkeydown="if(event.key==='Enter')applyPhotoUrl()" />
+
+    <div class="note-card" style="margin-top:14px;">
+      <span class="note-icon">🔒</span>
+      <div>الصورة تُحفظ محلياً في المتصفح فقط ولا تُرسَل لأي خادم.</div>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button class="btn btn-ghost" onclick="closeM('mbPhoto')">إلغاء</button>
+    <button class="btn btn-primary" id="photoSaveBtn" onclick="savePhoto()" style="display:none">💾 حفظ الصورة</button>
+  </div>
+</div></div>
+
+<!-- ── BOTTOM NAVIGATION (mobile) ─────────────── -->
+<nav id="bottomNav">
+  <button class="bn-item active" id="bn-dash" onclick="showPage('dash');setBnActive('dash')">
+    <span class="bn-icon">🏠</span><span>الرئيسية</span>
+    <div class="bn-dot"></div>
+  </button>
+  <button class="bn-item" id="bn-students" onclick="showPage('students');setBnActive('students')">
+    <span class="bn-icon">👥</span><span>الطلاب</span>
+    <div class="bn-badge" id="bnn-students" style="display:none">0</div>
+  </button>
+  <button class="bn-item" id="bn-attend" onclick="showPage('attend');setBnActive('attend')">
+    <span class="bn-icon">📋</span><span>الحضور</span>
+  </button>
+  <button class="bn-item" id="bn-reports" onclick="showPage('reports');setBnActive('reports')">
+    <span class="bn-icon">📊</span><span>التقارير</span>
+  </button>
+  <button class="bn-item" id="bn-more" onclick="openMoreSheet()">
+    <span class="bn-icon">⋯</span><span>المزيد</span>
+  </button>
+</nav>
+
+<!-- ── FLOATING ACTION BUTTON ─────────────────── -->
+<button id="fab" onclick="onFabPress()" title="إضافة سريعة">➕</button>
+
+<!-- ── MORE SHEET (mobile) ───────────────────── -->
+<div id="moreSheet" onclick="if(event.target===this)closeMoreSheet()">
+  <div id="moreSheetContent">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">كل الصفحات</div>
+    <div class="sheet-grid">
+      <button class="sheet-item" onclick="showPage('arabic');closeMoreSheet()"><span class="si-icon">📖</span>لغتي</button>
+      <button class="sheet-item" onclick="showPage('gradebook');closeMoreSheet()"><span class="si-icon">📒</span>الدرجات</button>
+      <button class="sheet-item" onclick="showPage('seatmap');closeMoreSheet()"><span class="si-icon">🪑</span>المقاعد</button>
+      <button class="sheet-item" onclick="showPage('behavior');closeMoreSheet()"><span class="si-icon">⭐</span>السلوك</button>
+      <button class="sheet-item" onclick="showPage('goals');closeMoreSheet()"><span class="si-icon">🎯</span>الأهداف</button>
+      <button class="sheet-item" onclick="showPage('planner');closeMoreSheet()"><span class="si-icon">📅</span>المخطط</button>
+      <button class="sheet-item" onclick="showPage('meetings');closeMoreSheet()"><span class="si-icon">🤝</span>الأولياء</button>
+      <button class="sheet-item" onclick="showPage('insights');closeMoreSheet()"><span class="si-icon">🤖</span>رؤى ذكية</button>
+      <button class="sheet-item" onclick="showPage('treasuremap');closeMoreSheet()"><span class="si-icon">🗺️</span>خريطة الكنز</button>
+      <button class="sheet-item" onclick="showPage('analytics');closeMoreSheet()"><span class="si-icon">📈</span>تحليلات</button>
+      <button class="sheet-item" onclick="showPage('notes');closeMoreSheet()"><span class="si-icon">📝</span>ملاحظات</button>
+      <button class="sheet-item" onclick="showPage('photos');closeMoreSheet()"><span class="si-icon">📷</span>الصور</button>
+      <button class="sheet-item" onclick="showPage('curriculum');closeMoreSheet()"><span class="si-icon">📚</span>المواد</button>
+      <button class="sheet-item" onclick="showPage('changelog');closeMoreSheet()"><span class="si-icon">📜</span>السجل</button>
+      <button class="sheet-item" onclick="showPage('profile');closeMoreSheet()"><span class="si-icon">⚙️</span>الإعدادات</button>
+      <button class="sheet-item" onclick="toggleDark();closeMoreSheet()"><span class="si-icon">🌙</span>الوضع الليلي</button>
+    </div>
+    <div style="margin-top:14px;display:flex;gap:10px;">
+      <button class="btn btn-red btn-sm" style="flex:1" onclick="doLogout();closeMoreSheet()">🚪 خروج</button>
+      <button class="btn btn-ghost btn-sm" style="flex:1" onclick="closeMoreSheet()">إغلاق</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast-wrap" id="toastWrap"></div>
 
 <script>
@@ -1327,35 +1962,32 @@ const S = {
   user: null, teacher: {n1:'',n2:'',n3:''},
   students: [], attendance: {}, evals: {}, notes: [],
   subjects: JSON.parse(JSON.stringify(DEFAULT_SUBJECTS)),
-  behavior: {},    // { studentId: { date: { stars:3, tags:[] } } }
-  goals: [],       // [{ id, sid, text, deadline, prio, strategy, done, createdAt }]
-  grades: { columns:[], rows:{} }, // { columns:[{id,name,max}], rows:{sid:{colId:score}} }
-  planner: {},     // { 'YYYY-WW': { day: { period: { content, notes } } } }
-  meetings: [],    // [{ id, sid, date, type, notes, action }]
-  seatLayout: [],  // [ [sid|null, ...], ... ] 5×6 grid
+  behavior: {}, goals: [], grades: { columns:[], rows:{} },
+  planner: {}, meetings: [], seatLayout: [],
+  changelog: [],   // [{ id, ts, type, action, detail }]
   darkMode: false,
   currentEval: null, currentChart: null, currentSubject: null,
   viewMode: 'table',
-  // quick eval state
   qeQueue: [], qeIdx: 0, qeSubId:'', qeSecId:'',
-  // planner editing
   editingPeriod: null,
 };
 
 function save() {
-  localStorage.setItem('bs_v4', JSON.stringify({
+  // Keep changelog to last 200 entries max
+  if(S.changelog.length > 200) S.changelog = S.changelog.slice(-200);
+  localStorage.setItem('bs_v5', JSON.stringify({
     user:S.user, teacher:S.teacher,
     students:S.students, attendance:S.attendance,
     evals:S.evals, notes:S.notes, subjects:S.subjects,
     behavior:S.behavior, goals:S.goals, grades:S.grades,
     planner:S.planner, meetings:S.meetings, seatLayout:S.seatLayout,
-    darkMode:S.darkMode
+    changelog:S.changelog, darkMode:S.darkMode
   }));
 }
 
 function load() {
   try {
-    const raw = localStorage.getItem('bs_v4') || localStorage.getItem('bs_v3') || localStorage.getItem('bs_v2') || '{}';
+    const raw = localStorage.getItem('bs_v5') || localStorage.getItem('bs_v4') || localStorage.getItem('bs_v3') || localStorage.getItem('bs_v2') || '{}';
     const d = JSON.parse(raw);
     if(d.user) S.user=d.user;
     if(d.teacher) S.teacher=d.teacher;
@@ -1370,6 +2002,7 @@ function load() {
     if(d.planner) S.planner=d.planner;
     if(d.meetings) S.meetings=d.meetings;
     if(d.seatLayout) S.seatLayout=d.seatLayout;
+    if(d.changelog) S.changelog=d.changelog;
     if(d.darkMode) { S.darkMode=true; document.body.classList.add('dark'); }
   } catch(e) {}
 }
@@ -1448,6 +2081,7 @@ function doLogin(provider){
   S.teacher={n1,n2,n3};
   S.user={provider,name:fullName(),loginAt:Date.now()};
   save();
+  logChange('auth','تسجيل دخول',`${provider==='google'?'Google':'محلي'} — ${S.teacher.n1}`);
   enterApp();
 }
 
@@ -1469,8 +2103,16 @@ function enterApp(){
   if(S.darkMode) document.body.classList.add('dark');
   rebuildSubjectNav();
   buildNotifs();
+  // Changelog badge
+  const nbc=document.getElementById('nb-changelog');
+  if(nbc) nbc.textContent=S.changelog?.length||0;
+  // Mobile bottom nav badge
+  const bnn=document.getElementById('bnn-students');
+  if(bnn){ bnn.textContent=S.students.length; bnn.style.display=S.students.length>0?'flex':'none'; }
   showPage('dash');
+  setBnActive('dash');
   setInterval(save, 3000);
+  setTimeout(initPWA, 1000);
 }
 
 function doLogout(){
@@ -1485,7 +2127,7 @@ function doLogout(){
 // ══════════════════════════════════════════════
 // NAVIGATION
 // ══════════════════════════════════════════════
-const PAGES=['dash','students','attend','arabic','reports','analytics','gradebook','notes','seatmap','behavior','goals','planner','meetings','insights','curriculum','profile'];
+const PAGES=['dash','students','attend','arabic','reports','analytics','gradebook','notes','seatmap','behavior','goals','planner','meetings','insights','treasuremap','photos','changelog','classroom','curriculum','profile'];
 function showPage(p){
   PAGES.forEach(id=>{
     const n=document.getElementById('nav-'+id);
@@ -1500,13 +2142,23 @@ function showPage(p){
     reports:renderReports, analytics:renderAnalytics,
     gradebook:renderGradeBook, notes:renderNotes, seatmap:renderSeatMap,
     behavior:renderBehavior, goals:renderGoals, planner:renderPlanner,
-    meetings:renderMeetings, insights:renderInsights,
+    meetings:renderMeetings, insights:renderInsights, treasuremap:renderTreasureMap, photos:renderPhotoManager,
     profile:renderProfile, curriculum:renderCurriculum
   };
   const subMatch=S.subjects.find(s=>s.id===p);
   if(subMatch){ c.innerHTML=renderSubjectPage(p); }
   else { c.innerHTML=(renderers[p]||renderDash)(); }
   c.scrollTop=0; closeCmd();
+  // Mobile bottom nav sync
+  if(window.innerWidth<=960){
+    setBnActive(p);
+    const fab=document.getElementById('fab');
+    if(fab){
+      const fabPages={students:'➕',notes:'📝',goals:'🎯',meetings:'🤝'};
+      if(fabPages[p]){fab.textContent=fabPages[p];fab.classList.add('show');}
+      else{fab.classList.remove('show');}
+    }
+  }
   setTimeout(()=>initPage(p),80);
 }
 
@@ -1525,6 +2177,17 @@ function initPage(p){
   if(p==='reports') initReportCharts();
   if(p==='analytics') initAnalyticsCharts();
   if(p==='insights') setTimeout(animateInsights,100);
+  if(p==='treasuremap') setTimeout(initTreasureMap,80);
+  if(p==='profile') setTimeout(updatePWAStatus,50);
+}
+
+function updatePWAStatus(){
+  const dot = document.getElementById('pwaColorDot');
+  const txt = document.getElementById('pwaOnlineText');
+  const status = document.getElementById('pwaInstallStatus');
+  if(dot) dot.style.background = navigator.onLine ? 'var(--mint)' : 'var(--ember)';
+  if(txt) txt.textContent = navigator.onLine ? 'متصل بالإنترنت' : 'غير متصل — يعمل offline';
+  if(status) status.textContent = _pwaPrompt ? '⬇️ يمكن تثبيت التطبيق على جهازك' : '✅ التطبيق محفوظ محلياً';
 }
 
 // ══════════════════════════════════════════════
@@ -1585,6 +2248,22 @@ function avatarStyle(sid){
   const idx = S.students.findIndex(s=>s.id===sid) % AVATAR_COLORS.length;
   const [c1,c2]=AVATAR_COLORS[idx]||AVATAR_COLORS[0];
   return `background:linear-gradient(135deg,${c1},${c2})`;
+}
+
+// Returns <img> if student has photo, else colored initial div
+function avatarHTML(sid, size=40, extraStyle='', showEdit=false){
+  const s=S.students.find(x=>x.id===sid);
+  if(!s) return `<div class="avatar" style="width:${size}px;height:${size}px;font-size:${Math.round(size*0.38)}px;${avatarStyle(sid)};color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;${extraStyle}">?</div>`;
+  if(s.photo){
+    return `<div class="stu-photo-wrap" style="width:${size}px;height:${size}px;${extraStyle}">
+      <img src="${s.photo}" class="stu-photo" width="${size}" height="${size}" style="width:${size}px;height:${size}px;" />
+      ${showEdit?`<div class="stu-photo-edit" onclick="openPhotoModal('${sid}',event)">✏️</div>`:''}
+    </div>`;
+  }
+  return `<div class="stu-photo-wrap" style="${extraStyle}" ${showEdit?`onclick="openPhotoModal('${sid}',event)"`:''}>`+
+    `<div class="avatar" style="width:${size}px;height:${size}px;font-size:${Math.round(size*0.38)}px;${avatarStyle(sid)};color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;">${s.name.charAt(0)}</div>`+
+    `${showEdit?`<div class="stu-photo-edit">📷</div>`:''}
+    </div>`;
 }
 
 function genId(){ return 'id_'+Date.now()+'_'+Math.random().toString(36).substr(2,5); }
@@ -1852,7 +2531,7 @@ function renderStudentTable(list){
         <td><span class="rank-circ">${i+1}</span></td>
         <td>
           <div style="display:flex;align-items:center;gap:10px;">
-            <div class="avatar av-40" style="${avatarStyle(s.id)};color:white;">${s.name.charAt(0)}</div>
+            ${avatarHTML(s.id,40,'',true)}
             <div>
               <div style="font-weight:800;color:var(--ink2);">${s.name}</div>
               <div style="font-size:0.74rem;color:var(--muted);">${s.parent||'لا يوجد رقم'}</div>
@@ -1906,7 +2585,7 @@ function renderStudentCards(list){
       return `<div class="stu-card" onclick="openEval('${s.id}')">
         ${m.total>=70?`<div class="stu-card-streak">⭐ ممتاز</div>`:''}
         <div class="stu-card-top">
-          <div class="stu-card-avatar" style="${avatarStyle(s.id)};color:white;">${s.name.charAt(0)}</div>
+          ${avatarHTML(s.id,48,'border-radius:14px;',true)}
           <div>
             <div class="stu-card-name">${s.name}</div>
             <div class="stu-card-num">${s.parent?'📱 '+s.parent:'لا يوجد رقم'}</div>
@@ -1935,29 +2614,21 @@ function openAddModal(){
   document.getElementById('an2').value='';
   document.getElementById('an3').value='';
   document.getElementById('an5').value='';
+  // Reset photo
+  _addPhotoData='';
+  const prev=document.getElementById('addModalPhotoPreview');
+  if(prev) prev.innerHTML='👤';
+  const inp=document.getElementById('an6');
+  if(inp) inp.value='';
   openM('mbAdd'); 
 }
 
-function saveStudent(){
-  const name=document.getElementById('an1').value.trim();
-  if(!name){toast('الرجاء إدخال الاسم','error');return;}
-  const num=document.getElementById('an2').value||S.students.length+1;
-  const parent=document.getElementById('an3').value.trim();
-  const gender=document.getElementById('an4').value;
-  const note=document.getElementById('an5').value.trim();
-  const s={id:genId(),name,num:+num,parent,gender,note,createdAt:Date.now()};
-  S.students.push(s);
-  if(note) S.notes.push({id:genId(),sid:s.id,text:note,type:'general',prio:'normal',date:today()});
-  save();
-  document.getElementById('nb-students').textContent=S.students.length;
-  closeM('mbAdd');
-  toast('تم إضافة الطالب بنجاح ✅','success');
-  showPage('students');
-}
+// saveStudent — see photo system section below
 
 function delStudent(id){
   const s=S.students.find(x=>x.id===id);
   if(!s||!confirm(`حذف "${s.name}"؟ لا يمكن التراجع.`)) return;
+  logChange('del','حذف طالب',s.name);
   S.students=S.students.filter(x=>x.id!==id);
   delete S.evals[id];
   Object.keys(S.attendance).forEach(d=>{if(S.attendance[d])delete S.attendance[d][id];});
@@ -2073,7 +2744,9 @@ function setAtt(sid,val){
 function markAllAtt(val){
   if(!S.attendance[attendDate]) S.attendance[attendDate]={};
   S.students.forEach(s=>S.attendance[attendDate][s.id]=val);
-  save(); showPage('attend');
+  save();
+  logChange('att','تسجيل حضور جماعي',val==='p'?'تحضير الكل':val==='a'?'غياب الكل':'بعذر الكل');
+  showPage('attend');
 }
 
 function exportAttendancePDF(){
@@ -2087,7 +2760,15 @@ function exportAttendancePDF(){
     const statusAr=v==='p'?'<span style="color:#059669;font-weight:800">✅ حاضر</span>':v==='a'?'<span style="color:#dc2626;font-weight:800">❌ غائب</span>':v==='e'?'<span style="color:#d97706;font-weight:800">📋 بعذر</span>':'<span style="color:#94a3b8">—</span>';
     return `<tr style="background:${i%2?'#f8faff':'#fff'}">
       <td style="text-align:center;font-weight:800;color:#1e3a5f">${i+1}</td>
-      <td><strong>${s.name}</strong></td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px;">
+          ${s.photo
+            ?`<img src="${s.photo}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;border:1.5px solid #e2e8f8;flex-shrink:0;" />`
+            :`<div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#1e3a5f,#1565c0);color:white;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;flex-shrink:0;">${s.name.charAt(0)}</div>`
+          }
+          <strong>${s.name}</strong>
+        </div>
+      </td>
       <td style="text-align:center">${statusAr}</td>
       <td style="color:#94a3b8;font-size:.85em">${s.parent||'—'}</td>
     </tr>`;
@@ -2253,86 +2934,160 @@ function renderSubjectPage(subId){
 // EVAL MODAL — Dynamic
 // ══════════════════════════════════════════════
 let evalSubId='';
+// ── EVAL SYSTEM — fully isolated per call ──────────────────────────────
+// State scoped to current open modal only — no DOM leakage between subjects
+let _evalSid='', _evalSubId='', _evalSecIdx=0;
+
 function openEvalDyn(sid, subId){
-  S.currentEval=sid; evalSubId=subId||S.subjects[0]?.id||'';
-  const s=S.students.find(x=>x.id===sid);
-  const sub=S.subjects.find(x=>x.id===evalSubId);
-  if(!s||!sub) return;
-  document.getElementById('evalTitle').textContent='تقييم: '+s.name;
-  document.getElementById('evalSub').textContent=`${sub.icon} ${sub.name}`;
-  // Build tabs dynamically
-  const tabBar=document.getElementById('evalModalTabs');
-  tabBar.innerHTML=sub.sections.map((sec,i)=>`
-    <button class="m-tab ${i===0?'active':''}" id="etab-${sec.id}" onclick="switchETabDyn('${sec.id}','${evalSubId}')">${sec.icon||'📌'} ${sec.name}</button>
-  `).join('');
-  // Build first section
-  sub.sections.forEach((sec,i)=>{
-    let container=document.getElementById('esec_'+sec.id);
-    if(!container){
-      container=document.createElement('div');
-      container.id='esec_'+sec.id;
-      document.getElementById('evalSectionsWrap').appendChild(container);
-    }
-    container.style.display=i===0?'':'none';
-    renderEvalSection(sec, evalSubId);
-  });
+  _evalSid = sid;
+  _evalSubId = subId || S.subjects[0]?.id || '';
+  evalSubId = _evalSubId; // keep legacy compat
+  S.currentEval = sid;
+
+  const s = S.students.find(x=>x.id===sid);
+  if(!s){ toast('تعذّر فتح التقييم','error'); return; }
+
+  document.getElementById('evalTitle').textContent = 'تقييم: ' + s.name;
+
+  // ── Build subject selector (shown when >1 subject) ──
+  const selector = document.getElementById('evalSubjectSelector');
+  if(S.subjects.length > 1){
+    selector.style.display = '';
+    selector.innerHTML = '<div style="font-size:0.80rem;font-weight:800;color:var(--muted);margin-bottom:6px;">اختر المادة:</div>' +
+      '<div style="display:flex;gap:8px;flex-wrap:wrap;">' +
+      S.subjects.map(sub=>`
+        <button class="btn btn-sm ${sub.id===_evalSubId?'btn-primary':'btn-ghost'}"
+          onclick="_evalSwitchSubject('${sub.id}')" id="subjBtn_${sub.id}">
+          ${sub.icon||'📚'} ${sub.name}
+        </button>`).join('') +
+      '</div>';
+  } else {
+    selector.style.display = 'none';
+  }
+
+  _evalLoadSubject(_evalSubId, sid);
   openM('mbEval');
+}
+
+function _evalSwitchSubject(subId){
+  _evalSubId = subId;
+  evalSubId = subId;
+  // Update subject button states
+  S.subjects.forEach(sub=>{
+    const btn=document.getElementById('subjBtn_'+sub.id);
+    if(btn){ btn.className='btn btn-sm '+(sub.id===subId?'btn-primary':'btn-ghost'); }
+  });
+  _evalLoadSubject(subId, _evalSid);
+}
+
+function _evalLoadSubject(subId, sid){
+  const sub = S.subjects.find(x=>x.id===subId);
+  if(!sub) return;
+
+  document.getElementById('evalSub').textContent = (sub.icon||'📚') + ' ' + sub.name;
+
+  // ── COMPLETELY WIPE previous section content ──
+  const tabBar = document.getElementById('evalModalTabs');
+  const wrap = document.getElementById('evalSectionsWrap');
+  tabBar.innerHTML = '';
+  wrap.innerHTML = '';
+
+  if(sub.sections.length === 0){
+    wrap.innerHTML = '<div class="empty"><div class="empty-emoji">📭</div><h3>لا توجد خانات في هذه المادة</h3><p>أضف خانات من صفحة إدارة المواد</p></div>';
+    return;
+  }
+
+  // ── Build section tabs ──
+  sub.sections.forEach((sec, i)=>{
+    const btn = document.createElement('button');
+    btn.className = 'm-tab' + (i===0?' active':'');
+    btn.dataset.secid = sec.id;
+    btn.dataset.subid = subId;
+    btn.innerHTML = (sec.icon||'📌') + ' ' + sec.name;
+    btn.onclick = ()=> _evalShowSection(sec.id);
+    tabBar.appendChild(btn);
+  });
+
+  // ── Build section panels ──
+  sub.sections.forEach((sec, i)=>{
+    const panel = document.createElement('div');
+    panel.dataset.secpanel = sec.id;
+    panel.style.display = i===0 ? '' : 'none';
+    panel.innerHTML = _buildSectionHTML(sec, subId, sid);
+    wrap.appendChild(panel);
+  });
+
+  _evalSecIdx = 0;
+}
+
+function _evalShowSection(secId){
+  const wrap = document.getElementById('evalSectionsWrap');
+  const tabBar = document.getElementById('evalModalTabs');
+  // Show correct panel, hide rest
+  wrap.querySelectorAll('[data-secpanel]').forEach(p=>{
+    p.style.display = p.dataset.secpanel===secId ? '' : 'none';
+  });
+  // Toggle tab active state
+  tabBar.querySelectorAll('.m-tab').forEach(b=>{
+    b.classList.toggle('active', b.dataset.secid===secId);
+  });
+}
+
+function _buildSectionHTML(sec, subId, sid){
+  const secEv = ((S.evals[sid]||{})[subId]||{})[sec.id]||{};
+  const mastered = Object.values(secEv).filter(v=>v==='m').length;
+  const pct = sec.skills.length ? Math.round((mastered/sec.skills.length)*100) : 0;
+  const badgeCol = masteryColor(pct);
+
+  const skillsHTML = sec.skills.map((sk, i)=>{
+    const v = secEv[i];
+    const isMastered = v==='m', isNot = v==='n';
+    return `<div class="eval-item ${isMastered?'mastered':isNot?'not-mastered':''}" id="ei__${subId}__${sec.id}__${i}">
+      <div class="eval-num">${i+1}</div>
+      <div class="eval-name">${sk}</div>
+      <div class="eval-btns">
+        <button class="ev-btn ev-m ${isMastered?'on':''}" onclick="setEvDyn('${subId}','${sec.id}',${i},'m')">✅ أتقن</button>
+        <button class="ev-btn ev-n ${isNot?'on':''}"  onclick="setEvDyn('${subId}','${sec.id}',${i},'n')">❌ لم يتقن</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  return `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span style="font-weight:800;font-size:0.95rem;color:var(--ink2);">${sec.icon||'📌'} ${sec.name}</span>
+        <span class="badge badge-${badgeCol}" id="secBadge__${subId}__${sec.id}">${mastered}/${sec.skills.length} أتقن (${pct}%)</span>
+      </div>
+      <div style="display:flex;gap:7px;">
+        <button class="btn btn-green btn-xs" onclick="setAllEvalDyn('${subId}','${sec.id}','m')">✅ كل أتقن</button>
+        <button class="btn btn-red btn-xs"   onclick="setAllEvalDyn('${subId}','${sec.id}','n')">❌ كل لم يتقن</button>
+        <button class="btn btn-ghost btn-xs" onclick="clearEvalDyn('${subId}','${sec.id}')">↺ مسح</button>
+      </div>
+    </div>
+    <div class="eval-grid">${skillsHTML}</div>`;
+}
+
+// Re-render a section panel in place (called after bulk set/clear)
+function renderEvalSection(sec, subId){
+  const sid = S.currentEval;
+  const wrap = document.getElementById('evalSectionsWrap');
+  if(!wrap) return;
+  const panel = wrap.querySelector('[data-secpanel="'+sec.id+'"]');
+  if(!panel) return;
+  const wasHidden = panel.style.display==='none';
+  panel.innerHTML = _buildSectionHTML(sec, subId, sid);
+  panel.style.display = wasHidden ? 'none' : '';
 }
 
 // legacy shim
 function openEval(sid){ openEvalDyn(sid, S.subjects[0]?.id||'sub_arabic'); }
 
-function renderEvalSection(sec, subId){
-  const sid=S.currentEval;
-  const secEv=((S.evals[sid]||{})[subId]||{})[sec.id]||{};
-  const mastered=Object.values(secEv).filter(v=>v==='m').length;
-  const container=document.getElementById('esec_'+sec.id);
-  if(!container) return;
-  container.innerHTML=`
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-      <div>
-        <span style="font-weight:800;font-size:0.95rem;color:var(--ink2);">${sec.icon||'📌'} ${sec.name}</span>
-        <span class="badge badge-${masteryColor(sec.skills.length?Math.round((mastered/sec.skills.length)*100):0)}" style="margin-right:8px;">${mastered}/${sec.skills.length} أتقن</span>
-      </div>
-      <div style="display:flex;gap:7px;">
-        <button class="btn btn-green btn-xs" onclick="setAllEvalDyn('${subId}','${sec.id}','m')">✅ كل أتقن</button>
-        <button class="btn btn-red btn-xs" onclick="setAllEvalDyn('${subId}','${sec.id}','n')">❌ كل لم يتقن</button>
-        <button class="btn btn-ghost btn-xs" onclick="clearEvalDyn('${subId}','${sec.id}')">↺ مسح</button>
-      </div>
-    </div>
-    <div class="eval-grid">
-      ${sec.skills.map((sk,i)=>{
-        const v=secEv[i];
-        return `<div class="eval-item ${v==='m'?'mastered':v==='n'?'not-mastered':''}" id="ei_${sec.id}_${i}">
-          <div class="eval-num">${i+1}</div>
-          <div class="eval-name">${sk}</div>
-          <div class="eval-btns">
-            <button class="ev-btn ev-m ${v==='m'?'on':''}" onclick="setEvDyn('${subId}','${sec.id}',${i},'m')">✅ أتقن</button>
-            <button class="ev-btn ev-n ${v==='n'?'on':''}" onclick="setEvDyn('${subId}','${sec.id}',${i},'n')">❌ لم يتقن</button>
-          </div>
-        </div>`;
-      }).join('')}
-    </div>
-  `;
-}
-
-function switchETabDyn(secId, subId){
-  const sub=S.subjects.find(x=>x.id===subId);
-  if(!sub) return;
-  sub.sections.forEach(sec=>{
-    const tab=document.getElementById('etab-'+sec.id);
-    const cont=document.getElementById('esec_'+sec.id);
-    if(tab) tab.classList.toggle('active',sec.id===secId);
-    if(cont) cont.style.display=sec.id===secId?'':'none';
-  });
-}
-
-// Legacy shim
+function switchETabDyn(secId, subId){ _evalShowSection(secId); }
 function switchETab(type){
-  const sub=S.subjects.find(x=>x.id===evalSubId);
+  const sub=S.subjects.find(x=>x.id===_evalSubId);
   if(!sub) return;
   const sec=type==='r'?sub.sections[0]:sub.sections[1];
-  if(sec) switchETabDyn(sec.id, evalSubId);
+  if(sec) _evalShowSection(sec.id);
 }
 
 function setEvDyn(subId, secId, idx, val){
@@ -2342,11 +3097,28 @@ function setEvDyn(subId, secId, idx, val){
   if(!S.evals[sid][subId][secId]) S.evals[sid][subId][secId]={};
   S.evals[sid][subId][secId][idx]=val;
   save();
-  const item=document.getElementById(`ei_${secId}_${idx}`);
-  if(!item) return;
-  item.className=`eval-item ${val==='m'?'mastered':val==='n'?'not-mastered':''}`;
-  item.querySelectorAll('.ev-btn').forEach(b=>b.classList.remove('on'));
-  item.querySelector(val==='m'?'.ev-m':'.ev-n')?.classList.add('on');
+
+  // Update the specific skill row (new ID format: ei__subId__secId__idx)
+  const item=document.getElementById('ei__'+subId+'__'+secId+'__'+idx);
+  if(item){
+    item.className='eval-item '+(val==='m'?'mastered':val==='n'?'not-mastered':'');
+    item.querySelectorAll('.ev-btn').forEach(b=>b.classList.remove('on'));
+    item.querySelector(val==='m'?'.ev-m':'.ev-n')?.classList.add('on');
+  }
+
+  // Live-update the section badge counter
+  const secEv=(S.evals[sid][subId]||{})[secId]||{};
+  const sub=S.subjects.find(x=>x.id===subId);
+  const sec=sub?.sections.find(x=>x.id===secId);
+  if(sec){
+    const mst=Object.values(secEv).filter(v=>v==='m').length;
+    const pct=sec.skills.length?Math.round((mst/sec.skills.length)*100):0;
+    const badge=document.getElementById('secBadge__'+subId+'__'+secId);
+    if(badge){
+      badge.textContent=mst+'/'+sec.skills.length+' أتقن ('+pct+'%)';
+      badge.className='badge badge-'+masteryColor(pct);
+    }
+  }
 }
 
 // Legacy shim for old setEv(type,idx,val) calls
@@ -2366,7 +3138,8 @@ function setAllEvalDyn(subId, secId, val){
   if(!S.evals[sid][subId]) S.evals[sid][subId]={};
   if(!S.evals[sid][subId][secId]) S.evals[sid][subId][secId]={};
   sec.skills.forEach((_,i)=>S.evals[sid][subId][secId][i]=val);
-  save(); renderEvalSection(sec, subId);
+  save();
+  renderEvalSection(sec, subId); // re-renders panel in place
 }
 
 function clearEvalDyn(subId, secId){
@@ -2374,8 +3147,11 @@ function clearEvalDyn(subId, secId){
   const sec=sub?.sections.find(x=>x.id===secId);
   if(!sec) return;
   const sid=S.currentEval;
-  if(S.evals[sid]?.[subId]) S.evals[sid][subId][secId]={};
-  save(); renderEvalSection(sec, subId);
+  if(!S.evals[sid]) S.evals[sid]={};
+  if(!S.evals[sid][subId]) S.evals[sid][subId]={};
+  S.evals[sid][subId][secId]={};
+  save();
+  renderEvalSection(sec, subId); // re-renders panel in place
 }
 
 // Legacy shims
@@ -2688,10 +3464,13 @@ function genStudentPDF(sid){
 
   <!-- Student card -->
   <div class="stu-card">
-    <div class="stu-avatar">${s.name.charAt(0)}</div>
+    ${s.photo
+      ?`<img src="${s.photo}" style="width:70px;height:70px;border-radius:50%;object-fit:cover;border:3px solid #1565c0;flex-shrink:0;" />`
+      :`<div class="stu-avatar">${s.name.charAt(0)}</div>`
+    }
     <div>
       <div class="stu-name">${s.name}</div>
-      <div class="stu-meta">📱 ولي الأمر: ${s.parent||'—'} &nbsp;|&nbsp; الجنس: ${s.gender==='f'?'أنثى':'ذكر'}</div>
+      <div class="stu-meta">📱 ولي الأمر: ${s.parent||'—'} &nbsp;|&nbsp; الجنس: ${s.gender==='f'?'أنثى':'ذكر'} &nbsp;|&nbsp; 🆔 رقم الجلوس: ${s.num||'—'}</div>
     </div>
   </div>
 
@@ -2742,154 +3521,282 @@ function genStudentPDF(sid){
 // ══════════════════════════════════════════════
 // REPORTS PAGE
 // ══════════════════════════════════════════════
+// ── Active report subject filter ────────────────────────────
+let _repSubId = '__all__'; // '__all__' or a specific subject id
+
 function renderReports(){
+  // Determine which subjects/sections to show
+  const activeSubs = _repSubId==='__all__'
+    ? S.subjects
+    : S.subjects.filter(s=>s.id===_repSubId);
+
+  // Per-student mastery for the active filter
+  function filteredMastery(sid){
+    let m=0, t=0;
+    activeSubs.forEach(sub=>sub.sections.forEach(sec=>{
+      const ev=((S.evals[sid]||{})[sub.id]||{})[sec.id]||{};
+      m+=Object.values(ev).filter(v=>v==='m').length;
+      t+=sec.skills.length;
+    }));
+    return { m, t, pct: t?Math.round((m/t)*100):0 };
+  }
+
+  const avgPct = S.students.length
+    ? Math.round(S.students.reduce((a,s)=>a+filteredMastery(s.id).pct,0)/S.students.length)
+    : 0;
+
+  const subjectLabel = _repSubId==='__all__'
+    ? 'جميع المواد'
+    : (S.subjects.find(s=>s.id===_repSubId)?.name||'');
+
   return `
   <div class="breadcrumb">🏠 <span class="sep">›</span> <span class="active">التقارير</span></div>
   <div class="ph">
-    <div><div class="ph-title">📄 التقارير والمشاركة</div><div class="ph-sub">توليد وإرسال التقارير للأولياء والمدرسة</div></div>
+    <div><div class="ph-title">📄 التقارير والمشاركة</div>
+    <div class="ph-sub">توليد وإرسال التقارير للأولياء والمدرسة</div></div>
   </div>
 
+  <!-- Subject Filter Tabs -->
+  <div style="margin-bottom:18px;">
+    <div style="font-size:0.78rem;font-weight:900;color:var(--muted2);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;">📚 اختر المادة لعرض تقريرها</div>
+    <div style="display:flex;gap:9px;flex-wrap:wrap;">
+      <button class="btn ${_repSubId==='__all__'?'btn-primary':'btn-ghost'} btn-sm"
+        onclick="_repSubId='__all__';showPage('reports')">
+        🗂️ جميع المواد
+      </button>
+      ${S.subjects.map(sub=>`
+        <button class="btn ${_repSubId===sub.id?'btn-primary':'btn-ghost'} btn-sm"
+          onclick="_repSubId='${sub.id}';showPage('reports')" style="${_repSubId===sub.id?'':''}">
+          ${sub.icon||'📚'} ${sub.name}
+        </button>
+      `).join('')}
+    </div>
+  </div>
+
+  <!-- Report Header Card -->
   <div class="rep-card" style="margin-bottom:22px;">
     <div class="rep-card-header">
       <div class="rch-badge">🏫 تقرير رسمي</div>
       <h2>مدارس البشرى الأهلية</h2>
-      <p>كشف متابعة الطلاب — الصف الأول الابتدائي — مادة لغتي</p>
+      <p>كشف متابعة الطلاب — الصف الأول الابتدائي — ${subjectLabel}</p>
       <div class="rep-meta-row">
         <div class="rep-meta-item">👩‍🏫 ${fullName()}</div>
         <div class="rep-meta-item">📅 ${fmtDate(today())}</div>
         <div class="rep-meta-item">👥 ${S.students.length} طالب</div>
-        <div class="rep-meta-item">⭐ متوسط ${S.students.length?Math.round(S.students.reduce((a,s)=>a+studentMastery(s.id).total,0)/S.students.length):0}%</div>
+        <div class="rep-meta-item">⭐ متوسط ${avgPct}%</div>
       </div>
     </div>
-    <div style="padding:22px;display:flex;gap:12px;flex-wrap:wrap;">
-      <button class="btn btn-primary" onclick="downloadClassPDF()">📄 تقرير الفصل PDF</button>
+    <div style="padding:18px 22px;display:flex;gap:10px;flex-wrap:wrap;border-bottom:1px solid var(--border);">
+      <button class="btn btn-primary" onclick="downloadClassPDF()">📄 PDF كامل</button>
       <button class="btn btn-green" onclick="shareClassWA()">💬 واتساب للمدرسة</button>
       <button class="btn btn-gold" onclick="shareAllParents()">📤 إرسال للأولياء</button>
-      <button class="btn btn-ghost" onclick="copyClassReport()">📋 نسخ التقرير</button>
+      <button class="btn btn-ghost" onclick="copyClassReport()">📋 نسخ نصي</button>
     </div>
+    <!-- Per-subject quick PDF buttons -->
+    ${S.subjects.length>1?`
+    <div style="padding:14px 22px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+      <span style="font-size:0.80rem;font-weight:800;color:var(--muted2);">PDF مادة محددة:</span>
+      ${S.subjects.map(sub=>`
+        <button class="btn btn-ghost btn-xs" onclick="downloadSubjectPDF('${sub.id}')">
+          ${sub.icon||'📚'} ${sub.name}
+        </button>`).join('')}
+    </div>`:''}
   </div>
 
+  <!-- Charts -->
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:20px;">
     <div class="chart-box">
-      <h3>توزيع مستويات الطلاب</h3>
-      <div class="chart-sub">حسب نسبة الإتقان الكلية في لغتي</div>
+      <h3>📊 توزيع المستويات</h3>
+      <div class="chart-sub">${subjectLabel}</div>
       <div class="chart-h chart-h-220"><canvas id="repChart1"></canvas></div>
     </div>
     <div class="chart-box">
-      <h3>مقارنة القراءة والكتابة</h3>
-      <div class="chart-sub">متوسط الإتقان لكل طالب</div>
+      <h3>📈 مقارنة الطلاب</h3>
+      <div class="chart-sub">أعلى 10 طلاب</div>
       <div class="chart-h chart-h-220"><canvas id="repChart2"></canvas></div>
     </div>
   </div>
 
+  <!-- Detail Table -->
   <div class="card" style="margin-bottom:20px;">
-    <div class="card-header"><h3>📊 ملخص الفصل التفصيلي</h3>
+    <div class="card-header">
+      <h3>📋 كشف المتابعة التفصيلي — ${subjectLabel}</h3>
       <span class="badge badge-blue">${S.students.length} طالب</span>
     </div>
     ${S.students.length===0?`<div class="empty"><div class="empty-emoji">📊</div><h3>لا توجد بيانات</h3></div>`:`
     <div class="tbl-wrap"><table class="tbl">
       <thead>
         <tr>
-          <th>#</th><th>الطالب</th>
-          ${S.subjects.map(sub=>sub.sections.map(sec=>`<th style="text-align:center;white-space:nowrap">${sub.icon||'📚'} ${sub.name}<br><small style="font-weight:400;opacity:.8">${sec.icon||''} ${sec.name}</small></th>`).join('')).join('')}
-          <th style="text-align:center">الكلي</th><th style="text-align:center">المستوى</th><th>الإجراءات</th>
+          <th style="min-width:36px">#</th>
+          <th style="min-width:140px">الطالب</th>
+          ${activeSubs.map(sub=>sub.sections.map(sec=>`
+            <th style="text-align:center;white-space:nowrap;min-width:100px">
+              ${sub.icon||'📚'} ${sub.name}<br>
+              <small style="font-weight:400;opacity:.8;">${sec.icon||''} ${sec.name}</small>
+            </th>`).join('')).join('')}
+          <th style="text-align:center;min-width:90px">الإتقان</th>
+          <th style="text-align:center;min-width:80px">المستوى</th>
+          <th style="min-width:110px">الإجراءات</th>
         </tr>
       </thead>
       <tbody>
       ${S.students.map((s,i)=>{
-        const m=studentMastery(s.id);
+        const fm = filteredMastery(s.id);
+        const secCells = activeSubs.map(sub=>sub.sections.map(sec=>{
+          const secEv=((S.evals[s.id]||{})[sub.id]||{})[sec.id]||{};
+          const mst=Object.values(secEv).filter(v=>v==='m').length;
+          const pct=sec.skills.length?Math.round((mst/sec.skills.length)*100):0;
+          const col=masteryColor(pct);
+          return `<td style="text-align:center;">
+            <div style="display:flex;flex-direction:column;align-items:center;gap:3px;">
+              <span class="badge badge-${col}">${pct}%</span>
+              <span style="font-size:0.72rem;color:var(--muted)">${mst}/${sec.skills.length}</span>
+            </div>
+          </td>`;
+        }).join('')).join('');
         return `<tr>
           <td><span class="rank-circ">${i+1}</span></td>
-          <td><div style="font-weight:700;">${s.name}</div></td>
-          ${S.subjects.map(sub=>sub.sections.map(sec=>{
-            const secEv=((S.evals[s.id]||{})[sub.id]||{})[sec.id]||{};
-            const mst=Object.values(secEv).filter(v=>v==='m').length;
-            const pct=sec.skills.length?Math.round((mst/sec.skills.length)*100):0;
-            return `<td style="text-align:center"><span class="badge badge-${masteryColor(pct)}">${mst}/${sec.skills.length}<br>${pct}%</span></td>`;
-          }).join('')).join('')}
-          <td style="text-align:center">
-            <div class="prog-wrap" style="width:70px;margin:0 auto 4px;"><div class="prog-bar ${masteryColor(m.total)}" style="width:${m.total}%"></div></div>
-            <span class="badge badge-${masteryColor(m.total)}">${m.total}%</span>
+          <td>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <div class="avatar av-32" style="${avatarStyle(s.id)};color:white">${s.name.charAt(0)}</div>
+              <span style="font-weight:700;">${s.name}</span>
+            </div>
           </td>
-          <td style="text-align:center"><span class="badge badge-${masteryColor(m.total)}">${masteryLabel(m.total)}</span></td>
-          <td><div style="display:flex;gap:6px;">
-            <button class="btn btn-gold btn-xs" onclick="genStudentPDF('${s.id}')">📄 PDF</button>
-            <button class="btn btn-plum btn-xs" onclick="waStudent('${s.id}')">💬</button>
-          </div></td>
+          ${secCells}
+          <td style="text-align:center;">
+            <div class="prog-wrap" style="width:70px;margin:0 auto 5px;">
+              <div class="prog-bar ${masteryColor(fm.pct)}" style="width:${fm.pct}%"></div>
+            </div>
+            <span class="badge badge-${masteryColor(fm.pct)}">${fm.pct}%</span>
+          </td>
+          <td style="text-align:center;">
+            <span class="badge badge-${masteryColor(fm.pct)}">${masteryLabel(fm.pct)}</span>
+          </td>
+          <td>
+            <div style="display:flex;gap:5px;flex-wrap:wrap;">
+              <button class="btn btn-gold btn-xs" onclick="genStudentPDF('${s.id}')">📄 PDF</button>
+              <button class="btn btn-plum btn-xs" onclick="waStudentFiltered('${s.id}')">💬</button>
+            </div>
+          </td>
         </tr>`;
       }).join('')}
       </tbody>
     </table></div>`}
-  </div>
-  `;
+  </div>`;
+}
+
+// ── Filtered mastery helper (reused in charts) ──────────────
+function _getActiveSubs(){
+  return _repSubId==='__all__' ? S.subjects : S.subjects.filter(s=>s.id===_repSubId);
+}
+function _filteredMastery(sid){
+  let m=0,t=0;
+  _getActiveSubs().forEach(sub=>sub.sections.forEach(sec=>{
+    const ev=((S.evals[sid]||{})[sub.id]||{})[sec.id]||{};
+    m+=Object.values(ev).filter(v=>v==='m').length;
+    t+=sec.skills.length;
+  }));
+  return {m,t,pct:t?Math.round((m/t)*100):0};
 }
 
 function initReportCharts(){
   setTimeout(()=>{
-    const levels={e:0,g:0,n:0};
-    S.students.forEach(s=>{const t=studentMastery(s.id).total;if(t>=70)levels.e++;else if(t>=40)levels.g++;else levels.n++;});
-    const c1=document.getElementById('repChart1');
-    if(c1) new Chart(c1,{type:'pie',data:{labels:['ممتاز','جيد','يحتاج دعم'],datasets:[{data:[levels.e,levels.g,levels.n],backgroundColor:['#10b981','#f59e0b','#ef4444'],borderWidth:0,hoverOffset:10}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{family:'Tajawal',size:12},padding:14}}}}});
+    const activeSubs=_getActiveSubs();
 
+    // Chart 1: Level distribution (pie)
+    const levels={e:0,g:0,n:0};
+    S.students.forEach(s=>{
+      const p=_filteredMastery(s.id).pct;
+      if(p>=70)levels.e++; else if(p>=40)levels.g++; else levels.n++;
+    });
+    const c1=document.getElementById('repChart1');
+    if(c1) new Chart(c1,{
+      type:'doughnut',
+      data:{labels:['ممتاز (70%+)','جيد (40-70%)','يحتاج دعم'],
+        datasets:[{data:[levels.e,levels.g,levels.n],
+          backgroundColor:['#10b981','#f59e0b','#ef4444'],
+          borderWidth:0,hoverOffset:10}]},
+      options:{responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{position:'bottom',labels:{font:{family:'Tajawal',size:12},padding:14}}}}
+    });
+
+    // Chart 2: Top 10 students bar (per section)
     const stuNames=S.students.slice(0,10).map(s=>s.name.split(' ')[0]);
-    const palette2=['rgba(21,101,192,0.75)','rgba(16,185,129,0.75)','rgba(245,158,11,0.75)','rgba(124,58,237,0.75)','rgba(239,68,68,0.75)'];
-    const secDatasets2=[];
-    let pi2=0;
-    S.subjects.forEach(sub=>{
+    const palette=['rgba(21,101,192,0.80)','rgba(16,185,129,0.80)','rgba(245,158,11,0.80)','rgba(124,58,237,0.80)','rgba(239,68,68,0.80)'];
+    const datasets=[];
+    let pi=0;
+    activeSubs.forEach(sub=>{
       sub.sections.forEach(sec=>{
         const data=S.students.slice(0,10).map(s=>{
-          const secEv=((S.evals[s.id]||{})[sub.id]||{})[sec.id]||{};
-          const mst=Object.values(secEv).filter(v=>v==='m').length;
+          const ev=((S.evals[s.id]||{})[sub.id]||{})[sec.id]||{};
+          const mst=Object.values(ev).filter(v=>v==='m').length;
           return sec.skills.length?Math.round((mst/sec.skills.length)*100):0;
         });
-        secDatasets2.push({label:sub.name+' — '+sec.name,data,backgroundColor:palette2[pi2%palette2.length],borderRadius:4,borderSkipped:false});
-        pi2++;
+        datasets.push({
+          label:`${sub.name} — ${sec.name}`,data,
+          backgroundColor:palette[pi%palette.length],
+          borderRadius:5,borderSkipped:false
+        });
+        pi++;
       });
     });
     const c2=document.getElementById('repChart2');
-    if(c2) new Chart(c2,{type:'bar',data:{labels:stuNames,datasets:secDatasets2},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{family:'Tajawal',size:10},padding:8,boxWidth:12}}},scales:{y:{min:0,max:100,ticks:{stepSize:25,font:{family:'Tajawal'},callback:v=>v+'%'}},x:{ticks:{font:{family:'Tajawal',size:10}}}}}});
+    if(c2) new Chart(c2,{
+      type:'bar',
+      data:{labels:stuNames,datasets},
+      options:{responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{position:'bottom',labels:{font:{family:'Tajawal',size:10},padding:8,boxWidth:12}}},
+        scales:{
+          y:{min:0,max:100,ticks:{stepSize:25,font:{family:'Tajawal'},callback:v=>v+'%'}},
+          x:{ticks:{font:{family:'Tajawal',size:10}}}
+        }}
+    });
   },80);
 }
 
 function downloadClassPDF(){
-  // Build all section headers dynamically
+  // Use active subject filter
+  const activeSubs = _getActiveSubs();
+  const subLabel = _repSubId==='__all__' ? 'جميع المواد' : (S.subjects.find(s=>s.id===_repSubId)?.name||'');
+
   const allSections=[];
-  S.subjects.forEach(sub=>sub.sections.forEach(sec=>allSections.push({subName:sub.name,secName:sec.name,secIcon:sec.icon||'📌',subId:sub.id,secId:sec.id})));
+  activeSubs.forEach(sub=>sub.sections.forEach(sec=>
+    allSections.push({subName:sub.name,secName:sec.name,secIcon:sec.icon||'📌',subId:sub.id,secId:sec.id})
+  ));
 
   const thCols=allSections.map(sc=>`<th>${sc.subName}<br><small style="font-weight:400;font-size:.78em;opacity:.8">${sc.secIcon} ${sc.secName}</small></th>`).join('');
 
   const rows=S.students.map((s,i)=>{
-    const m=studentMastery(s.id);
     const ev=S.evals[s.id]||{};
     const secCells=allSections.map(sc=>{
       const secEv=(ev[sc.subId]||{})[sc.secId]||{};
       const mst=Object.values(secEv).filter(v=>v==='m').length;
-      const tot=S.subjects.find(x=>x.id===sc.subId)?.sections.find(x=>x.id===sc.secId)?.skills.length||0;
+      const tot=activeSubs.find(x=>x.id===sc.subId)?.sections.find(x=>x.id===sc.secId)?.skills.length||0;
       const pct=tot?Math.round((mst/tot)*100):0;
       const clr=pct>=70?'#059669':pct>=40?'#d97706':'#dc2626';
       return `<td style="text-align:center"><span style="color:${clr};font-weight:800">${pct}%</span><br><small style="color:#94a3b8;font-size:.78em">${mst}/${tot}</small></td>`;
     }).join('');
-    const totalClr=m.total>=70?'#059669':m.total>=40?'#d97706':'#dc2626';
-    const attToday=Object.values(S.attendance[today()]||{}).filter((v,_,arr)=>arr).length;
+    const fm=_filteredMastery(s.id);
+    const fClr=fm.pct>=70?'#059669':fm.pct>=40?'#d97706':'#dc2626';
     const attStatus=(S.attendance[today()]||{})[s.id];
     const attBadge=attStatus==='p'?'<span style="color:#059669">✅ حاضر</span>':attStatus==='a'?'<span style="color:#dc2626">❌ غائب</span>':attStatus==='e'?'<span style="color:#d97706">📋 بعذر</span>':'<span style="color:#94a3b8">—</span>';
     return `<tr style="background:${i%2?'#f8faff':'#fff'}">
       <td style="text-align:center;font-weight:800;color:#1e3a5f">${i+1}</td>
       <td><strong>${s.name}</strong></td>
       ${secCells}
-      <td style="text-align:center"><strong style="color:${totalClr};font-size:1.05em">${m.total}%</strong><br><small style="color:${totalClr}">${masteryLabel(m.total)}</small></td>
+      <td style="text-align:center"><strong style="color:${fClr};font-size:1.05em">${fm.pct}%</strong><br><small style="color:${fClr}">${masteryLabel(fm.pct)}</small></td>
       <td style="text-align:center">${attBadge}</td>
     </tr>`;
   }).join('');
 
-  const avgMastery=S.students.length?Math.round(S.students.reduce((a,s)=>a+studentMastery(s.id).total,0)/S.students.length):0;
+  const avgMastery=S.students.length?Math.round(S.students.reduce((a,s)=>a+_filteredMastery(s.id).pct,0)/S.students.length):0;
   const present=Object.values(S.attendance[today()]||{}).filter(v=>v==='p').length;
 
   const html=`<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<title>تقرير الفصل — مدارس البشرى</title>
+<title>تقرير الفصل — مدارس البشرى — ${subLabel}</title>
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
@@ -2921,7 +3828,7 @@ function downloadClassPDF(){
 </div>
 <div class="header">
   <div>
-    <h1>🏫 مدارس البشرى الأهلية — تقرير الفصل</h1>
+    <h1>🏫 مدارس البشرى الأهلية — تقرير الفصل — ${subLabel}</h1>
     <div class="meta">الصف الأول الابتدائي · المعلم: ${fullName()} · التاريخ: ${today()}</div>
   </div>
   <div style="text-align:left;font-size:.9em">
@@ -2952,16 +3859,17 @@ function downloadClassPDF(){
 }
 
 function shareClassWA(){
+  const subLabel=_repSubId==='__all__'?'جميع المواد':(S.subjects.find(s=>s.id===_repSubId)?.name||'');
   let msg=`📚 *تقرير الفصل — مدارس البشرى الأهلية*\n`;
+  msg+=`📖 المادة: *${subLabel}*\n`;
   msg+=`👩‍🏫 المعلم: ${fullName()}\n📅 ${today()}\n👥 ${S.students.length} طالب\n`;
   msg+=`━━━━━━━━━━━━━━━━\n`;
   msg+=S.students.map((s,i)=>{
-    const m=studentMastery(s.id);
-    return `${i+1}. ${s.name}: ${m.total}% — ${masteryLabel(m.total)}`;
+    const fm=_filteredMastery(s.id);
+    return `${i+1}. ${s.name}: ${fm.pct}% — ${masteryLabel(fm.pct)}`;
   }).join('\n');
   msg+=`\n━━━━━━━━━━━━━━━━\n🏫 مدارس البشرى الأهلية`;
-  const url=`https://wa.me/?text=${encodeURIComponent(msg)}`;
-  window.open(url,'_blank');
+  window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`,'_blank');
 }
 
 function shareAllParents(){
@@ -2973,9 +3881,40 @@ function shareAllParents(){
 }
 
 function copyClassReport(){
-  let txt=`تقرير مدارس البشرى الأهلية\nالصف الأول الابتدائي — مادة لغتي\nالمعلم: ${fullName()}\nالتاريخ: ${today()}\n\n`;
-  txt+=S.students.map((s,i)=>{const m=studentMastery(s.id);return `${i+1}. ${s.name} — ${m.total}% — ${masteryLabel(m.total)}`;}).join('\n');
+  const subLabel=_repSubId==='__all__'?'جميع المواد':(S.subjects.find(s=>s.id===_repSubId)?.name||'');
+  let txt=`تقرير مدارس البشرى الأهلية\nالصف الأول الابتدائي — ${subLabel}\nالمعلم: ${fullName()}\nالتاريخ: ${today()}\n\n`;
+  txt+=S.students.map((s,i)=>{const fm=_filteredMastery(s.id);return `${i+1}. ${s.name} — ${fm.pct}% — ${masteryLabel(fm.pct)}`;}).join('\n');
   navigator.clipboard.writeText(txt).then(()=>toast('تم نسخ التقرير ✅','success'));
+}
+
+
+function waStudentFiltered(sid){
+  const s=S.students.find(x=>x.id===sid);
+  if(!s){toast('لم يُعثر على الطالب','error');return;}
+  const subLabel=_repSubId==='__all__'?'جميع المواد':(S.subjects.find(x=>x.id===_repSubId)?.name||'');
+  const fm=_filteredMastery(sid);
+  // Build detail lines for active subjects only
+  let subLines='';
+  _getActiveSubs().forEach(sub=>{
+    subLines+=`\n📚 *${sub.name}*\n`;
+    sub.sections.forEach(sec=>{
+      const secEv=((S.evals[sid]||{})[sub.id]||{})[sec.id]||{};
+      const mst=Object.values(secEv).filter(v=>v==='m').length;
+      const pct=sec.skills.length?Math.round((mst/sec.skills.length)*100):0;
+      const bar=pct>=70?'🟢':pct>=40?'🟡':'🔴';
+      subLines+=`  ${bar} ${sec.icon||''} ${sec.name}: ${mst}/${sec.skills.length} (${pct}%)\n`;
+    });
+  });
+  const msg=`📚 *تقرير متابعة طالب*\n🏫 *مدارس البشرى الأهلية*\n📖 المادة: ${subLabel}\n━━━━━━━━━━━━━━━━\n👤 الطالب: *${s.name}*\n👩‍🏫 المعلم: ${fullName()}\n📅 ${fmtDate(today())}\n${subLines}\n⭐ *الإتقان: ${fm.pct}% — ${masteryLabel(fm.pct)}*\n━━━━━━━━━━━━━━━━\nللاستفسار تواصل مع المدرسة 🙏`;
+  const ph=s.parent?s.parent.replace(/\D/g,''):'';
+  window.open(`https://wa.me/${ph}?text=${encodeURIComponent(msg)}`,'_blank');
+}
+
+function downloadSubjectPDF(subId){
+  const prevFilter=_repSubId;
+  _repSubId=subId;
+  downloadClassPDF();
+  _repSubId=prevFilter;
 }
 
 // ══════════════════════════════════════════════
@@ -3351,6 +4290,7 @@ function saveNote(){
   };
   S.notes.push(note);
   save();
+  logChange('add','إضافة ملاحظة',text.substring(0,40));
   document.getElementById('nb-notes').textContent=S.notes.length;
   closeM('mbNote');
   toast('تم حفظ الملاحظة 📝','success');
@@ -3410,14 +4350,29 @@ function renderProfile(){
       <div class="card" style="padding:22px;">
         <div style="font-weight:800;color:var(--ink2);margin-bottom:14px;">🛠️ أدوات البيانات</div>
         <div style="display:flex;gap:10px;flex-wrap:wrap;">
-          <button class="btn btn-ghost" onclick="exportData()">📤 تصدير البيانات</button>
-          <button class="btn btn-ghost" onclick="importDataClick()">📥 استيراد البيانات</button>
+          <button class="btn btn-ghost" onclick="exportData()">📤 تصدير JSON</button>
+          <button class="btn btn-ghost" onclick="importDataClick()">📥 استيراد JSON</button>
           <input type="file" id="importFile" style="display:none;" accept=".json" onchange="importData(this)" />
+          <button class="btn btn-ghost" onclick="saveOfflineSnapshot();toast('تم حفظ نسخة offline ✅','success')">📦 حفظ للاستخدام offline</button>
           <button class="btn btn-red" onclick="clearAllData()">🗑️ حذف كل البيانات</button>
         </div>
-        <div class="note-card" style="margin-top:14px;">
+        <!-- PWA Status card -->
+        <div style="margin-top:14px;background:linear-gradient(135deg,rgba(21,101,192,0.07),rgba(16,185,129,0.05));border:1.5px solid rgba(21,101,192,0.15);border-radius:var(--r-sm);padding:14px 16px;">
+          <div style="font-weight:800;color:var(--ink2);margin-bottom:8px;font-size:0.90rem;">📲 حالة وضع عدم الاتصال</div>
+          <div style="display:flex;flex-direction:column;gap:6px;font-size:0.84rem;color:var(--muted);">
+            <div id="pwaOnlineStatus" style="display:flex;align-items:center;gap:7px;">
+              <div id="pwaColorDot" style="width:9px;height:9px;border-radius:50%;background:var(--mint)"></div>
+              <span id="pwaOnlineText">جاري الفحص...</span>
+            </div>
+            <div>📦 البيانات محفوظة في المتصفح — تعمل بدون إنترنت تلقائياً</div>
+            <div>🔋 الأصول الخارجية (Chart.js، الخطوط) تُحفظ عند الاتصال</div>
+            <div id="pwaInstallStatus">✅ التطبيق محفوظ محلياً</div>
+          </div>
+          <button class="btn btn-primary btn-sm" style="margin-top:10px" onclick="installPWA()">📲 تثبيت كتطبيق</button>
+        </div>
+        <div class="note-card" style="margin-top:10px;">
           <span class="note-icon">💡</span>
-          <div>يتم حفظ البيانات تلقائياً في المتصفح. يمكنك تصدير البيانات كـ JSON للنسخ الاحتياطي.</div>
+          <div>بياناتك محفوظة في <strong>localStorage</strong> وهي موجودة حتى بدون إنترنت. اضغط "حفظ للاستخدام offline" لحفظ نسخة كاملة في <strong>IndexedDB</strong>.</div>
         </div>
       </div>
     </div>
@@ -3508,8 +4463,16 @@ document.addEventListener('click',e=>{
 // ══════════════════════════════════════════════
 // MODAL UTILS
 // ══════════════════════════════════════════════
-function openM(id){ document.getElementById(id).classList.add('open'); }
-function closeM(id){ document.getElementById(id).classList.remove('open'); }
+function openM(id){
+  const el=document.getElementById(id); if(!el) return;
+  el.classList.add('open');
+  if(window.innerWidth<=960) document.body.style.overflow='hidden';
+}
+function closeM(id){
+  const el=document.getElementById(id); if(!el) return;
+  el.classList.remove('open');
+  document.body.style.overflow='';
+}
 document.querySelectorAll('.modal-bg').forEach(el=>{
   el.addEventListener('click',e=>{if(e.target===el)el.classList.remove('open');});
 });
@@ -3755,14 +4718,13 @@ function renderSeatMap(){
       const s=sid?S.students.find(x=>x.id===sid):null;
       const att=sid?(todayAtt[sid]||''):null;
       const m=s?studentMastery(s.id):null;
-      const col=s?avatarStyle(s.id):'';
       const attClass=att==='p'?'present':att==='a'?'absent':'';
       if(!s) return `<div class="seat-cell empty" onclick="assignSeat(${r},${c})">
         <div style="font-size:22px;opacity:0.25">🪑</div>
         <div style="font-size:0.68rem;color:var(--muted2)">فارغ</div>
       </div>`;
       return `<div class="seat-cell ${attClass}" onclick="assignSeat(${r},${c})" title="${s.name}">
-        <div class="seat-avatar" style="${col}">${s.name.charAt(0)}</div>
+        ${s.photo?`<img src="${s.photo}" class="seat-avatar stu-photo" style="width:34px;height:34px;" />`:`<div class="seat-avatar" style="${avatarStyle(s.id)};color:white">${s.name.charAt(0)}</div>`}
         <div class="seat-name">${s.name.split(' ').slice(0,2).join(' ')}</div>
         <div class="seat-pct" style="color:${m.total>=70?'var(--mint)':m.total>=40?'var(--gold)':'var(--ember)'}">${m.total}%</div>
       </div>`;
@@ -3884,7 +4846,16 @@ function printBehaviorReport(){
     const rec=(S.behavior[s.id]||{})[td]||{stars:0,tags:[]};
     const stars='★'.repeat(rec.stars)+'☆'.repeat(5-rec.stars);
     rows+=`<tr style="background:${i%2?'#f8faff':'white'}">
-      <td>${i+1}</td><td><strong>${s.name}</strong></td>
+      <td>${i+1}</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px;">
+          ${s.photo
+            ?`<img src="${s.photo}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;border:1.5px solid #e2e8f8;" />`
+            :`<div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#1e3a5f,#1565c0);color:white;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;">${s.name.charAt(0)}</div>`
+          }
+          <strong>${s.name}</strong>
+        </div>
+      </td>
       <td style="font-size:1.1em;letter-spacing:2px;color:#f59e0b">${stars}</td>
       <td>${rec.tags.join(' · ')||'—'}</td>
     </tr>`;
@@ -3987,6 +4958,7 @@ function saveGoal(){
   };
   S.goals.push(goal);
   save();
+  logChange('add','إضافة هدف',text.substring(0,40));
   const nb=document.getElementById('nb-goals');
   if(nb) nb.textContent=S.goals.filter(g=>!g.done).length;
   closeM('mbGoal');
@@ -4253,7 +5225,9 @@ function saveMeeting(){
     type:document.getElementById('meetType').value,
     notes, action:document.getElementById('meetAction').value.trim()
   });
-  save(); closeM('mbMeeting');
+  save();
+  logChange('add','تسجيل لقاء ولي أمر',notes.substring(0,40));
+  closeM('mbMeeting');
   toast('تم تسجيل اللقاء 🤝','success');
   showPage('meetings');
 }
@@ -4406,6 +5380,1395 @@ function animateInsights(){
     setTimeout(()=>{el.style.opacity='1';el.style.transform='none';},i*90);
   });
 }
+
+// ══════════════════════════════════════════════════════════════
+// PWA — SERVICE WORKER + OFFLINE + INSTALL
+// ══════════════════════════════════════════════════════════════
+
+// Inject manifest dynamically (avoids needing external file)
+(function(){
+  const manifest = {
+    name: 'مدارس البشرى — منصة المعلم',
+    short_name: 'البشرى',
+    description: 'منصة المعلم الذكية لمتابعة الطلاب',
+    start_url: './',
+    display: 'standalone',
+    background_color: '#1e3a5f',
+    theme_color: '#1e3a5f',
+    dir: 'rtl',
+    lang: 'ar',
+    icons: [
+      { src: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="20" fill="%231e3a5f"/><text y=".9em" font-size="80" x="10">🏫</text></svg>', sizes: '192x192', type: 'image/svg+xml' },
+      { src: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="20" fill="%231e3a5f"/><text y=".9em" font-size="80" x="10">🏫</text></svg>', sizes: '512x512', type: 'image/svg+xml' }
+    ]
+  };
+  const blob = new Blob([JSON.stringify(manifest)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  document.getElementById('pwaManifest').href = url;
+})();
+
+// ══════════════════════════════════════════════════════════════
+// PWA OFFLINE ENGINE
+// Strategy: since this is a single HTML file, SW blob registration
+// is blocked by browsers. Instead we use:
+//   1. IndexedDB to cache the full page HTML for offline use
+//   2. Cache API to cache external CDN assets (Chart.js, fonts)
+//   3. Online/Offline detection with auto-sync
+//   4. "Add to Home Screen" install prompt
+// ══════════════════════════════════════════════════════════════
+
+const CACHE_NAME = 'albushra-v6';
+
+// ── Cache external assets via Cache API (no SW needed) ─────────
+async function cacheExternalAssets(){
+  if(!('caches' in window)) return;
+  try {
+    const cache = await caches.open(CACHE_NAME);
+    const assets = [
+      'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js',
+      'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',
+      'https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js',
+      'https://fonts.googleapis.com/css2?family=Tajawal:wght@200;300;400;500;700;800;900&family=Amiri:wght@400;700&display=swap'
+    ];
+    // Cache each asset silently (ignore failures)
+    await Promise.allSettled(assets.map(url=>
+      fetch(url, {mode:'no-cors'}).then(r=>cache.put(url, r)).catch(()=>{})
+    ));
+    console.log('✅ External assets cached');
+  } catch(e){ console.warn('Cache failed:', e); }
+}
+
+// ── Save full page snapshot to IndexedDB for offline ──────────
+function saveOfflineSnapshot(){
+  try {
+    const html = document.documentElement.outerHTML;
+    const req = indexedDB.open('albushra_offline', 1);
+    req.onupgradeneeded = e => e.target.result.createObjectStore('pages');
+    req.onsuccess = e => {
+      const db = e.target.result;
+      const tx = db.transaction('pages','readwrite');
+      tx.objectStore('pages').put({
+        html, savedAt: new Date().toISOString(),
+        version: 'v6'
+      }, 'main');
+    };
+  } catch(e){ /* IDB not available */ }
+}
+
+// ── Attempt to serve from IndexedDB if offline ────────────────
+function checkOfflineSnapshot(){
+  if(navigator.onLine) return;
+  try {
+    const req = indexedDB.open('albushra_offline', 1);
+    req.onsuccess = e => {
+      const db = e.target.result;
+      if(!db.objectStoreNames.contains('pages')) return;
+      const tx = db.transaction('pages','readonly');
+      tx.objectStore('pages').get('main').onsuccess = r => {
+        if(r.result) console.log('📦 Offline snapshot available from', r.result.savedAt);
+      };
+    };
+  } catch(e){}
+}
+
+let _pwaPrompt = null;
+
+function initPWA(){
+  // Cache assets when online
+  if(navigator.onLine){
+    setTimeout(cacheExternalAssets, 2000);
+    // Save page snapshot every 5 minutes
+    setTimeout(saveOfflineSnapshot, 5000);
+    setInterval(saveOfflineSnapshot, 5 * 60 * 1000);
+  } else {
+    checkOfflineSnapshot();
+  }
+
+  // PWA install prompt
+  window.addEventListener('beforeinstallprompt', e=>{
+    e.preventDefault();
+    _pwaPrompt = e;
+    setTimeout(()=>{
+      if(!localStorage.getItem('pwa_dismissed')){
+        document.getElementById('pwaInstallBanner').classList.add('show');
+      }
+    }, 3000);
+  });
+
+  window.addEventListener('appinstalled', ()=>{
+    document.getElementById('pwaInstallBanner').classList.remove('show');
+    toast('🎉 تم تثبيت التطبيق! افتحه من الشاشة الرئيسية','success');
+    logChange('add','تثبيت التطبيق','تم تثبيت PWA على الجهاز');
+  });
+
+  // Online/Offline events
+  let wasOffline = false;
+  window.addEventListener('offline', ()=>{
+    wasOffline = true;
+    document.getElementById('offlineBadge').classList.add('show');
+    toast('📵 انقطع الاتصال — البيانات محفوظة محلياً','info');
+    logChange('edit','حالة الاتصال','انقطع الاتصال بالإنترنت');
+  });
+
+  window.addEventListener('online', ()=>{
+    document.getElementById('offlineBadge').classList.remove('show');
+    if(wasOffline){
+      wasOffline = false;
+      const sb = document.getElementById('syncBadge');
+      sb.classList.add('show');
+      setTimeout(()=>sb.classList.remove('show'), 3200);
+      save();
+      cacheExternalAssets();
+      saveOfflineSnapshot();
+      logChange('edit','حالة الاتصال','عاد الاتصال — تمت المزامنة والنسخ الاحتياطي');
+    }
+  });
+
+  // Initial state
+  if(!navigator.onLine){
+    document.getElementById('offlineBadge').classList.add('show');
+  }
+}
+
+function installPWA(){
+  if(!_pwaPrompt){ toast('افتح هذه الصفحة في Chrome أو Edge للتثبيت','info'); return; }
+  _pwaPrompt.prompt();
+  _pwaPrompt.userChoice.then(r=>{
+    if(r.outcome==='accepted') toast('🎉 جاري التثبيت...','success');
+    _pwaPrompt = null;
+    document.getElementById('pwaInstallBanner').classList.remove('show');
+  });
+}
+
+function dismissPWA(){
+  document.getElementById('pwaInstallBanner').classList.remove('show');
+  localStorage.setItem('pwa_dismissed', '1');
+}
+
+// ══════════════════════════════════════════════════════════════
+// CHANGELOG — سجل التغييرات
+// ══════════════════════════════════════════════════════════════
+
+const CL_TYPES = {
+  add:  { label:'إضافة',  icon:'➕', color:'var(--mint)'  },
+  edit: { label:'تعديل', icon:'✏️', color:'var(--sky3)'  },
+  del:  { label:'حذف',   icon:'🗑️', color:'var(--ember)' },
+  eval: { label:'تقييم', icon:'📋', color:'var(--plum)'  },
+  att:  { label:'حضور',  icon:'📅', color:'var(--gold)'  },
+  auth: { label:'دخول',  icon:'🔑', color:'var(--mint)'  },
+};
+
+function logChange(type, action, detail=''){
+  const entry = {
+    id: genId(),
+    ts: new Date().toISOString(),
+    type,
+    action,
+    detail,
+    teacher: S.teacher.n1 || 'مجهول'
+  };
+  if(!S.changelog) S.changelog=[];
+  S.changelog.push(entry);
+  // Update badge if changelog page is open
+  const nb = document.getElementById('nb-changelog');
+  if(nb) nb.textContent = S.changelog.length;
+}
+
+function renderChangelog(){
+  const log = [...(S.changelog||[])].reverse().slice(0,100);
+  return `
+  <div class="breadcrumb">🏠 <span class="sep">›</span> <span class="active">سجل التغييرات</span></div>
+  <div class="ph">
+    <div>
+      <div class="ph-title">📜 سجل التغييرات</div>
+      <div class="ph-sub">${S.changelog?.length||0} إجراء مسجَّل — كل تعديل بتاريخه ووقته</div>
+    </div>
+    <div class="ph-actions">
+      <button class="btn btn-ghost" onclick="exportChangelog()">📤 تصدير السجل</button>
+      <button class="btn btn-red btn-sm" onclick="clearChangelog()">🗑️ مسح السجل</button>
+    </div>
+  </div>
+
+  ${log.length===0?`<div class="empty"><div class="empty-emoji">📜</div><h3>لا توجد سجلات بعد</h3><p>ستظهر هنا كل التغييرات التي تجريها</p></div>`:`
+
+  <!-- Filters -->
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">
+    ${Object.entries(CL_TYPES).map(([k,v])=>{
+      const count=(S.changelog||[]).filter(e=>e.type===k).length;
+      return count?`<span class="badge" style="background:${v.color}20;color:${v.color};border:1px solid ${v.color}40;cursor:none" onclick="filterChangelog('${k}')" id="clf_${k}">${v.icon} ${v.label} (${count})</span>`:'';
+    }).join('')}
+    <span class="badge badge-gray" onclick="filterChangelog('')" id="clf_all">الكل (${S.changelog?.length||0})</span>
+  </div>
+
+  <div class="card">
+    <div id="changelogList" style="padding:6px 0;">
+      ${log.map(entry=>{
+        const t=CL_TYPES[entry.type]||{label:entry.type,icon:'📌',color:'var(--muted)'};
+        const d=new Date(entry.ts);
+        const timeStr=d.toLocaleDateString('ar-SA',{month:'short',day:'numeric'})+' '+d.toLocaleTimeString('ar-SA',{hour:'2-digit',minute:'2-digit'});
+        return `<div class="cl-item" data-type="${entry.type}" style="padding:11px 18px;">
+          <div class="cl-dot ${entry.type}" style="background:${t.color}"></div>
+          <div style="flex:1">
+            <div class="cl-action">${t.icon} ${entry.action}${entry.detail?` — <span style="color:var(--muted);font-size:0.82rem">${entry.detail}</span>`:''}</div>
+            <div class="cl-meta">👤 ${entry.teacher} · 🕐 ${timeStr}</div>
+          </div>
+          <span class="badge" style="background:${t.color}15;color:${t.color};border:1px solid ${t.color}30;font-size:0.72rem">${t.label}</span>
+        </div>`;
+      }).join('')}
+    </div>
+  </div>`}`;
+}
+
+function filterChangelog(type){
+  const items=document.querySelectorAll('#changelogList .cl-item');
+  items.forEach(el=>{
+    el.style.display=(!type||el.dataset.type===type)?'':'none';
+  });
+  document.querySelectorAll('[id^="clf_"]').forEach(b=>{
+    b.style.opacity=(!type||b.id==='clf_'+type||b.id==='clf_all')&&(!type&&b.id==='clf_all'||type&&b.id==='clf_'+type)?'1':'0.5';
+  });
+}
+
+function exportChangelog(){
+  if(!S.changelog?.length){toast('لا توجد سجلات','error');return;}
+  const csv=['التاريخ والوقت,النوع,الإجراء,التفاصيل,المعلم',
+    ...S.changelog.map(e=>`"${e.ts}","${e.type}","${e.action}","${e.detail||''}","${e.teacher}"`)
+  ].join('\n');
+  const a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent(csv);
+  a.download='changelog_'+today()+'.csv';
+  a.click();
+  toast('تم تصدير السجل ✅','success');
+}
+
+function clearChangelog(){
+  if(!confirm('مسح سجل التغييرات كاملاً؟')) return;
+  S.changelog=[];
+  save(); showPage('changelog');
+  toast('تم مسح السجل','success');
+}
+
+// changelog hooks — integrated directly into functions below
+
+// ══════════════════════════════════════════════════════════════
+// GOOGLE CLASSROOM IMPORT
+// ══════════════════════════════════════════════════════════════
+
+// Google OAuth config — teacher pastes their own Client ID
+// Uses implicit flow (no backend needed)
+let _gcToken = null;
+const GC_SCOPES = 'https://www.googleapis.com/auth/classroom.rosters.readonly https://www.googleapis.com/auth/classroom.courses.readonly';
+
+function renderClassroomImport(){
+  return `
+  <div class="breadcrumb">🏠 <span class="sep">›</span> <span class="active">استيراد Google Classroom</span></div>
+  <div class="ph">
+    <div><div class="ph-title">🎓 استيراد من Google Classroom</div>
+    <div class="ph-sub">جلب أسماء الطلاب مباشرةً من فصلك في Google Classroom</div></div>
+  </div>
+
+  <div class="gc-card">
+    <div class="gc-header">
+      <div class="gc-logo">🎓</div>
+      <div>
+        <div class="gc-title">Google Classroom Import</div>
+        <div class="gc-sub">يتطلب حساب Google ومعلم في Classroom</div>
+      </div>
+    </div>
+
+    <div class="gc-steps">
+      <div class="gc-step">
+        <div class="gc-step-num">1</div>
+        <div>
+          <strong>أدخل Client ID من Google Cloud Console</strong><br>
+          <span style="font-size:0.80rem;color:var(--muted)">أنشئ مشروعاً على <a href="https://console.cloud.google.com" target="_blank" style="color:var(--sky)">console.cloud.google.com</a> وفعّل Classroom API وأضف OAuth Client ID</span>
+          <div style="margin-top:8px;">
+            <input type="text" id="gcClientId" placeholder="XXXXXXXX.apps.googleusercontent.com"
+              style="width:100%;padding:9px 12px;border:1.5px solid var(--border2);border-radius:9px;font-family:'Tajawal',sans-serif;font-size:0.88rem;outline:none;text-align:left;direction:ltr"
+              value="${localStorage.getItem('gc_client_id')||''}" />
+          </div>
+        </div>
+      </div>
+
+      <div class="gc-step">
+        <div class="gc-step-num">2</div>
+        <div style="flex:1">
+          <strong>سجّل الدخول بـ Google</strong><br>
+          <span style="font-size:0.80rem;color:var(--muted)">سيُطلب منك الإذن بقراءة قائمة طلابك فقط</span>
+          <div style="margin-top:10px;">
+            <button class="btn btn-primary" onclick="gcSignIn()">
+              <svg width="18" height="18" viewBox="0 0 24 24" style="flex-shrink:0"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+              تسجيل الدخول بـ Google
+            </button>
+            <span id="gcAuthStatus" style="margin-right:10px;font-size:0.82rem;color:var(--muted)"></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="gc-step" id="gcStep3" style="${_gcToken?'':'opacity:0.45'}">
+        <div class="gc-step-num">3</div>
+        <div style="flex:1">
+          <strong>اختر الفصل واستورد الطلاب</strong>
+          <div id="gcCoursesList" style="margin-top:10px;">
+            ${_gcToken?'<button class="btn btn-green btn-sm" onclick="gcLoadCourses()">🔄 تحميل الفصول</button>':'<span style="font-size:0.82rem;color:var(--muted)">سجّل الدخول أولاً</span>'}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="gc-import-result" id="gcImportResult"></div>
+  </div>
+
+  <div class="note-card">
+    <span class="note-icon">🔒</span>
+    <div>البيانات لا تُرسَل لأي خادم — تُحفظ محلياً في متصفحك فقط. الصلاحية المطلوبة: قراءة قائمة الطلاب فقط (للقراءة لا للكتابة).</div>
+  </div>
+
+  <div class="note-card" style="background:linear-gradient(135deg,#eff6ff,#dbeafe);border-color:#bfdbfe;color:#1e40af;margin-top:12px;">
+    <span class="note-icon">📋</span>
+    <div>
+      <strong>بديل سريع — استيراد من ملف نصي:</strong><br>
+      أضف أسماء الطلاب سطراً بسطر وسيتم استيرادهم مباشرة:
+      <div style="margin-top:8px;display:flex;gap:8px;align-items:flex-start;">
+        <textarea id="textImportNames" placeholder="محمد أحمد&#10;فاطمة علي&#10;عبدالله محمد&#10;..." style="flex:1;min-height:100px;padding:10px;border:1.5px solid var(--border2);border-radius:9px;font-family:'Tajawal',sans-serif;font-size:0.88rem;resize:vertical;outline:none;"></textarea>
+        <button class="btn btn-primary" onclick="importFromText()" style="flex-shrink:0;">⬇️ استيراد</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+// Google OAuth Implicit Flow
+function gcSignIn(){
+  const clientId = document.getElementById('gcClientId')?.value?.trim();
+  if(!clientId){ toast('أدخل Client ID أولاً','error'); return; }
+  localStorage.setItem('gc_client_id', clientId);
+
+  const redirectUri = window.location.href.split('?')[0].split('#')[0];
+  const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?`+
+    `client_id=${encodeURIComponent(clientId)}`+
+    `&redirect_uri=${encodeURIComponent(redirectUri)}`+
+    `&response_type=token`+
+    `&scope=${encodeURIComponent(GC_SCOPES)}`+
+    `&prompt=select_account`;
+
+  // Store that we're waiting for OAuth callback
+  sessionStorage.setItem('gc_oauth_pending','1');
+
+  const popup = window.open(authUrl,'gcAuth','width=500,height=600,scrollbars=yes');
+  if(!popup){ toast('يرجى السماح بالنوافذ المنبثقة','error'); return; }
+
+  // Poll for callback
+  const poll = setInterval(()=>{
+    try {
+      const hash = popup.location.hash;
+      if(hash && hash.includes('access_token')){
+        clearInterval(poll);
+        popup.close();
+        const params = new URLSearchParams(hash.substring(1));
+        _gcToken = params.get('access_token');
+        if(_gcToken){
+          document.getElementById('gcAuthStatus').innerHTML='<span style="color:var(--mint);font-weight:800">✅ تم الدخول</span>';
+          document.getElementById('gcStep3').style.opacity='1';
+          document.getElementById('gcCoursesList').innerHTML='<button class="btn btn-green btn-sm" onclick="gcLoadCourses()">🔄 تحميل الفصول</button>';
+          logChange('auth','تسجيل دخول Google Classroom','');
+          toast('✅ تم تسجيل الدخول بنجاح','success');
+        }
+      }
+    } catch(e) { /* cross-origin, keep polling */ }
+    if(popup.closed){ clearInterval(poll); }
+  }, 500);
+}
+
+// Handle OAuth redirect (if page reloaded with token in hash)
+(function(){
+  if(window.location.hash.includes('access_token')){
+    const params = new URLSearchParams(window.location.hash.substring(1));
+    _gcToken = params.get('access_token');
+    history.replaceState(null,'',window.location.pathname);
+  }
+})();
+
+async function gcLoadCourses(){
+  if(!_gcToken){ toast('سجّل الدخول أولاً','error'); return; }
+  const el = document.getElementById('gcCoursesList');
+  el.innerHTML = '<span style="color:var(--muted);font-size:0.85rem">⏳ جاري تحميل الفصول...</span>';
+  try {
+    const res = await fetch('https://classroom.googleapis.com/v1/courses?courseStates=ACTIVE',{
+      headers:{ Authorization: 'Bearer '+_gcToken }
+    });
+    const data = await res.json();
+    if(data.error){ throw new Error(data.error.message); }
+    const courses = data.courses||[];
+    if(!courses.length){ el.innerHTML='<span style="color:var(--muted)">لا توجد فصول نشطة</span>'; return; }
+    el.innerHTML = '<div style="display:flex;flex-direction:column;gap:8px;">'+
+      courses.map(c=>`
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:white;border-radius:10px;border:1px solid rgba(66,133,244,0.20);">
+          <div>
+            <div style="font-weight:800;color:#1a73e8;">${c.name}</div>
+            <div style="font-size:0.78rem;color:var(--muted)">${c.section||''} · ${c.enrollmentCode||''}</div>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="gcImportStudents('${c.id}','${c.name.replace(/'/g,'')}')">⬇️ استيراد</button>
+        </div>`).join('')+
+      '</div>';
+  } catch(e){
+    el.innerHTML=`<span style="color:var(--ember)">❌ خطأ: ${e.message}</span>`;
+    toast('فشل تحميل الفصول: '+e.message,'error');
+  }
+}
+
+async function gcImportStudents(courseId, courseName){
+  if(!_gcToken){ toast('سجّل الدخول أولاً','error'); return; }
+  const res = document.getElementById('gcImportResult');
+  res.style.display='block';
+  res.textContent='⏳ جاري تحميل الطلاب...';
+  try {
+    const r = await fetch(`https://classroom.googleapis.com/v1/courses/${courseId}/students?pageSize=100`,{
+      headers:{ Authorization:'Bearer '+_gcToken }
+    });
+    const data = await r.json();
+    if(data.error) throw new Error(data.error.message);
+    const students = data.students||[];
+    if(!students.length){ res.textContent='لا يوجد طلاب في هذا الفصل'; return; }
+
+    let added=0, skipped=0;
+    students.forEach((stu,i)=>{
+      const name = stu.profile?.name?.fullName || stu.profile?.name?.givenName || '';
+      if(!name){ skipped++; return; }
+      // Skip if already exists
+      if(S.students.some(s=>s.name===name)){ skipped++; return; }
+      S.students.push({
+        id: genId(), name,
+        num: S.students.length+1,
+        parent:'', gender:'m',
+        note:'مستورد من Google Classroom',
+        createdAt: Date.now()
+      });
+      added++;
+    });
+
+    save();
+    document.getElementById('nb-students').textContent = S.students.length;
+    logChange('add',`استيراد من Google Classroom`,`${added} طالب من فصل ${courseName}`);
+    res.innerHTML=`✅ تم استيراد <strong>${added}</strong> طالب جديد من "${courseName}"${skipped?` (${skipped} موجود مسبقاً)`:''} — <a href="javascript:showPage('students')" style="color:#1a73e8;font-weight:800">عرض الطلاب →</a>`;
+    toast(`✅ تم استيراد ${added} طالب من Google Classroom`,'success');
+    if(added>0) confetti();
+  } catch(e){
+    res.textContent='❌ خطأ: '+e.message;
+    toast('فشل الاستيراد: '+e.message,'error');
+  }
+}
+
+// Quick text import (no Google needed)
+function importFromText(){
+  const raw = document.getElementById('textImportNames')?.value||'';
+  const names = raw.split('\n').map(n=>n.trim()).filter(n=>n.length>1);
+  if(!names.length){ toast('أدخل أسماء الطلاب','error'); return; }
+  let added=0, skipped=0;
+  names.forEach(name=>{
+    if(S.students.some(s=>s.name===name)){ skipped++; return; }
+    S.students.push({
+      id:genId(), name,
+      num:S.students.length+1,
+      parent:'', gender:'m', note:'', createdAt:Date.now()
+    });
+    added++;
+  });
+  save();
+  document.getElementById('nb-students').textContent=S.students.length;
+  logChange('add','استيراد من نص',`${added} طالب`);
+  toast(`✅ تم إضافة ${added} طالب${skipped?` (${skipped} موجود)`:''}`,'success');
+  if(added>0){ confetti(); showPage('students'); }
+}
+
+// ══════════════════════════════════════════════════════════════
+// 🗺️ TREASURE MAP — خريطة الكنز
+// ══════════════════════════════════════════════════════════════
+
+let _tmSubId   = null;   // active subject id
+let _tmSecId   = null;   // active section id
+let _tmStuId   = null;   // selected student (null = class view)
+let _tmView    = 'class'; // 'class' | 'student'
+
+// Station icons per skill index (cycles)
+const TM_ICONS = ['🌱','📝','🔤','🌊','⚡','🌙','🌟','🏔️','🦁','🐉','💎','🏆'];
+const TM_BADGES_DEF = [
+  {id:'first',   name:'الخطوة الأولى', icon:'👣', desc:'أتقن أول مهارة'},
+  {id:'half',    name:'نصف الطريق',   icon:'🌗', desc:'أتقن نصف المهارات'},
+  {id:'warrior', name:'المحارب',      icon:'⚔️', desc:'أتقن 75% من المهارات'},
+  {id:'star',    name:'النجم',        icon:'🌟', desc:'أتقن جميع المهارات'},
+  {id:'speed',   name:'السريع',       icon:'⚡', desc:'أتقن 5 مهارات متتالية'},
+  {id:'reader',  name:'القارئ الماهر',icon:'📖', desc:'إتقان كامل في القراءة'},
+  {id:'writer',  name:'الكاتب المبدع',icon:'✍️', desc:'إتقان كامل في الكتابة'},
+];
+
+function _tmGetSub(){ return S.subjects.find(s=>s.id===_tmSubId)||S.subjects[0]; }
+function _tmGetSec(){
+  const sub=_tmGetSub();
+  if(!sub) return null;
+  return sub.sections.find(s=>s.id===_tmSecId)||sub.sections[0];
+}
+
+// Calculate mastery for one student in one section
+function _tmSecMastery(sid, subId, secId){
+  const sec = S.subjects.find(s=>s.id===subId)?.sections.find(s=>s.id===secId);
+  if(!sec) return {done:[], partial:[], total:0};
+  const ev = ((S.evals[sid]||{})[subId]||{})[secId]||{};
+  const done=[],partial=[];
+  sec.skills.forEach((sk,i)=>{
+    if(ev[i]==='m') done.push(i);
+    else if(ev[i]==='n') partial.push(i);
+  });
+  return {done, partial, total:sec.skills.length,
+    pct: Math.round((done.length/sec.skills.length)*100)};
+}
+
+// Compute earned badges for a student in a section
+function _tmBadges(sid, subId, secId){
+  const m = _tmSecMastery(sid, subId, secId);
+  const earned=[];
+  if(m.done.length>=1) earned.push('first');
+  if(m.done.length>=Math.floor(m.total/2)) earned.push('half');
+  if(m.pct>=75) earned.push('warrior');
+  if(m.pct===100) earned.push('star');
+  // Speed: 5 consecutive
+  let consec=0, maxConsec=0;
+  for(let i=0;i<m.total;i++){
+    if(m.done.includes(i)){consec++;maxConsec=Math.max(maxConsec,consec);}
+    else consec=0;
+  }
+  if(maxConsec>=5) earned.push('speed');
+  // Subject-level badges
+  const sub=S.subjects.find(s=>s.id===subId);
+  if(sub){
+    const sec0=sub.sections[0];
+    const sec1=sub.sections[1];
+    if(sec0 && secId===sec0.id && m.pct===100) earned.push('reader');
+    if(sec1 && secId===sec1.id && m.pct===100) earned.push('writer');
+  }
+  return earned;
+}
+
+function renderTreasureMap(){
+  const sub = _tmGetSub();
+  if(!sub){ _tmSubId=S.subjects[0]?.id; }
+  if(!_tmGetSec()) _tmSecId = _tmGetSub()?.sections[0]?.id;
+
+  const activeSub = _tmGetSub();
+  const activeSec = _tmGetSec();
+
+  return `
+  <div class="breadcrumb">🏠 <span class="sep">›</span> <span class="active">🗺️ خريطة الكنز</span></div>
+  <div class="ph">
+    <div>
+      <div class="ph-title">🗺️ خريطة الكنز</div>
+      <div class="ph-sub">رحلة تعلم بصرية — تابع تقدم كل طالب محطةً بمحطة</div>
+    </div>
+    <div class="ph-actions">
+      <button class="btn ${_tmView==='class'?'btn-primary':'btn-ghost'} btn-sm" onclick="_tmView='class';showPage('treasuremap')">🏫 عرض الفصل</button>
+      <button class="btn ${_tmView==='student'?'btn-primary':'btn-ghost'} btn-sm" onclick="_tmView='student';showPage('treasuremap')">👤 عرض فردي</button>
+      <button class="btn btn-gold btn-sm" onclick="_tmPrintCerts()">🏅 طباعة الشهادات</button>
+    </div>
+  </div>
+
+  <!-- Subject tabs -->
+  <div class="tm-sub-tabs tm-no-print">
+    ${S.subjects.map(sub=>`
+      <button class="tm-sub-tab ${(_tmSubId||S.subjects[0]?.id)===sub.id?'active':''}"
+        onclick="_tmSubId='${sub.id}';_tmSecId=null;showPage('treasuremap')">
+        ${sub.icon||'📚'} ${sub.name}
+      </button>`).join('')}
+  </div>
+
+  <!-- Section tabs (if >1 section) -->
+  ${activeSub&&activeSub.sections.length>1?`
+  <div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:18px;">
+    ${activeSub.sections.map(sec=>`
+      <button class="btn btn-sm ${(_tmSecId||activeSub.sections[0]?.id)===sec.id?'btn-primary':'btn-ghost'}"
+        onclick="_tmSecId='${sec.id}';showPage('treasuremap')">
+        ${sec.icon||'📌'} ${sec.name}
+      </button>`).join('')}
+  </div>`:''}
+
+  ${_tmView==='class' ? _renderClassMap(activeSub,activeSec) : _renderStudentMap(activeSub,activeSec)}
+
+  <!-- Tooltip -->
+  <div id="tmPopup" class="tm-popup" style="display:none;"></div>
+  `;
+}
+
+function _renderClassMap(sub,sec){
+  if(!sec||!S.students.length) return `<div class="empty"><div class="empty-emoji">🗺️</div><h3>لا يوجد طلاب بعد</h3></div>`;
+  const subId=sub.id, secId=sec.id;
+
+  // Stats
+  const masteries = S.students.map(s=>_tmSecMastery(s.id,subId,secId));
+  const avgPct = Math.round(masteries.reduce((a,m)=>a+m.pct,0)/S.students.length);
+  const completed = masteries.filter(m=>m.pct===100).length;
+  const needsHelp = masteries.filter(m=>m.pct<40).length;
+
+  // Per-skill class mastery
+  const skillRates = sec.skills.map((sk,i)=>{
+    const cnt = S.students.filter(s=>((S.evals[s.id]||{})[subId]||{})[secId]?.[i]==='m').length;
+    return {sk, pct: Math.round((cnt/S.students.length)*100), cnt};
+  });
+  const hardest = [...skillRates].sort((a,b)=>a.pct-b.pct)[0];
+  const easiest = [...skillRates].sort((a,b)=>b.pct-a.pct)[0];
+
+  return `
+  <!-- Class summary KPIs -->
+  <div class="kpi-grid" style="margin-bottom:20px;">
+    <div class="kpi blue"><span class="kpi-icon">👥</span><div class="kpi-val">${S.students.length}</div><div class="kpi-label">طلاب في الرحلة</div></div>
+    <div class="kpi green"><span class="kpi-icon">🏆</span><div class="kpi-val">${completed}</div><div class="kpi-label">وصلوا الكنز</div></div>
+    <div class="kpi gold"><span class="kpi-icon">⭐</span><div class="kpi-val">${avgPct}%</div><div class="kpi-label">متوسط التقدم</div></div>
+    <div class="kpi red"><span class="kpi-icon">⚠️</span><div class="kpi-val">${needsHelp}</div><div class="kpi-label">يحتاجون دعم</div></div>
+  </div>
+
+  <!-- Insight bar -->
+  ${hardest?`<div class="note-card" style="margin-bottom:16px;${hardest.pct<50?'background:linear-gradient(135deg,#fef2f2,#fee2e2);border-color:#fca5a5;color:#991b1b;':'background:linear-gradient(135deg,#f0fdf4,#dcfce7);border-color:#bbf7d0;color:#166534;'}">
+    <span class="note-icon">${hardest.pct<50?'⚠️':'🌟'}</span>
+    <div>${hardest.pct<50
+      ?`<strong>أصعب محطة:</strong> "${hardest.sk}" — ${hardest.pct}% فقط من الطلاب أتقنوها. يُنصح بإعادة شرحها.`
+      :`<strong>أسهل محطة:</strong> "${easiest.sk}" — ${easiest.pct}% إتقان! رائع.`
+    }</div>
+  </div>`:''}
+
+  <!-- Class Road Map -->
+  <div class="card" style="margin-bottom:20px;overflow:visible;">
+    <div class="card-header">
+      <h3>🗺️ خريطة الرحلة — ${sec.icon||''} ${sec.name}</h3>
+      <span class="badge badge-gold">${sec.skills.length} محطة</span>
+    </div>
+    <div style="padding:10px 16px;overflow-x:auto;">
+      <!-- Road with station nodes -->
+      <div class="tm-road" id="tmRoad">
+        <!-- Start flag -->
+        <div class="tm-station">
+          <div class="tm-node start" title="البداية">🚀</div>
+          <div class="tm-label">البداية</div>
+        </div>
+        <div class="tm-connector" style="background:linear-gradient(90deg,#1565c0,#42a5f5)"></div>
+
+        ${sec.skills.map((sk,i)=>{
+          const rate = skillRates[i];
+          const cls = rate.pct>=70?'done':rate.pct>0?'partial':'locked';
+          const connClr = rate.pct>=70?'#10b981':rate.pct>0?'#f59e0b':'#e2e8f8';
+          const icon = TM_ICONS[i%TM_ICONS.length];
+          return `<div class="tm-station" onclick="_tmShowStationInfo('${subId}','${secId}',${i},event)">
+            <div class="tm-node ${cls}" title="${sk}">
+              ${rate.pct===100?'✅':icon}
+              ${rate.pct===100?`<div style="position:absolute;top:-8px;right:-8px;background:#f59e0b;border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center;font-size:10px;border:2px solid white;">⭐</div>`:''}
+            </div>
+            <div class="tm-label">${sk.length>10?sk.substring(0,9)+'…':sk}</div>
+            <div class="tm-pct ${cls}">${rate.pct}%</div>
+          </div>
+          ${i<sec.skills.length-1?`<div class="tm-connector" style="background:${connClr}80"></div>`:''}`;
+        }).join('')}
+
+        <div class="tm-connector" style="background:linear-gradient(90deg,#a78bfa,#7c3aed)"></div>
+        <!-- Treasure finish -->
+        <div class="tm-station">
+          <div class="tm-node finish">🏆</div>
+          <div class="tm-label">الكنز!</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Class heatmap grid -->
+  <div class="card" style="margin-bottom:20px;">
+    <div class="card-header"><h3>🌡️ خريطة الحرارة — كل طالب × كل محطة</h3>
+      <div style="display:flex;gap:8px;font-size:0.76rem;color:var(--muted);font-weight:700;">
+        <span>🟢 أتقن</span><span>🟡 لم يتقن</span><span>⬜ لم يُقيَّم</span>
+      </div>
+    </div>
+    <div style="padding:16px;overflow-x:auto;">
+      <!-- Header row: skill names -->
+      <div class="tm-class-row" style="grid-template-columns:130px repeat(${sec.skills.length},1fr);margin-bottom:4px;">
+        <div style="font-size:0.70rem;font-weight:800;color:var(--muted2);">الطالب</div>
+        ${sec.skills.map((sk,i)=>`<div style="font-size:0.62rem;font-weight:800;color:var(--muted);text-align:center;transform:rotate(-35deg);transform-origin:center;white-space:nowrap;height:40px;display:flex;align-items:flex-end;justify-content:center;">${i+1}</div>`).join('')}
+      </div>
+      ${S.students.map(s=>{
+        const ev=((S.evals[s.id]||{})[subId]||{})[secId]||{};
+        return `<div class="tm-class-row" style="grid-template-columns:130px repeat(${sec.skills.length},1fr);margin-bottom:3px;">
+          <div style="font-size:0.78rem;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:none;"
+            onclick="_tmView='student';_tmStuId='${s.id}';showPage('treasuremap')"
+            title="عرض رحلة ${s.name}">${s.name.split(' ')[0]}</div>
+          ${sec.skills.map((_,i)=>{
+            const v=ev[i];
+            const cls=v==='m'?'c-done':v==='n'?'c-partial':'c-none';
+            const tt=v==='m'?'✅ أتقن':v==='n'?'❌ لم يتقن':'⬜ لم يُقيَّم';
+            return `<div class="tm-class-cell ${cls}" title="${tt}"></div>`;
+          }).join('')}
+        </div>`;
+      }).join('')}
+      <!-- Skill numbers legend -->
+      <div style="margin-top:12px;display:flex;flex-direction:column;gap:3px;">
+        ${sec.skills.map((sk,i)=>`<div style="font-size:0.74rem;color:var(--muted);"><strong style="color:var(--ink2)">${i+1}.</strong> ${sk}</div>`).join('')}
+      </div>
+    </div>
+  </div>
+
+  <!-- Student quick list -->
+  <div class="card">
+    <div class="card-header"><h3>👤 عرض رحلة طالب محدد</h3></div>
+    <div style="padding:14px 16px;display:flex;flex-wrap:wrap;gap:8px;">
+      ${S.students.map(s=>{
+        const m=_tmSecMastery(s.id,subId,secId);
+        return `<div class="tm-student-pill ${_tmStuId===s.id?'active':''}"
+          onclick="_tmView='student';_tmStuId='${s.id}';showPage('treasuremap')">
+          <div class="avatar av-32" style="${avatarStyle(s.id)};color:white">${s.name.charAt(0)}</div>
+          <div>
+            <div class="tm-pill-name">${s.name.split(' ').slice(0,2).join(' ')}</div>
+            <div class="tm-pill-pct" style="color:${m.pct>=70?'#059669':m.pct>=40?'#d97706':'#dc2626'}">${m.pct}% — ${m.done.length}/${m.total}</div>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+  </div>`;
+}
+
+function _renderStudentMap(sub,sec){
+  if(!S.students.length) return `<div class="empty"><div class="empty-emoji">👤</div><h3>لا يوجد طلاب</h3></div>`;
+  if(!_tmStuId) _tmStuId=S.students[0].id;
+  const s=S.students.find(x=>x.id===_tmStuId)||S.students[0];
+  const subId=sub.id, secId=sec.id;
+  const m=_tmSecMastery(s.id,subId,secId);
+  const ev=((S.evals[s.id]||{})[subId]||{})[secId]||{};
+  const earnedBadges=_tmBadges(s.id,subId,secId);
+  const starsToday=((S.behavior[s.id]||{})[today()]||{}).stars||0;
+
+  // Next locked skill
+  const nextLocked=sec.skills.findIndex((_,i)=>ev[i]===undefined||ev[i]==='n');
+
+  return `
+  <!-- Student selector -->
+  <div style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:18px;padding:12px 16px;background:var(--card);border-radius:var(--r);border:1px solid var(--border);">
+    <div style="font-size:0.78rem;font-weight:900;color:var(--muted2);width:100%;margin-bottom:4px;">اختر الطالب:</div>
+    ${S.students.map(st=>{
+      const mm=_tmSecMastery(st.id,subId,secId);
+      return `<div class="tm-student-pill ${st.id===s.id?'active':''}"
+        onclick="_tmStuId='${st.id}';showPage('treasuremap')">
+        <div class="avatar av-32" style="${avatarStyle(st.id)};color:white">${st.name.charAt(0)}</div>
+        <div>
+          <div class="tm-pill-name">${st.name.split(' ')[0]}</div>
+          <div class="tm-pill-pct" style="color:${st.id===s.id?'rgba(255,255,255,0.85)':mm.pct>=70?'#059669':mm.pct>=40?'#d97706':'#dc2626'}">${mm.pct}%</div>
+        </div>
+      </div>`;
+    }).join('')}
+  </div>
+
+  <!-- Student hero card -->
+  <div style="background:linear-gradient(135deg,var(--ink2),var(--sky));border-radius:var(--r);padding:24px 28px;color:white;margin-bottom:20px;display:flex;align-items:center;gap:20px;flex-wrap:wrap;">
+    ${s.photo?`<img src="${s.photo}" style="width:70px;height:70px;border-radius:50%;object-fit:cover;border:3px solid rgba(255,255,255,0.3);flex-shrink:0" />`:`<div style="width:70px;height:70px;border-radius:50%;${avatarStyle(s.id)};color:white;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:900;border:3px solid rgba(255,255,255,0.3);flex-shrink:0">${s.name.charAt(0)}</div>`}
+    <div style="flex:1">
+      <div style="font-size:1.4rem;font-weight:900;margin-bottom:4px;">${s.name}</div>
+      <div style="opacity:.80;font-size:.88rem;">رحلة: ${sub.icon||'📚'} ${sub.name} — ${sec.icon||'📌'} ${sec.name}</div>
+      <div style="margin-top:10px;display:flex;gap:16px;flex-wrap:wrap;">
+        <span style="display:flex;align-items:center;gap:5px;font-size:.85rem">✅ أتقن: <strong>${m.done.length}/${m.total}</strong></span>
+        <span style="display:flex;align-items:center;gap:5px;font-size:.85rem">⭐ التقدم: <strong>${m.pct}%</strong></span>
+        <span style="display:flex;align-items:center;gap:5px;font-size:.85rem">⭐ السلوك اليوم: <strong>${'★'.repeat(starsToday)||'—'}</strong></span>
+      </div>
+    </div>
+    <div style="text-align:center;">
+      <div style="font-size:2.4rem;font-weight:900">${m.pct}%</div>
+      <div style="opacity:.75;font-size:.80rem">${m.pct>=70?'🏆 ممتاز!':m.pct>=40?'📈 في الطريق':'🌱 في البداية'}</div>
+    </div>
+  </div>
+
+  <!-- Progress bar full -->
+  <div style="margin-bottom:20px;">
+    <div style="display:flex;justify-content:space-between;font-size:.80rem;font-weight:800;color:var(--muted);margin-bottom:6px;">
+      <span>🚀 البداية</span><span>المحطة ${m.done.length} من ${m.total}</span><span>🏆 الكنز</span>
+    </div>
+    <div style="background:var(--border);border-radius:99px;height:14px;overflow:hidden;box-shadow:inset 0 2px 4px rgba(0,0,0,0.10)">
+      <div style="height:100%;width:${m.pct}%;background:linear-gradient(90deg,#1565c0,#10b981,#f59e0b);border-radius:99px;transition:width 1s cubic-bezier(.34,1.56,.64,1);position:relative;">
+        ${m.pct>8?`<div style="position:absolute;right:8px;top:50%;transform:translateY(-50%);font-size:9px;font-weight:900;color:white">${m.pct}%</div>`:''}
+      </div>
+    </div>
+  </div>
+
+  <!-- Individual road -->
+  <div class="card" style="margin-bottom:20px;overflow:visible;">
+    <div class="card-header"><h3>🗺️ رحلة ${s.name.split(' ')[0]}</h3>
+      ${nextLocked>=0?`<span class="badge badge-gold">⭐ التالية: ${sec.skills[nextLocked]?.substring(0,15)}</span>`:'<span class="badge badge-green">🏆 أتم الرحلة!</span>'}
+    </div>
+    <div style="padding:10px 16px;overflow-x:auto;">
+      <div class="tm-road">
+        <div class="tm-station">
+          <div class="tm-node start">🚀</div>
+          <div class="tm-label">البداية</div>
+        </div>
+        <div class="tm-connector" style="background:#1565c080"></div>
+        ${sec.skills.map((sk,i)=>{
+          const v=ev[i];
+          const cls=v==='m'?'done':v==='n'?'partial':'locked';
+          const icon=v==='m'?'✅':v==='n'?'❌':TM_ICONS[i%TM_ICONS.length];
+          const connClr=v==='m'?'#10b98180':v==='n'?'#f59e0b80':'#e2e8f8';
+          return `<div class="tm-station" onclick="_tmShowSkillDetail(${i},'${subId}','${secId}','${s.id}',event)">
+            <div class="tm-node ${cls}" title="${sk}">
+              ${icon}
+              ${i===nextLocked?`<div style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);font-size:16px;animation:bounce 1.5s infinite">👆</div>`:''}
+            </div>
+            <div class="tm-label">${sk.length>10?sk.substring(0,9)+'…':sk}</div>
+            <div class="tm-pct ${cls}">${v==='m'?'✅':v==='n'?'مراجعة':'⬜'}</div>
+          </div>
+          ${i<sec.skills.length-1?`<div class="tm-connector" style="background:${connClr}"></div>`:''}`;
+        }).join('')}
+        <div class="tm-connector" style="background:#7c3aed80"></div>
+        <div class="tm-station">
+          <div class="tm-node ${m.pct===100?'finish':'locked'}">${m.pct===100?'🏆':'🔒'}</div>
+          <div class="tm-label">${m.pct===100?'الكنز!':'مقفل'}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Skill detail list -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;">
+    <div class="card">
+      <div class="card-header"><h3>✅ المحطات المُتقنة (${m.done.length})</h3></div>
+      <div style="padding:10px 14px;">
+        ${m.done.length===0?'<div style="color:var(--muted);font-size:.85rem;padding:8px 0">لا توجد بعد</div>':
+          m.done.map(i=>`<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border);font-size:.84rem;">
+            <span style="color:var(--mint);font-size:16px">✅</span>
+            <span style="font-weight:700">${i+1}. ${sec.skills[i]}</span>
+          </div>`).join('')}
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><h3>🎯 المحطات المتبقية (${m.total-m.done.length})</h3></div>
+      <div style="padding:10px 14px;">
+        ${m.done.length===m.total?'<div style="color:var(--mint);font-size:.85rem;padding:8px 0">🏆 أتم جميع المحطات!</div>':
+          sec.skills.map((sk,i)=>ev[i]!=='m'?`<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border);font-size:.84rem;">
+            <span style="font-size:16px">${ev[i]==='n'?'❌':'⬜'}</span>
+            <span style="color:${ev[i]==='n'?'var(--ember)':'var(--muted)'};font-weight:600">${i+1}. ${sk}</span>
+          </div>`:''
+          ).filter(Boolean).join('')}
+      </div>
+    </div>
+  </div>
+
+  <!-- Badges -->
+  <div class="card" style="margin-bottom:20px;">
+    <div class="card-header"><h3>🏅 شارات الإنجاز</h3>
+      <span class="badge badge-gold">${earnedBadges.length} شارة مكتسبة</span>
+    </div>
+    <div class="card-body">
+      <div class="tm-badge-strip">
+        ${TM_BADGES_DEF.map(b=>{
+          const has=earnedBadges.includes(b.id);
+          return `<div class="tm-badge ${has?'earned':'locked'}" title="${b.desc}">
+            <div class="tm-badge-icon">${b.icon}</div>
+            <div class="tm-badge-name">${b.name}</div>
+            ${has?'<div style="font-size:.62rem;color:#b45309;font-weight:700">مكتسبة ✓</div>':'<div style="font-size:.62rem;color:var(--muted2)">مقفلة</div>'}
+          </div>`;
+        }).join('')}
+      </div>
+    </div>
+  </div>
+
+  <!-- Actions -->
+  <div style="display:flex;gap:10px;flex-wrap:wrap;">
+    <button class="btn btn-primary" onclick="genStudentPDF('${s.id}')">📄 تقرير PDF</button>
+    <button class="btn btn-green" onclick="waStudentFiltered('${s.id}')">💬 واتساب للولي</button>
+    <button class="btn btn-gold" onclick="_tmPrintCert('${s.id}')">🏅 طباعة شهادة</button>
+    <button class="btn btn-ghost" onclick="openEvalDyn('${s.id}','${subId}')">✏️ تحديث التقييم</button>
+  </div>`;
+}
+
+// Station info popup (class view)
+function _tmShowStationInfo(subId,secId,skillIdx,event){
+  const sec=S.subjects.find(s=>s.id===subId)?.sections.find(s=>s.id===secId);
+  if(!sec) return;
+  const skill=sec.skills[skillIdx];
+  const students=S.students.map(s=>{
+    const v=((S.evals[s.id]||{})[subId]||{})[secId]?.[skillIdx];
+    return {name:s.name.split(' ')[0], v};
+  });
+  const done=students.filter(s=>s.v==='m');
+  const not=students.filter(s=>s.v==='n');
+  const none=students.filter(s=>!s.v);
+  const popup=document.getElementById('tmPopup');
+  if(!popup) return;
+  popup.innerHTML=`
+    <div class="tm-popup-title">📌 ${skill}</div>
+    <div style="font-size:.78rem;color:var(--muted);margin-bottom:8px">${Math.round((done.length/S.students.length)*100)}% إتقان</div>
+    ${done.length?`<div class="tm-popup-skill"><span style="color:var(--mint)">✅</span> أتقن: ${done.map(s=>s.name).join('، ')}</div>`:''}
+    ${not.length?`<div class="tm-popup-skill"><span style="color:var(--ember)">❌</span> لم يتقن: ${not.map(s=>s.name).join('، ')}</div>`:''}
+    ${none.length?`<div class="tm-popup-skill"><span style="opacity:.5">⬜</span> لم يُقيَّم: ${none.map(s=>s.name).join('، ')}</div>`:''}
+  `;
+  const rect=event.currentTarget?.getBoundingClientRect?.()||{top:event.clientY,left:event.clientX};
+  popup.style.top=(rect.top+window.scrollY-180)+'px';
+  popup.style.left=Math.max(8,(rect.left-100))+'px';
+  popup.style.display='block';
+  setTimeout(()=>{ popup.style.display='none'; },3500);
+}
+
+function _tmShowSkillDetail(i,subId,secId,sid,event){
+  const sec=S.subjects.find(s=>s.id===subId)?.sections.find(s=>s.id===secId);
+  if(!sec) return;
+  const v=((S.evals[sid]||{})[subId]||{})[secId]?.[i];
+  const popup=document.getElementById('tmPopup');
+  if(!popup) return;
+  popup.innerHTML=`
+    <div class="tm-popup-title">${TM_ICONS[i%TM_ICONS.length]} ${sec.skills[i]}</div>
+    <div style="font-size:.88rem;margin-top:4px;color:${v==='m'?'var(--mint)':v==='n'?'var(--ember)':'var(--muted)'}">
+      ${v==='m'?'✅ مُتقنة':'❌ لم تُتقن بعد'}
+    </div>
+    <div style="display:flex;gap:8px;margin-top:10px;pointer-events:all;">
+      <button class="btn btn-green btn-xs" onclick="setEvDyn('${subId}','${secId}',${i},'m');document.getElementById('tmPopup').style.display='none';showPage('treasuremap')">✅ أتقن</button>
+      <button class="btn btn-red btn-xs" onclick="setEvDyn('${subId}','${secId}',${i},'n');document.getElementById('tmPopup').style.display='none';showPage('treasuremap')">❌ لم يتقن</button>
+    </div>`;
+  popup.style.pointerEvents='all';
+  const rect=event.currentTarget?.getBoundingClientRect?.()||{top:event.clientY,left:event.clientX};
+  popup.style.top=(rect.top+window.scrollY-160)+'px';
+  popup.style.left=Math.max(8,(rect.left-80))+'px';
+  popup.style.display='block';
+}
+
+// Print certificate for one student
+function _tmPrintCert(sid){
+  const s=S.students.find(x=>x.id===sid);
+  if(!s) return;
+  const sub=_tmGetSub(), sec=_tmGetSec();
+  const m=_tmSecMastery(sid,sub.id,sec.id);
+  const earned=_tmBadges(sid,sub.id,sec.id);
+  const badgesHTML=TM_BADGES_DEF.filter(b=>earned.includes(b.id))
+    .map(b=>`<div style="text-align:center;margin:0 8px"><div style="font-size:32px">${b.icon}</div><div style="font-size:10px;font-weight:800;color:#7c3aed">${b.name}</div></div>`).join('');
+  const skillsHTML=sec.skills.map((sk,i)=>{
+    const v=((S.evals[sid]||{})[sub.id]||{})[sec.id]?.[i];
+    return `<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid #f0f0f0;font-size:11px;">
+      <span style="color:${v==='m'?'#059669':'#dc2626'};font-size:14px">${v==='m'?'✅':'❌'}</span>
+      <span style="font-weight:${v==='m'?'800':'400'};color:${v==='m'?'#1e3a5f':'#94a3b8'}">${sk}</span>
+    </div>`;
+  }).join('');
+
+  const certHTML=`<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8">
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;800;900&family=Amiri:wght@700&display=swap" rel="stylesheet">
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Tajawal',sans-serif;direction:rtl;background:#fff}
+    @media print{.no-print{display:none}}
+    .cert{width:210mm;min-height:148mm;padding:14mm 16mm;border:8px double #f59e0b;margin:8mm auto;position:relative;background:linear-gradient(160deg,#fffbeb 0%,#fff 60%)}
+    .cert::before{content:'🗺️';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:200px;opacity:.04;pointer-events:none}
+    .school{font-size:12px;color:#64748b;text-align:center;margin-bottom:4px}
+    .cert-title{font-family:'Amiri',serif;font-size:28px;color:#1e3a5f;text-align:center;font-weight:700;margin-bottom:4px}
+    .cert-sub{text-align:center;color:#64748b;font-size:12px;margin-bottom:14px}
+    .student-name{font-size:26px;font-weight:900;color:#1565c0;text-align:center;padding:8px 0;border-top:2px solid #f59e0b;border-bottom:2px solid #f59e0b;margin:8px 0 12px}
+    .stats{display:flex;justify-content:center;gap:24px;margin-bottom:14px}
+    .stat{text-align:center}.stat-val{font-size:24px;font-weight:900;color:#059669}.stat-lbl{font-size:10px;color:#64748b;font-weight:700}
+    .skills-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 16px;margin-bottom:14px}
+    .badges-row{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+    .footer{text-align:center;font-size:10px;color:#94a3b8;margin-top:8px}
+    .no-print{text-align:center;padding:10px;margin-bottom:8px}
+    .pbtn{padding:9px 20px;border-radius:9px;border:none;font-family:'Tajawal',sans-serif;font-weight:800;cursor:pointer;background:linear-gradient(135deg,#1e3a5f,#1565c0);color:white;font-size:.9em}
+  </style></head><body>
+  <div class="no-print"><button class="pbtn" onclick="window.print()">🖨️ طباعة الشهادة</button></div>
+  <div class="cert">
+    <div class="school">🏫 مدارس البشرى الأهلية — الصف الأول الابتدائي</div>
+    <div class="cert-title">🗺️ شهادة إتقان خريطة الكنز</div>
+    <div class="cert-sub">${sub.icon||'📚'} ${sub.name} — ${sec.icon||'📌'} ${sec.name}</div>
+    <div style="display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:8px;">
+      ${s.photo
+        ?`<img src="${s.photo}" style="width:64px;height:64px;border-radius:50%;object-fit:cover;border:3px solid #f59e0b;box-shadow:0 4px 12px rgba(0,0,0,.15);" />`
+        :`<div style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#1e3a5f,#1565c0);color:white;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:900;border:3px solid #f59e0b;">${s.name.charAt(0)}</div>`
+      }
+      <div class="student-name" style="border:none;padding:0;margin:0">⭐ ${s.name} ⭐</div>
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="stat-val">${m.pct}%</div><div class="stat-lbl">نسبة الإتقان</div></div>
+      <div class="stat"><div class="stat-val">${m.done.length}/${m.total}</div><div class="stat-lbl">المحطات المُتقنة</div></div>
+      <div class="stat"><div class="stat-val">${earned.length}</div><div class="stat-lbl">الشارات المكتسبة</div></div>
+    </div>
+    ${badgesHTML?`<div class="badges-row">${badgesHTML}</div>`:''}
+    <div class="skills-grid">${skillsHTML}</div>
+    <div class="footer">المعلم: ${fullName()} · التاريخ: ${fmtDate(today())} · مدارس البشرى الأهلية</div>
+  </div></body></html>`;
+  const w=window.open('','_blank','width=800,height=650');
+  w.document.write(certHTML); w.document.close();
+}
+
+// Print ALL certificates
+function _tmPrintCerts(){
+  if(!S.students.length){toast('لا يوجد طلاب','error');return;}
+  const sub=_tmGetSub(), sec=_tmGetSec();
+  if(!sub||!sec){toast('اختر مادة وخانة أولاً','error');return;}
+  // Open one window with all certs
+  const all=S.students.map(s=>{
+    const m=_tmSecMastery(s.id,sub.id,sec.id);
+    const earned=_tmBadges(s.id,sub.id,sec.id);
+    const bdg=TM_BADGES_DEF.filter(b=>earned.includes(b.id))
+      .map(b=>`<span style="font-size:22px" title="${b.name}">${b.icon}</span>`).join('');
+    const skills=sec.skills.map((sk,i)=>{
+      const v=((S.evals[s.id]||{})[sub.id]||{})[sec.id]?.[i];
+      return `<div style="font-size:10px;padding:2px 0;border-bottom:1px solid #f5f5f5;display:flex;gap:5px;align-items:center"><span>${v==='m'?'✅':'❌'}</span><span style="color:${v==='m'?'#1e3a5f':'#94a3b8'}">${sk}</span></div>`;
+    }).join('');
+    return `<div style="width:180mm;border:5px double #f59e0b;padding:10mm 12mm;margin:5mm auto;page-break-after:always;position:relative;background:linear-gradient(160deg,#fffbeb,#fff);">
+      <div style="font-size:10px;color:#64748b;text-align:center">🏫 مدارس البشرى الأهلية</div>
+      <div style="font-family:'Amiri',serif;font-size:22px;font-weight:700;color:#1e3a5f;text-align:center;margin:4px 0">🗺️ شهادة خريطة الكنز</div>
+      <div style="display:flex;align-items:center;justify-content:center;gap:10px;border-top:2px solid #f59e0b;border-bottom:2px solid #f59e0b;padding:6px 0;margin:6px 0;">
+        ${s.photo
+          ?`<img src="${s.photo}" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid #f59e0b;" />`
+          :`<div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#1e3a5f,#1565c0);color:white;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:900;">${s.name.charAt(0)}</div>`
+        }
+        <div style="font-size:18px;font-weight:900;color:#1565c0;">⭐ ${s.name}</div>
+      </div>
+      <div style="display:flex;justify-content:center;gap:16px;margin-bottom:8px">
+        <span style="font-weight:900;color:#059669;font-size:18px">${m.pct}%</span>
+        <span style="font-weight:700;font-size:12px;color:#64748b">${m.done.length}/${m.total} محطة</span>
+        <span style="font-size:14px">${bdg||'—'}</span>
+      </div>
+      <div style="columns:2;gap:8px">${skills}</div>
+      <div style="font-size:9px;color:#94a3b8;text-align:center;margin-top:6px">${fullName()} · ${today()}</div>
+    </div>`;
+  }).join('');
+  const w=window.open('','_blank','width=900,height=700');
+  w.document.write(`<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;800;900&family=Amiri:wght@700&display=swap" rel="stylesheet">
+    <style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:'Tajawal',sans-serif;direction:rtl}@media print{.np{display:none}}</style>
+    </head><body>
+    <div class="np" style="padding:10px;text-align:center"><button onclick="window.print()" style="padding:9px 20px;border-radius:9px;border:none;background:linear-gradient(135deg,#1e3a5f,#1565c0);color:white;font-family:'Tajawal',sans-serif;font-weight:800;font-size:.9em;cursor:pointer">🖨️ طباعة كل الشهادات (${S.students.length})</button></div>
+    ${all}</body></html>`);
+  w.document.close();
+}
+
+function initTreasureMap(){
+  // Initialize default subject/section if not set
+  if(!_tmSubId) _tmSubId=S.subjects[0]?.id;
+  if(!_tmSecId) _tmSecId=S.subjects.find(s=>s.id===_tmSubId)?.sections[0]?.id;
+  // Animate progress bars
+  document.querySelectorAll('.prog-bar,.tm-node').forEach((el,i)=>{
+    el.style.transition=`all 0.5s ease ${i*0.04}s`;
+  });
+}
+
+// ══════════════════════════════════════════════════════════════
+// 📷 STUDENT PHOTO SYSTEM
+// ══════════════════════════════════════════════════════════════
+
+let _photoTargetSid = null;
+let _photoPendingData = null; // base64 string pending save
+
+function openPhotoModal(sid, event){
+  if(event) event.stopPropagation();
+  _photoTargetSid = sid;
+  _photoPendingData = null;
+  const s = S.students.find(x=>x.id===sid);
+  if(!s) return;
+  document.getElementById('photoStudentName').textContent = s.name;
+  document.getElementById('photoFileInput').value = '';
+  document.getElementById('photoCameraInput').value = '';
+  document.getElementById('photoUrlInput').value = '';
+  document.getElementById('photoUrlInput').style.display = 'none';
+  document.getElementById('photoSaveBtn').style.display = 'none';
+  // Show current photo if exists
+  const prev = document.getElementById('photoPreviewWrap');
+  const img = document.getElementById('photoPreviewImg');
+  if(s.photo){
+    img.src = s.photo;
+    prev.style.display = 'block';
+    document.getElementById('photoDropZone').style.display = 'none';
+  } else {
+    prev.style.display = 'none';
+    document.getElementById('photoDropZone').style.display = '';
+  }
+  openM('mbPhoto');
+}
+
+function handlePhotoFile(input){
+  const file = input.files[0];
+  if(!file) return;
+  if(file.size > 3*1024*1024){ toast('الصورة أكبر من 3MB، اختر صورة أصغر','error'); return; }
+  const reader = new FileReader();
+  reader.onload = e => {
+    _setPhotoPending(e.target.result);
+  };
+  reader.readAsDataURL(file);
+}
+
+function handlePhotoDrop(event){
+  event.preventDefault();
+  document.getElementById('photoDropZone').classList.remove('drag-over');
+  const file = event.dataTransfer.files[0];
+  if(!file || !file.type.startsWith('image/')){ toast('الرجاء إسقاط ملف صورة','error'); return; }
+  if(file.size > 3*1024*1024){ toast('الصورة أكبر من 3MB','error'); return; }
+  const reader = new FileReader();
+  reader.onload = e => _setPhotoPending(e.target.result);
+  reader.readAsDataURL(file);
+}
+
+function applyPhotoUrl(){
+  const url = document.getElementById('photoUrlInput').value.trim();
+  if(!url){ toast('أدخل رابط صحيح','error'); return; }
+  _setPhotoPending(url);
+}
+
+function _setPhotoPending(dataOrUrl){
+  // Resize image to max 200x200 using canvas to save storage space
+  if(dataOrUrl.startsWith('data:image')){
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const max = 200;
+      let w = img.width, h = img.height;
+      if(w > max || h > max){
+        if(w > h){ h = Math.round(h*(max/w)); w = max; }
+        else { w = Math.round(w*(max/h)); h = max; }
+      }
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      _photoPendingData = canvas.toDataURL('image/jpeg', 0.82);
+      _showPhotoPending();
+    };
+    img.src = dataOrUrl;
+  } else {
+    _photoPendingData = dataOrUrl;
+    _showPhotoPending();
+  }
+}
+
+function _showPhotoPending(){
+  const prev = document.getElementById('photoPreviewWrap');
+  const img = document.getElementById('photoPreviewImg');
+  img.src = _photoPendingData;
+  prev.style.display = 'block';
+  document.getElementById('photoDropZone').style.display = 'none';
+  document.getElementById('photoSaveBtn').style.display = '';
+}
+
+function savePhoto(){
+  if(!_photoPendingData || !_photoTargetSid){ toast('لا توجد صورة للحفظ','error'); return; }
+  const s = S.students.find(x=>x.id===_photoTargetSid);
+  if(!s) return;
+  s.photo = _photoPendingData;
+  save();
+  closeM('mbPhoto');
+  toast('تم حفظ صورة الطالب ✅','success');
+  logChange('edit','تحديث صورة طالب', s.name);
+  // Refresh current page if students-related
+  const cur = document.querySelector('.nav-btn.active')?.id?.replace('nav-','');
+  if(cur && ['students','seatmap','behavior','treasuremap'].includes(cur)) showPage(cur);
+  else showPage('students');
+}
+
+function removePhoto(){
+  const s = S.students.find(x=>x.id===_photoTargetSid);
+  if(!s) return;
+  s.photo = '';
+  _photoPendingData = null;
+  save();
+  document.getElementById('photoPreviewWrap').style.display = 'none';
+  document.getElementById('photoDropZone').style.display = '';
+  document.getElementById('photoSaveBtn').style.display = 'none';
+  toast('تم حذف الصورة','success');
+}
+
+// Preview in add-student modal
+let _addPhotoData = '';
+function previewAddPhoto(input){
+  const file = input.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const max = 200;
+      let w=img.width, h=img.height;
+      if(w>max||h>max){ if(w>h){h=Math.round(h*(max/w));w=max;}else{w=Math.round(w*(max/h));h=max;} }
+      canvas.width=w; canvas.height=h;
+      canvas.getContext('2d').drawImage(img,0,0,w,h);
+      _addPhotoData = canvas.toDataURL('image/jpeg', 0.82);
+      const prev = document.getElementById('addModalPhotoPreview');
+      prev.innerHTML = `<img src="${_addPhotoData}" style="width:52px;height:52px;border-radius:50%;object-fit:cover;" />`;
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+// Photo reset integrated into openAddModal directly
+
+// Hook into saveStudent to include photo
+const _origSaveStudentCore = saveStudent;
+function saveStudent(){
+  const name=document.getElementById('an1').value.trim();
+  if(!name){toast('الرجاء إدخال الاسم','error');return;}
+  const num=document.getElementById('an2').value||S.students.length+1;
+  const parent=document.getElementById('an3').value.trim();
+  const gender=document.getElementById('an4').value;
+  const note=document.getElementById('an5').value.trim();
+  const s={id:genId(),name,num:+num,parent,gender,note,photo:_addPhotoData||'',createdAt:Date.now()};
+  S.students.push(s);
+  if(note) S.notes.push({id:genId(),sid:s.id,text:note,type:'general',prio:'normal',date:today()});
+  save();
+  logChange('add','إضافة طالب',name);
+  document.getElementById('nb-students').textContent=S.students.length;
+  closeM('mbAdd');
+  _addPhotoData='';
+  toast('تم إضافة الطالب بنجاح ✅','success');
+  showPage('students');
+}
+
+// Bulk photo import page inside profile
+function renderPhotoManager(){
+  return `
+  <div class="breadcrumb">🏠 <span class="sep">›</span> <span class="active">إدارة صور الطلاب</span></div>
+  <div class="ph">
+    <div><div class="ph-title">📷 إدارة صور الطلاب</div>
+    <div class="ph-sub">أضف صورة لكل طالب — تظهر في كل صفحات التطبيق</div></div>
+  </div>
+  ${S.students.length===0?`<div class="empty"><div class="empty-emoji">📷</div><h3>لا يوجد طلاب</h3></div>`:`
+  <div class="photo-class-grid">
+    ${S.students.map(s=>`
+      <div class="photo-class-item" onclick="openPhotoModal('${s.id}',event)">
+        ${s.photo
+          ?`<img src="${s.photo}" style="width:64px;height:64px;border-radius:50%;object-fit:cover;border:2px solid var(--sky3);" />`
+          :`<div style="width:64px;height:64px;border-radius:50%;${avatarStyle(s.id)};color:white;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:900;border:2px dashed rgba(255,255,255,0.4);">${s.name.charAt(0)}</div>`
+        }
+        <div class="pc-name">${s.name.split(' ').slice(0,2).join(' ')}</div>
+        <div style="font-size:0.65rem;color:${s.photo?'var(--mint)':'var(--muted2)'}">
+          ${s.photo?'✅ يوجد صورة':'📷 اضغط للإضافة'}
+        </div>
+      </div>
+    `).join('')}
+  </div>`}`;
+}
+
+// ══════════════════════════════════════════════════════════════
+// 📱 MOBILE SUPPORT SYSTEM
+// ══════════════════════════════════════════════════════════════
+
+const isMobile = () => window.innerWidth <= 960 || ('ontouchstart' in window);
+
+// ── Bottom Nav ──────────────────────────────────────────────
+const BN_PAGES = { dash:'dash', students:'students', attend:'attend', reports:'reports' };
+
+function setBnActive(page){
+  document.querySelectorAll('.bn-item').forEach(b=>{
+    b.classList.remove('active');
+    b.querySelector('.bn-dot')?.classList.remove('active');
+  });
+  const btn = document.getElementById('bn-'+page);
+  if(btn){ btn.classList.add('active'); }
+  // Update student badge
+  const bnn = document.getElementById('bnn-students');
+  if(bnn){
+    const n = S.students.length;
+    bnn.textContent = n;
+    bnn.style.display = n>0?'flex':'none';
+  }
+}
+
+// Hook showPage to also update bottom nav
+// showPage mobile hooks — integrated below
+
+function onFabPress(){
+  const cur = document.querySelector('.nav-btn.active, .bn-item.active')?.id?.replace('nav-','')?.replace('bn-','') || '';
+  if(cur==='students') openAddModal();
+  else if(cur==='notes') openNoteFor(null);
+  else if(cur==='goals') openGoalFor(null);
+  else if(cur==='meetings') openMeetingFor(null);
+  else openAddModal();
+}
+
+// ── More Sheet ───────────────────────────────────────────────
+function openMoreSheet(){
+  document.getElementById('moreSheet').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function closeMoreSheet(){
+  document.getElementById('moreSheet').classList.remove('open');
+  document.body.style.overflow='';
+}
+
+// ── Swipe to go back ─────────────────────────────────────────
+let _swipeStartX=0, _swipeStartY=0;
+document.addEventListener('touchstart', e=>{
+  _swipeStartX=e.touches[0].clientX;
+  _swipeStartY=e.touches[0].clientY;
+}, {passive:true});
+document.addEventListener('touchend', e=>{
+  const dx=e.changedTouches[0].clientX-_swipeStartX;
+  const dy=e.changedTouches[0].clientY-_swipeStartY;
+  // Swipe right (RTL: go back) — only if horizontal swipe > 80px and not in modal
+  if(Math.abs(dx)>80 && Math.abs(dx)>Math.abs(dy)*2){
+    const inModal=document.querySelector('.modal-bg.open');
+    if(inModal){ closeMoreSheet(); return; }
+    if(dx>0 && isMobile()) openMoreSheet(); // swipe right = open menu
+  }
+}, {passive:true});
+
+// ── Pull-to-refresh on mobile ────────────────────────────────
+let _pullStart=0, _pulling=false;
+const content = document.getElementById('mainContent');
+if(content){
+  content.addEventListener('touchstart', e=>{
+    if(content.scrollTop===0) _pullStart=e.touches[0].clientY;
+  }, {passive:true});
+  content.addEventListener('touchmove', e=>{
+    if(_pullStart>0 && content.scrollTop===0){
+      const pull=e.touches[0].clientY-_pullStart;
+      if(pull>60 && !_pulling){
+        _pulling=true;
+        const ind=document.createElement('div');
+        ind.id='pullInd';
+        ind.style.cssText='position:fixed;top:68px;left:50%;transform:translateX(-50%);background:var(--sky);color:white;padding:6px 18px;border-radius:0 0 12px 12px;font-size:.80rem;font-weight:800;z-index:400;font-family:Tajawal,sans-serif;';
+        ind.textContent='🔄 اسحب للتحديث...';
+        document.body.appendChild(ind);
+      }
+    }
+  }, {passive:true});
+  content.addEventListener('touchend', e=>{
+    if(_pulling){
+      _pulling=false; _pullStart=0;
+      document.getElementById('pullInd')?.remove();
+      const cur=document.querySelector('.nav-btn.active, .bn-item.active')?.id?.replace('nav-','')?.replace('bn-','');
+      if(cur) showPage(cur);
+      toast('تم التحديث','success');
+    } else { _pullStart=0; }
+  }, {passive:true});
+}
+
+// ── Modal bottom sheet on mobile ─────────────────────────────
+// openM/closeM — see above
+
+// ── Responsive table helper: hide less important cols ─────────
+function applyMobileTableHide(){
+  if(!isMobile()) return;
+  // Add hide-mobile to certain th/td based on index
+  document.querySelectorAll('.tbl thead tr th').forEach((th,i)=>{
+    if(i>=5 && i!==th.closest('thead').querySelectorAll('th').length-1){
+      th.classList.add('hide-mobile');
+    }
+  });
+  document.querySelectorAll('.tbl tbody tr').forEach(tr=>{
+    tr.querySelectorAll('td').forEach((td,i)=>{
+      if(i>=5 && i!==tr.querySelectorAll('td').length-1){
+        td.classList.add('hide-mobile');
+      }
+    });
+  });
+}
+
+// ── Override initPage to apply mobile fixes ──────────────────
+// initPage mobile — integrated
+
+// ── Viewport height fix for mobile browsers (address bar) ────
+function fixViewportHeight(){
+  const vh = window.innerHeight * 0.01;
+  document.documentElement.style.setProperty('--vh', `${vh}px`);
+}
+window.addEventListener('resize', fixViewportHeight);
+fixViewportHeight();
+
+// ── Prevent double-tap zoom on buttons ───────────────────────
+document.addEventListener('touchend', e=>{
+  if(e.target.matches('button,.btn,.bn-item,.nav-btn')){
+    e.preventDefault();
+    e.target.click();
+  }
+}, {passive:false});
 
 // ══════════════════════════════════════════════
 // INIT
