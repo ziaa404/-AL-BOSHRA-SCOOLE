@@ -1299,6 +1299,291 @@ body.dark .dark-toggle::after { content:'🌙'; transform:translateX(20px); }
 .photo-class-item:hover { border-color:var(--sky3); box-shadow:var(--shadow-sm); }
 .photo-class-item .pc-name { font-size:0.72rem; font-weight:800; color:var(--ink2); text-align:center; }
 
+
+/* ══════════════════════════════════════════════
+   🖥️ CLASSROOM MODE v2 — Projector Layout
+══════════════════════════════════════════════ */
+#classroomOverlay{position:fixed;inset:0;z-index:1000;background:#0a0f1e;display:none;flex-direction:column;font-family:'Tajawal',sans-serif;direction:rtl;overflow:hidden;}
+#classroomOverlay.open{display:flex;}
+
+/* Header */
+.cm-header{display:flex;align-items:center;justify-content:space-between;padding:10px 20px;background:rgba(255,255,255,0.04);border-bottom:1px solid rgba(255,255,255,0.07);flex-shrink:0;height:58px;}
+.cm-logo-badge{width:36px;height:36px;border-radius:9px;background:rgba(66,165,245,0.18);border:1px solid rgba(66,165,245,0.30);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.cm-school{color:rgba(255,255,255,0.55);font-size:0.76rem;font-weight:700;}
+.cm-skill-live{color:var(--sky3);font-size:0.84rem;font-weight:800;margin-top:1px;}
+.cm-clock-wrap{text-align:center;}
+.cm-clock-time{font-size:1.5rem;font-weight:900;color:white;letter-spacing:2px;font-variant-numeric:tabular-nums;line-height:1;}
+.cm-clock-date{font-size:0.70rem;color:rgba(255,255,255,0.35);font-weight:600;margin-top:1px;}
+.cm-view-tabs{display:flex;background:rgba(255,255,255,0.06);border-radius:10px;padding:3px;gap:3px;border:1px solid rgba(255,255,255,0.08);}
+.cm-view-tab{padding:6px 16px;border-radius:8px;border:none;background:none;font-family:'Tajawal',sans-serif;font-size:0.82rem;font-weight:800;color:rgba(255,255,255,0.40);cursor:none;transition:all 0.14s;}
+.cm-view-tab.active{background:rgba(66,165,245,0.18);color:var(--sky3);}
+.cm-exit{background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.55);padding:6px 13px;border-radius:8px;font-family:'Tajawal',sans-serif;font-size:0.80rem;font-weight:700;cursor:none;transition:all 0.14s;}
+.cm-exit:hover{background:rgba(239,68,68,0.18);border-color:var(--ember);color:var(--ember);}
+
+/* Views */
+.cm-views{flex:1;position:relative;overflow:hidden;}
+.cm-view{position:absolute;inset:0;display:none;padding:16px 20px;}
+.cm-view.active{display:flex;flex-direction:column;}
+
+/* ── BOARD VIEW ── */
+.cm-board-grid{display:grid;grid-template-columns:200px 1fr 240px;gap:14px;height:100%;}
+.cm-board-left{display:flex;flex-direction:column;gap:12px;}
+.cm-board-center{display:flex;flex-direction:column;gap:12px;overflow:hidden;}
+.cm-board-right{display:flex;flex-direction:column;gap:8px;overflow:hidden;}
+
+/* Cards */
+.cm-timer-card,.cm-attendance-card,.cm-progress-card,.cm-star-card{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:14px 16px;}
+.cm-card-title{font-size:0.76rem;font-weight:800;color:rgba(255,255,255,0.38);letter-spacing:0.8px;text-transform:uppercase;margin-bottom:10px;}
+
+/* Timer */
+.cm-timer-card{display:flex;flex-direction:column;align-items:center;gap:10px;flex:1;}
+.cm-timer-label{font-size:0.72rem;font-weight:800;color:rgba(255,255,255,0.35);letter-spacing:1px;text-transform:uppercase;}
+.cm-timer-ring{position:relative;width:180px;height:180px;flex-shrink:0;}
+.cm-timer-ring svg{transform:rotate(-90deg);}
+.ring-bg{fill:none;stroke:rgba(255,255,255,0.07);stroke-width:10;}
+.ring-prog{fill:none;stroke:var(--sky3);stroke-width:10;stroke-linecap:round;transition:stroke-dashoffset 1s linear;}
+.ring-prog.warn{stroke:var(--gold);}
+.ring-prog.urgent{stroke:var(--ember);}
+.cm-timer-display{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;}
+.cm-timer-time{font-size:2.4rem;font-weight:900;color:white;letter-spacing:-1px;font-variant-numeric:tabular-nums;}
+.cm-timer-time.warn{color:var(--gold);}
+.cm-timer-time.urgent{color:var(--ember);animation:timerPulse 0.7s ease infinite alternate;}
+@keyframes timerPulse{from{opacity:1}to{opacity:0.4}}
+.cm-timer-controls{display:flex;gap:8px;width:100%;}
+.cm-btn{padding:8px 16px;border-radius:9px;border:none;font-family:'Tajawal',sans-serif;font-size:0.84rem;font-weight:800;cursor:none;transition:all 0.13s;display:flex;align-items:center;gap:6px;}
+.cm-btn-primary{background:var(--sky3);color:var(--ink);flex:1;justify-content:center;}
+.cm-btn-primary:hover{background:#63c4f8;transform:scale(1.03);}
+.cm-btn-ghost{background:rgba(255,255,255,0.07);color:rgba(255,255,255,0.65);border:1px solid rgba(255,255,255,0.10);}
+.cm-btn-ghost:hover{background:rgba(255,255,255,0.13);}
+.cm-mini-timers-row{display:flex;gap:5px;width:100%;}
+.cm-mini-btn{flex:1;padding:7px 4px;border-radius:7px;border:1px solid rgba(255,255,255,0.10);background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.55);font-family:'Tajawal',sans-serif;font-size:0.76rem;font-weight:800;cursor:none;transition:all 0.12s;}
+.cm-mini-btn:hover{background:rgba(66,165,245,0.15);border-color:rgba(66,165,245,0.30);color:var(--sky3);}
+.cm-mini-btn.active{background:rgba(239,68,68,0.15);border-color:var(--ember);color:var(--ember);}
+
+/* Attendance grid */
+.cm-att-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(44px,1fr));gap:7px;margin-bottom:10px;}
+.cm-att-card{border-radius:10px;padding:7px 4px;text-align:center;transition:transform 0.12s;cursor:none;}
+.cm-att-card:hover{transform:scale(1.08);}
+.cm-att-card.present{background:rgba(16,185,129,0.18);border:1px solid rgba(16,185,129,0.30);}
+.cm-att-card.absent{background:rgba(239,68,68,0.18);border:1px solid rgba(239,68,68,0.30);}
+.cm-att-card.unknown{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);}
+.cm-att-avatar{width:28px;height:28px;border-radius:50%;margin:0 auto 4px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;}
+.cm-att-card.present .cm-att-avatar{background:var(--mint);color:var(--ink);}
+.cm-att-card.absent  .cm-att-avatar{background:var(--ember);color:white;}
+.cm-att-card.unknown .cm-att-avatar{background:rgba(255,255,255,0.10);color:rgba(255,255,255,0.40);}
+.cm-att-name{font-size:0.60rem;font-weight:700;color:rgba(255,255,255,0.55);line-height:1.2;}
+.cm-att-summary{font-size:0.78rem;color:rgba(255,255,255,0.40);text-align:center;font-weight:700;}
+
+/* Progress */
+.cm-big-pct{font-size:3.5rem;font-weight:900;color:white;text-align:center;letter-spacing:-2px;margin:4px 0;}
+.cm-pct-bar-wrap{height:10px;background:rgba(255,255,255,0.08);border-radius:99px;overflow:hidden;margin-bottom:8px;}
+.cm-pct-bar{height:100%;background:linear-gradient(90deg,var(--sky),var(--mint));border-radius:99px;transition:width 1s ease;}
+.cm-pct-legend{display:flex;align-items:center;gap:5px;font-size:0.72rem;color:rgba(255,255,255,0.35);font-weight:700;flex-wrap:wrap;}
+.cm-legend-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.cm-legend-dot.green{background:var(--mint);}
+.cm-legend-dot.gold{background:var(--gold);}
+.cm-legend-dot.red{background:var(--ember);}
+
+/* Star card */
+.cm-star-card{text-align:center;background:linear-gradient(135deg,rgba(245,158,11,0.12),rgba(124,58,237,0.10));border-color:rgba(245,158,11,0.25);}
+.cm-star-crown{font-size:2rem;animation:starFloat 2s ease-in-out infinite alternate;}
+@keyframes starFloat{from{transform:translateY(0)}to{transform:translateY(-6px)}}
+.cm-star-card-name{font-size:1.1rem;font-weight:900;color:white;margin:4px 0;}
+.cm-star-card-sub{font-size:0.72rem;color:rgba(255,255,255,0.40);font-weight:700;}
+
+/* Eval card inside classroom */
+.cm-eval-card{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:14px 16px;flex:1;overflow:hidden;display:flex;flex-direction:column;}
+.cm-eval-stu-btn{
+  display:flex;align-items:center;gap:7px;padding:7px 9px;border-radius:9px;
+  background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);
+  cursor:none;transition:all 0.12s;position:relative;
+}
+.cm-eval-stu-btn:hover{background:rgba(255,255,255,0.10);}
+.cm-eval-stu-name{font-size:0.74rem;font-weight:700;color:rgba(255,255,255,0.80);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;}
+.cm-eval-stu-status{font-size:0.80rem;flex-shrink:0;}
+.cm-eval-stu-btn.ev-mastered{background:rgba(16,185,129,0.12);border-color:rgba(16,185,129,0.25);}
+.cm-eval-stu-btn.ev-not{background:rgba(239,68,68,0.12);border-color:rgba(239,68,68,0.25);}
+
+/* Top list */
+.cm-top-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);}
+.cm-top-medal{font-size:1rem;width:22px;text-align:center;flex-shrink:0;}
+.cm-top-name{flex:1;font-size:0.82rem;color:rgba(255,255,255,0.85);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.cm-top-pct{font-size:0.80rem;font-weight:900;}
+
+/* ── WHEEL VIEW ── */
+.cm-wheel-fullscreen{display:flex;gap:32px;height:100%;align-items:center;justify-content:center;}
+.cm-wheel-left{display:flex;flex-direction:column;align-items:center;gap:16px;}
+.cm-wheel-right{display:flex;flex-direction:column;gap:16px;min-width:280px;max-width:320px;height:100%;justify-content:center;}
+.cm-wheel-title{font-size:1.6rem;font-weight:900;color:white;letter-spacing:-0.5px;}
+.cm-wheel-subtitle{font-size:0.88rem;color:rgba(255,255,255,0.40);}
+.cm-wheel-canvas-wrap{position:relative;width:380px;height:380px;}
+#cmWheelCanvas{border-radius:50%;box-shadow:0 0 40px rgba(0,0,0,0.60);}
+.cm-wheel-pointer{position:absolute;top:-16px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:14px solid transparent;border-right:14px solid transparent;border-top:28px solid var(--gold);filter:drop-shadow(0 2px 8px rgba(245,158,11,0.7));}
+.cm-spin-btn{padding:16px 40px;border-radius:99px;border:none;background:linear-gradient(135deg,var(--sky),var(--plum));color:white;font-family:'Tajawal',sans-serif;font-size:1.1rem;font-weight:900;cursor:none;transition:all 0.18s;box-shadow:0 8px 24px rgba(21,101,192,0.40);}
+.cm-spin-btn:hover{transform:scale(1.04);box-shadow:0 12px 32px rgba(21,101,192,0.50);}
+.cm-spin-btn:disabled{opacity:0.5;}
+.cm-wheel-result-big{background:rgba(66,165,245,0.10);border:1px solid rgba(66,165,245,0.22);border-radius:18px;padding:24px 20px;text-align:center;min-height:140px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;}
+.cm-wrb-emoji{font-size:3rem;}
+.cm-wrb-text{font-size:1.5rem;font-weight:900;color:white;letter-spacing:-0.5px;}
+.cm-wrb-sub{font-size:0.84rem;color:rgba(255,255,255,0.45);}
+.cm-wheel-history-wrap{flex:1;overflow-y:auto;}
+.cm-hist-item{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:8px;background:rgba(255,255,255,0.04);margin-bottom:5px;font-size:0.82rem;color:rgba(255,255,255,0.65);font-weight:600;}
+.cm-hist-num{width:20px;height:20px;border-radius:50%;background:rgba(255,255,255,0.08);font-size:0.68rem;font-weight:900;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.40);flex-shrink:0;}
+
+/* ── HONOR VIEW ── */
+.cm-honor-fullscreen{position:relative;display:flex;flex-direction:column;align-items:center;height:100%;padding:10px 20px;}
+.cm-honor-header{text-align:center;margin-bottom:20px;}
+.cm-honor-title{font-size:2rem;font-weight:900;color:white;letter-spacing:-0.5px;}
+.cm-honor-date{font-size:0.82rem;color:rgba(255,255,255,0.35);margin-top:4px;}
+.cm-honor-podium{display:flex;align-items:flex-end;justify-content:center;gap:12px;margin-bottom:20px;}
+.cm-podium-item{display:flex;flex-direction:column;align-items:center;gap:8px;}
+.cm-podium-avatar{border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;color:white;flex-shrink:0;border:3px solid rgba(255,255,255,0.20);}
+.cm-podium-name{font-weight:800;color:white;text-align:center;line-height:1.2;}
+.cm-podium-pct{font-weight:900;text-align:center;}
+.cm-podium-base{border-radius:12px 12px 0 0;width:100%;display:flex;align-items:flex-end;justify-content:center;padding-bottom:8px;}
+.cm-podium-rank{font-size:0.72rem;color:rgba(255,255,255,0.50);font-weight:800;}
+/* 1st place */
+.cm-podium-item.first .cm-podium-avatar{width:80px;height:80px;font-size:32px;}
+.cm-podium-item.first .cm-podium-name{font-size:1rem;}
+.cm-podium-item.first .cm-podium-pct{font-size:1.1rem;color:var(--gold);}
+.cm-podium-item.first .cm-podium-base{height:80px;background:linear-gradient(180deg,rgba(245,158,11,0.25),rgba(245,158,11,0.08));border:1px solid rgba(245,158,11,0.25);min-width:140px;}
+/* 2nd */
+.cm-podium-item.second .cm-podium-avatar{width:64px;height:64px;font-size:26px;}
+.cm-podium-item.second .cm-podium-name{font-size:0.88rem;}
+.cm-podium-item.second .cm-podium-pct{font-size:0.92rem;color:rgba(255,255,255,0.60);}
+.cm-podium-item.second .cm-podium-base{height:60px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.10);min-width:120px;}
+/* 3rd */
+.cm-podium-item.third .cm-podium-avatar{width:56px;height:56px;font-size:22px;}
+.cm-podium-item.third .cm-podium-name{font-size:0.82rem;}
+.cm-podium-item.third .cm-podium-pct{font-size:0.84rem;color:rgba(255,255,255,0.50);}
+.cm-podium-item.third .cm-podium-base{height:44px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);min-width:110px;}
+/* Rest */
+.cm-honor-rest{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;max-width:900px;}
+.cm-rest-chip{display:flex;align-items:center;gap:7px;padding:7px 13px;border-radius:99px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);font-size:0.82rem;color:rgba(255,255,255,0.65);font-weight:700;}
+
+/* Status bar */
+.cm-status-bar{display:flex;align-items:center;justify-content:space-between;padding:7px 20px;background:rgba(0,0,0,0.30);border-top:1px solid rgba(255,255,255,0.05);flex-shrink:0;}
+.cm-status-dot{width:7px;height:7px;border-radius:50%;background:var(--mint);animation:pulse 2s infinite;}
+.cm-status-text{font-size:0.76rem;color:rgba(255,255,255,0.40);font-weight:700;}
+.cm-noise-mini{display:flex;align-items:center;gap:7px;}
+.cm-noise-bar-h{width:60px;height:6px;background:rgba(255,255,255,0.08);border-radius:99px;overflow:hidden;}
+.cm-noise-fill-h{height:100%;background:var(--mint);border-radius:99px;transition:width 0.18s ease;}
+
+/* Noise alert */
+#cmNoiseAlert{position:fixed;inset:0;z-index:1100;background:rgba(239,68,68,0.20);pointer-events:none;display:none;align-items:center;justify-content:center;}
+#cmNoiseAlert.show{display:flex;animation:noiseFlash 0.5s ease;}
+
+/* ══ GAMES CSS ═════════════════════════════════════════════ */
+.cm-games-fullscreen{display:flex;gap:0;height:100%;}
+.cm-games-sidebar{width:200px;flex-shrink:0;display:flex;flex-direction:column;gap:10px;padding:4px 0;border-left:1px solid rgba(255,255,255,0.07);}
+.cm-games-title{font-size:0.80rem;font-weight:900;color:rgba(255,255,255,0.40);letter-spacing:1px;text-transform:uppercase;padding:0 8px 8px;border-bottom:1px solid rgba(255,255,255,0.07);}
+.cm-games-list{display:flex;flex-direction:column;gap:7px;}
+.cm-game-btn{display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:11px 13px;border-radius:12px;border:1px solid rgba(255,255,255,0.07);background:rgba(255,255,255,0.03);cursor:none;transition:all 0.13s;text-align:right;font-family:'Tajawal',sans-serif;}
+.cm-game-btn:hover{background:rgba(255,255,255,0.08);border-color:rgba(255,255,255,0.14);}
+.cm-game-btn.active{background:rgba(66,165,245,0.12);border-color:rgba(66,165,245,0.28);}
+.cg-icon{font-size:1.4rem;}
+.cg-name{font-size:0.82rem;font-weight:800;color:rgba(255,255,255,0.85);}
+.cg-sub{font-size:0.68rem;color:rgba(255,255,255,0.35);font-weight:600;}
+.cm-games-main{flex:1;padding:20px 24px;overflow-y:auto;display:flex;flex-direction:column;gap:16px;}
+
+/* Quiz game */
+.cg-question-card{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.10);border-radius:18px;padding:28px 32px;text-align:center;}
+.cg-question-num{font-size:0.76rem;font-weight:800;color:rgba(255,255,255,0.35);letter-spacing:1px;text-transform:uppercase;margin-bottom:12px;}
+.cg-question-text{font-size:2rem;font-weight:900;color:white;line-height:1.35;margin-bottom:10px;letter-spacing:-0.3px;}
+.cg-choices{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px;}
+.cg-choice{padding:16px 20px;border-radius:13px;border:1.5px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.04);cursor:none;transition:all 0.15s;font-family:'Tajawal',sans-serif;font-size:1.15rem;font-weight:700;color:rgba(255,255,255,0.85);text-align:center;}
+.cg-choice:hover{background:rgba(66,165,245,0.12);border-color:rgba(66,165,245,0.30);color:var(--sky3);}
+.cg-choice.correct{background:rgba(16,185,129,0.18);border-color:rgba(16,185,129,0.40);color:var(--mint);}
+.cg-choice.wrong{background:rgba(239,68,68,0.15);border-color:rgba(239,68,68,0.35);color:var(--ember);}
+.cg-choice-label{display:inline-block;width:22px;height:22px;border-radius:50%;background:rgba(255,255,255,0.10);font-size:0.76rem;font-weight:900;line-height:22px;text-align:center;margin-left:8px;}
+/* Remove button on each choice */
+.cg-remove-btn{
+  padding:0 10px; border:1.5px solid rgba(255,68,68,0.25);
+  border-right:none; border-radius:0 13px 13px 0;
+  background:rgba(239,68,68,0.08); color:rgba(239,68,68,0.55);
+  font-size:0.80rem; font-weight:900; cursor:none; transition:all 0.12s;
+  flex-shrink:0;
+}
+.cg-remove-btn:hover{background:rgba(239,68,68,0.20);color:var(--ember);}
+/* Hidden/eliminated choice */
+.cg-choice-hidden{
+  background:rgba(255,255,255,0.02); border-color:rgba(255,255,255,0.05);
+  display:flex; align-items:center; justify-content:center;
+  pointer-events:none; opacity:0.35; min-height:54px;
+  border-radius:13px;
+}
+/* Used 50/50 button */
+.cg-used{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);color:rgba(255,255,255,0.25);}
+
+/* Hot chair */
+.cg-chair-display{display:flex;flex-direction:column;align-items:center;gap:16px;padding:24px;}
+.cg-chair-student{font-size:2rem;font-weight:900;color:white;text-align:center;}
+.cg-chair-question{font-size:1.8rem;font-weight:800;color:white;text-align:center;padding:20px 28px;background:rgba(66,165,245,0.08);border-radius:14px;border:1px solid rgba(66,165,245,0.20);max-width:700px;}
+.cg-chair-btns{display:flex;gap:12px;}
+.cg-chair-btn{padding:13px 30px;border-radius:12px;border:none;font-family:'Tajawal',sans-serif;font-size:1rem;font-weight:800;cursor:none;transition:all 0.15s;}
+.cg-chair-btn.yes{background:rgba(16,185,129,0.20);border:1.5px solid rgba(16,185,129,0.40);color:var(--mint);}
+.cg-chair-btn.no{background:rgba(245,158,11,0.18);border:1.5px solid rgba(245,158,11,0.35);color:var(--gold);}
+.cg-chair-btn.pass{background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.50);}
+
+/* Race game */
+.cg-race-question{font-size:2.2rem;font-weight:900;color:white;text-align:center;padding:28px;background:rgba(255,255,255,0.04);border-radius:16px;border:1px solid rgba(255,255,255,0.08);margin-bottom:16px;letter-spacing:-0.3px;}
+.cg-race-scores{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;}
+.cg-score-card{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:13px;padding:12px;text-align:center;transition:all 0.2s;cursor:none;}
+.cg-score-card:hover{border-color:var(--mint);background:rgba(16,185,129,0.08);}
+.cg-score-card.buzzing{animation:buzz 0.3s ease;border-color:var(--gold);background:rgba(245,158,11,0.12);}
+@keyframes buzz{0%{transform:scale(1)}50%{transform:scale(1.08)}100%{transform:scale(1)}}
+.cg-score-name{font-size:0.80rem;font-weight:700;color:rgba(255,255,255,0.80);margin-bottom:6px;}
+.cg-score-pts{font-size:1.6rem;font-weight:900;color:var(--sky3);}
+
+/* Word game */
+.cg-word-display{font-size:4rem;font-weight:900;color:white;text-align:center;letter-spacing:10px;padding:32px;background:rgba(255,255,255,0.03);border-radius:16px;border:1px solid rgba(255,255,255,0.08);}
+.cg-word-hint{font-size:1rem;color:rgba(255,255,255,0.45);text-align:center;margin-top:8px;}
+.cg-word-reveal{font-size:1.5rem;font-weight:900;color:var(--mint);text-align:center;padding:16px;display:none;}
+.cg-word-reveal.show{display:block;animation:popIn 0.3s cubic-bezier(0.34,1.56,0.64,1);}
+
+/* Quiz progress dots */
+.cg-progress-dot{width:14px;height:14px;border-radius:50%;flex-shrink:0;transition:all 0.2s;}
+.cg-dot-empty  {background:rgba(255,255,255,0.12);border:1.5px solid rgba(255,255,255,0.20);}
+.cg-dot-current{background:rgba(66,165,245,0.30);border:2px solid var(--sky3);box-shadow:0 0 8px rgba(66,165,245,0.4);}
+.cg-dot-correct{background:var(--mint);border:2px solid var(--mint);box-shadow:0 0 6px rgba(16,185,129,0.5);}
+.cg-dot-wrong  {background:var(--ember);border:2px solid var(--ember);}
+
+/* Shared game controls */
+.cg-controls{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+.cg-score-bar{display:flex;gap:8px;padding:10px 14px;background:rgba(255,255,255,0.03);border-radius:12px;border:1px solid rgba(255,255,255,0.07);flex-wrap:wrap;}
+.cg-score-item{display:flex;align-items:center;gap:6px;font-size:0.82rem;}
+.cg-score-dot{width:8px;height:8px;border-radius:50%;}
+
+/* In-game input */
+.cg-live-input{background:rgba(255,255,255,0.07);border:1.5px solid rgba(255,255,255,0.15);border-radius:12px;padding:10px 16px;font-family:'Tajawal',sans-serif;font-size:1rem;color:white;outline:none;width:100%;text-align:right;}
+.cg-live-input:focus{border-color:var(--sky3);}
+
+/* Result overlay inside game */
+.cg-result{text-align:center;padding:32px;background:linear-gradient(135deg,rgba(16,185,129,0.10),rgba(66,165,245,0.08));border-radius:18px;border:1px solid rgba(16,185,129,0.20);}
+.cg-result-emoji{font-size:3.5rem;margin-bottom:8px;}
+.cg-result-title{font-size:1.5rem;font-weight:900;color:white;margin-bottom:4px;}
+.cg-result-sub{font-size:0.88rem;color:rgba(255,255,255,0.45);}
+
+/* ══ GAMES BANK PAGE ════════════════════════════════════════ */
+.gb-game-section{background:var(--card);border-radius:var(--r);border:1px solid var(--border);overflow:hidden;margin-bottom:18px;}
+.gb-game-header{padding:14px 18px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;}
+.gb-game-icon{font-size:1.5rem;}
+.gb-game-title{font-size:1rem;font-weight:800;color:var(--ink2);}
+.gb-game-count{margin-right:auto;font-size:0.76rem;color:var(--muted2);font-weight:700;}
+.gb-q-item{display:flex;align-items:flex-start;gap:10px;padding:12px 16px;border-bottom:1px solid var(--border);transition:background 0.12s;}
+.gb-q-item:last-child{border-bottom:none;}
+.gb-q-item:hover{background:var(--surface);}
+.gb-q-num{width:24px;height:24px;border-radius:50%;background:var(--surface);border:1px solid var(--border);font-size:0.72rem;font-weight:900;color:var(--muted2);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px;}
+.gb-q-body{flex:1;}
+.gb-q-text{font-size:0.90rem;font-weight:700;color:var(--ink);margin-bottom:5px;}
+.gb-q-choices{display:flex;gap:6px;flex-wrap:wrap;}
+.gb-q-choice{padding:2px 10px;border-radius:99px;font-size:0.74rem;font-weight:700;border:1px solid var(--border);color:var(--muted);}
+.gb-q-choice.correct{background:rgba(16,185,129,0.10);border-color:var(--mint);color:var(--mint);}
+.gb-q-actions{display:flex;gap:5px;flex-shrink:0;}
+
+@keyframes noiseFlash{0%{opacity:0}50%{opacity:1}100%{opacity:0}}
+
+
 @media(max-width:960px) {
   .sidebar { display: none; }
   .content { padding: 16px 14px; }
@@ -1600,6 +1885,13 @@ body.dark .dark-toggle::after { content:'🌙'; transform:translateX(20px); }
       <button class="nav-btn" id="nav-notes" onclick="showPage('notes')"><span class="nav-icon">📝</span> الملاحظات <span class="nav-badge gold" id="nb-notes">0</span></button>
       <div class="sb-divider"></div>
       <div class="sb-section">أدوات الفصل</div>
+      <button class="nav-btn" id="nav-classroom_mode" onclick="showPage('classroom_mode')" style="position:relative;overflow:hidden;">
+        <span class="nav-icon">🖥️</span> وضع الحصة
+        <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);background:linear-gradient(135deg,var(--sky),var(--plum));color:white;font-size:0.60rem;font-weight:900;padding:2px 7px;border-radius:99px;">LIVE</span>
+      </button>
+      <button class="nav-btn" id="nav-games_bank" onclick="showPage('games_bank')">
+        <span class="nav-icon">🎮</span> بنك الأسئلة
+      </button>
       <button class="nav-btn" id="nav-treasuremap" onclick="showPage('treasuremap')" style="position:relative;overflow:hidden;">
         <span class="nav-icon">🗺️</span> خريطة الكنز
         <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);background:linear-gradient(135deg,#f59e0b,#ef4444);color:white;font-size:0.62rem;font-weight:900;padding:2px 7px;border-radius:99px;">جديد</span>
@@ -1733,7 +2025,7 @@ body.dark .dark-toggle::after { content:'🌙'; transform:translateX(20px); }
   </div>
   <div class="qe-btns">
     <button class="qe-btn m" onclick="qeAnswer('m')">✅ أتقن</button>
-    <button class="qe-btn n" onclick="qeAnswer('n')">❌ لم يتقن</button>
+    <button class="qe-btn n" onclick="qeAnswer('n')">❌ لم يتقن بعد</button>
     <button class="qe-btn skip" onclick="qeAnswer('skip')">تخطي ←</button>
   </div>
   <button style="background:none;border:none;color:rgba(255,255,255,0.5);font-size:18px;cursor:none;padding:0 4px;" onclick="stopQE()">✕</button>
@@ -1920,6 +2212,226 @@ body.dark .dark-toggle::after { content:'🌙'; transform:translateX(20px); }
   </div>
 </div>
 
+<!-- ══ CLASSROOM MODE OVERLAY — Projector Layout ══════════ -->
+<div id="classroomOverlay">
+
+  <!-- TOP BAR -->
+  <div class="cm-header">
+    <div style="display:flex;align-items:center;gap:14px;">
+      <div class="cm-logo-badge">🏫</div>
+      <div>
+        <div class="cm-school">مدارس البشرى الأهلية — الصف الأول الابتدائي</div>
+        <div class="cm-skill-live" id="cmSkillLive">—</div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:20px;">
+      <!-- Live clock -->
+      <div class="cm-clock-wrap">
+        <div class="cm-clock-time" id="cmClock">00:00:00</div>
+        <div class="cm-clock-date" id="cmDateLive">—</div>
+      </div>
+      <!-- View switcher -->
+      <div class="cm-view-tabs">
+        <button class="cm-view-tab active" id="cmVTab-board" onclick="cmSwitchView('board')">🖥️ السبورة</button>
+        <button class="cm-view-tab" id="cmVTab-wheel" onclick="cmSwitchView('wheel')">🎡 العجلة</button>
+        <button class="cm-view-tab" id="cmVTab-honor" onclick="cmSwitchView('honor')">🏆 الشرف</button>
+        <button class="cm-view-tab" id="cmVTab-games" onclick="cmSwitchView('games')">🎮 ألعاب</button>
+      </div>
+      <button class="cm-exit" onclick="closeClassroomMode()">✕ إنهاء</button>
+    </div>
+  </div>
+
+  <!-- VIEWS CONTAINER -->
+  <div class="cm-views" id="cmViews">
+
+    <!-- ══ VIEW: BOARD — السبورة الرئيسية ══ -->
+    <div class="cm-view active" id="cmView-board">
+      <div class="cm-board-grid">
+
+        <!-- LEFT: Timer + Controls -->
+        <div class="cm-board-left">
+          <!-- Lesson timer -->
+          <div class="cm-timer-card">
+            <div class="cm-timer-label" id="cmTimerLabel">⏱ مدة الحصة</div>
+            <div class="cm-timer-ring">
+              <svg width="180" height="180" viewBox="0 0 180 180">
+                <circle class="ring-bg" cx="90" cy="90" r="80"/>
+                <circle class="ring-prog" id="cmRingProg" cx="90" cy="90" r="80"
+                  stroke-dasharray="502" stroke-dashoffset="0"/>
+              </svg>
+              <div class="cm-timer-display">
+                <div class="cm-timer-time" id="cmTimerDisplay">45:00</div>
+              </div>
+            </div>
+            <div class="cm-timer-controls">
+              <button class="cm-btn cm-btn-primary" id="cmTimerBtn" onclick="cmToggleTimer()">▶ ابدأ</button>
+              <button class="cm-btn cm-btn-ghost" onclick="cmResetTimer()">↺</button>
+            </div>
+            <div class="cm-mini-timers-row">
+              <button class="cm-mini-btn" onclick="cmQuickTimer(5)">5د</button>
+              <button class="cm-mini-btn" onclick="cmQuickTimer(10)">10د</button>
+              <button class="cm-mini-btn" onclick="cmQuickTimer(15)">15د</button>
+              <button class="cm-mini-btn" onclick="cmQuickTimer(20)">20د</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- CENTER: Attendance interactive + Eval -->
+        <div class="cm-board-center">
+
+          <!-- Interactive Attendance -->
+          <div class="cm-attendance-card">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+              <div class="cm-card-title" style="margin-bottom:0">📋 الحضور — اضغط للتسجيل</div>
+              <div style="display:flex;gap:6px;">
+                <button class="cm-mini-btn" onclick="cmMarkAllPresent()" style="font-size:0.72rem;padding:5px 10px;">✅ كل الفصل</button>
+                <div class="cm-att-summary" id="cmAttSummary" style="margin:0;font-size:0.76rem;line-height:2;"></div>
+              </div>
+            </div>
+            <div class="cm-att-grid" id="cmAttGrid"></div>
+          </div>
+
+          <!-- Quick Eval in classroom -->
+          <div class="cm-eval-card" id="cmEvalCard">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+              <div class="cm-card-title" style="margin-bottom:0">⚡ تقييم المهارة الحالية</div>
+              <select id="cmEvalSubSec" onchange="cmRenderEvalGrid()"
+                style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:white;padding:4px 10px;border-radius:8px;font-family:'Tajawal',sans-serif;font-size:0.78rem;outline:none;"></select>
+            </div>
+            <div id="cmEvalGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:6px;max-height:160px;overflow-y:auto;"></div>
+          </div>
+        </div>
+
+        <!-- RIGHT: Mastery + actions -->
+        <div class="cm-board-right">
+          <div class="cm-card-title" style="margin-bottom:8px">📊 إتقان الطلاب</div>
+          <div id="cmTopList" style="display:flex;flex-direction:column;gap:5px;flex:1;overflow-y:auto;"></div>
+          <div style="display:flex;flex-direction:column;gap:7px;margin-top:10px;">
+            <button class="cm-btn cm-btn-primary" style="width:100%;justify-content:center;font-size:0.95rem;padding:11px" onclick="cmSwitchView('wheel')">
+              🎡 دوّر العجلة
+            </button>
+            <button class="cm-btn cm-btn-ghost" style="width:100%;justify-content:center" onclick="cmSwitchView('honor')">
+              🏆 لوحة الشرف
+            </button>
+            <button class="cm-btn cm-btn-ghost" style="width:100%;justify-content:center" onclick="cmPickStarOfDay()">
+              ⭐ نجمة اليوم
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ VIEW: WHEEL — العجلة العشوائية ══ -->
+    <div class="cm-view" id="cmView-wheel">
+      <div class="cm-wheel-fullscreen">
+        <div class="cm-wheel-left">
+          <div class="cm-wheel-title">🎡 عجلة المشاركة</div>
+          <div class="cm-wheel-subtitle">اضغط الزر لاختيار طالب عشوائياً</div>
+          <div class="cm-wheel-canvas-wrap">
+            <canvas id="cmWheelCanvas" width="380" height="380"></canvas>
+            <div class="cm-wheel-pointer"></div>
+          </div>
+          <button class="cm-spin-btn" id="cmSpinBtn" onclick="cmSpinWheel()">
+            🎡 أدِر العجلة
+          </button>
+        </div>
+        <div class="cm-wheel-right">
+          <div class="cm-wheel-result-big" id="cmWheelResultBig">
+            <div class="cm-wrb-emoji">🎯</div>
+            <div class="cm-wrb-text">انتظر الدوران...</div>
+            <div class="cm-wrb-sub" id="cmWheelSubBig"></div>
+          </div>
+          <div class="cm-wheel-history-wrap">
+            <div style="font-size:0.80rem;color:rgba(255,255,255,0.35);font-weight:700;margin-bottom:10px;letter-spacing:1px">سجل الاختيارات</div>
+            <div id="cmWheelHistory" style="display:flex;flex-direction:column;gap:6px;"></div>
+          </div>
+          <button class="cm-btn cm-btn-ghost" style="width:100%;justify-content:center;margin-top:auto" onclick="cmSwitchView('board')">
+            ← العودة للسبورة
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ VIEW: HONOR — لوحة الشرف ══ -->
+    <div class="cm-view" id="cmView-honor">
+      <div class="cm-honor-fullscreen">
+        <div class="cm-honor-header">
+          <div class="cm-honor-title">🏆 لوحة شرف الفصل</div>
+          <div class="cm-honor-date" id="cmHonorDate">—</div>
+        </div>
+        <div class="cm-honor-podium" id="cmHonorPodium"></div>
+        <div class="cm-honor-rest" id="cmHonorRest"></div>
+        <button class="cm-btn cm-btn-ghost" style="position:absolute;bottom:24px;left:24px" onclick="cmSwitchView('board')">
+          ← العودة
+        </button>
+      </div>
+    </div>
+
+    <!-- ══ VIEW: GAMES ══ -->
+    <div class="cm-view" id="cmView-games">
+      <div class="cm-games-fullscreen">
+
+        <!-- Sidebar: game selector -->
+        <div class="cm-games-sidebar">
+          <div class="cm-games-title">🎮 ألعاب الفصل</div>
+          <div class="cm-games-list">
+            <button class="cm-game-btn active" id="cgBtn-quiz" onclick="cmSelectGame('quiz')">
+              <div class="cg-icon">🎯</div>
+              <div class="cg-name">من سيربح المليون</div>
+              <div class="cg-sub">سؤال + خيارات</div>
+            </button>
+            <button class="cm-game-btn" id="cgBtn-hot" onclick="cmSelectGame('hot')">
+              <div class="cg-icon">💣</div>
+              <div class="cg-name">الكرسي الساخن</div>
+              <div class="cg-sub">أجب أو مرّر</div>
+            </button>
+            <button class="cm-game-btn" id="cgBtn-race" onclick="cmSelectGame('race')">
+              <div class="cg-icon">⏱️</div>
+              <div class="cg-name">سباق الإجابات</div>
+              <div class="cg-sub">أسرع يد ترفع</div>
+            </button>
+            <button class="cm-game-btn" id="cgBtn-word" onclick="cmSelectGame('word')">
+              <div class="cg-icon">🔤</div>
+              <div class="cg-name">أكمل الكلمة</div>
+              <div class="cg-sub">حروف ناقصة</div>
+            </button>
+          </div>
+          <button class="cm-btn cm-btn-ghost" style="width:100%;justify-content:center;margin-top:auto;font-size:0.80rem" onclick="cmSwitchView('board')">← السبورة</button>
+        </div>
+
+        <!-- Main game area -->
+        <div class="cm-games-main" id="cmGamesMain" style="flex:1;padding:20px 24px;overflow-y:auto;">
+          <!-- filled by JS -->
+        </div>
+
+      </div>
+    </div>
+
+  </div><!-- /cm-views -->
+
+  <!-- BOTTOM STATUS BAR -->
+  <div class="cm-status-bar">
+    <div style="display:flex;align-items:center;gap:8px;">
+      <span class="cm-status-dot" id="cmStatusDot"></span>
+      <span class="cm-status-text" id="cmStatusText">جاهز</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:16px;font-size:0.76rem;color:rgba(255,255,255,0.35);">
+      <span>Space = تشغيل/إيقاف</span>
+      <span>W = عجلة</span>
+      <span>H = لوحة الشرف</span>
+      <span>Esc = إغلاق</span>
+    </div>
+    <div class="cm-noise-mini" id="cmNoiseMini" title="مستوى الضجيج 🔊">
+      <div class="cm-noise-bar-h">
+        <div class="cm-noise-fill-h" id="cmNoiseFill" style="width:15%"></div>
+      </div>
+      <span style="font-size:0.74rem;color:rgba(255,255,255,0.35)">🔊</span>
+    </div>
+  </div>
+
+</div><!-- /classroomOverlay -->
+<div id="cmNoiseAlert"></div>
+
 <div class="toast-wrap" id="toastWrap"></div>
 
 <script>
@@ -2089,6 +2601,38 @@ function fullName(){
   return [S.teacher.n3,S.teacher.n1,S.teacher.n2].filter(Boolean).join(' ');
 }
 
+
+// ── إضافة طلاب تجريبيين إذا كان الفصل فارغاً ─────────────
+function addDemoStudents(){
+  if(S.students.length > 0) return;
+  const names = [
+    {n:'أحمد محمد العمري',   p:'+966501234001', g:'m'},
+    {n:'فاطمة علي الزهراني', p:'+966501234002', g:'f'},
+    {n:'محمد سعد القحطاني',  p:'+966501234003', g:'m'},
+    {n:'نورة خالد الشهري',   p:'+966501234004', g:'f'},
+    {n:'عبدالله يوسف الغامدي',p:'+966501234005', g:'m'},
+    {n:'ريم ناصر الدوسري',   p:'+966501234006', g:'f'},
+    {n:'سلطان حمد البلوي',   p:'+966501234007', g:'m'},
+    {n:'لمى عمر الحربي',     p:'+966501234008', g:'f'},
+    {n:'يوسف راشد المطيري',  p:'+966501234009', g:'m'},
+    {n:'هند سالم العتيبي',   p:'+966501234010', g:'f'},
+  ];
+  names.forEach((x,i)=>{
+    S.students.push({
+      id: genId(),
+      name: x.n,
+      num: i+1,
+      parent: x.p,
+      gender: x.g,
+      note: '',
+      photo: '',
+      createdAt: Date.now()
+    });
+  });
+  save();
+  toast('✅ تم إضافة 10 طلاب تجريبيين','success');
+}
+
 function enterApp(){
   document.getElementById('loginScreen').style.display='none';
   document.getElementById('app').style.display='block';
@@ -2100,6 +2644,7 @@ function enterApp(){
   document.getElementById('nb-notes').textContent=S.notes.length;
   const nbg=document.getElementById('nb-goals');
   if(nbg) nbg.textContent=S.goals.filter(g=>!g.done).length;
+  addDemoStudents();
   if(S.darkMode) document.body.classList.add('dark');
   rebuildSubjectNav();
   buildNotifs();
@@ -2109,6 +2654,8 @@ function enterApp(){
   // Mobile bottom nav badge
   const bnn=document.getElementById('bnn-students');
   if(bnn){ bnn.textContent=S.students.length; bnn.style.display=S.students.length>0?'flex':'none'; }
+  // Take weekly snapshot for progress tracking
+  ensureWeeklySnapshot();
   showPage('dash');
   setBnActive('dash');
   setInterval(save, 3000);
@@ -2127,7 +2674,7 @@ function doLogout(){
 // ══════════════════════════════════════════════
 // NAVIGATION
 // ══════════════════════════════════════════════
-const PAGES=['dash','students','attend','arabic','reports','analytics','gradebook','notes','seatmap','behavior','goals','planner','meetings','insights','treasuremap','photos','changelog','classroom','curriculum','profile'];
+const PAGES=['dash','students','attend','arabic','reports','analytics','gradebook','notes','seatmap','behavior','goals','planner','meetings','insights','treasuremap','classroom_mode','games_bank','photos','changelog','classroom','curriculum','profile'];
 function showPage(p){
   PAGES.forEach(id=>{
     const n=document.getElementById('nav-'+id);
@@ -2142,7 +2689,8 @@ function showPage(p){
     reports:renderReports, analytics:renderAnalytics,
     gradebook:renderGradeBook, notes:renderNotes, seatmap:renderSeatMap,
     behavior:renderBehavior, goals:renderGoals, planner:renderPlanner,
-    meetings:renderMeetings, insights:renderInsights, treasuremap:renderTreasureMap, photos:renderPhotoManager,
+    meetings:renderMeetings, insights:renderInsights, treasuremap:renderTreasureMap,
+    classroom_mode:renderClassroomMode, games_bank:renderGamesBank, photos:renderPhotoManager,
     profile:renderProfile, curriculum:renderCurriculum
   };
   const subMatch=S.subjects.find(s=>s.id===p);
@@ -2243,6 +2791,106 @@ function studentMastery(sid){
 
 function masteryColor(pct){ return pct>=70?'green':pct>=40?'gold':'red'; }
 function masteryLabel(pct){ return pct>=70?'ممتاز':pct>=40?'جيد':'يحتاج دعم'; }
+
+// ── مؤشر التقدم الحقيقي ─────────────────────────────────────
+// يحسب كم مهارة أتقنها الطالب في آخر N يوم
+// ويقارنها بالفترة اللي قبلها
+function studentProgress(sid, days=7){
+  const now = Date.now();
+  const msDay = 86400000;
+  const cutNew = now - days * msDay;       // بداية الفترة الجديدة
+  const cutOld = now - days * 2 * msDay;   // بداية الفترة القديمة
+
+  // احسب إجمالي المهارات المتقنة الآن
+  const curTotal = studentMastery(sid).totalM;
+
+  // ابحث في الـ changelog عن آخر تقييم لهذا الطالب قبل أسبوع
+  // لكن عندنا مشكلة: ما عندنا snapshot تاريخية للإتقان
+  // الحل: نحسب من تاريخ آخر تعديل في الـ evals
+  // بديل بسيط وفعال: نشوف كم entry eval في الـ changelog خلال الأسبوع
+
+  if(!S.changelog) return { delta:0, newSkills:0, trend:'flat' };
+
+  // عدد المهارات المقيّمة بـ 'تقييم' في آخر أسبوع لهذا الطالب
+  const recentEvals = S.changelog.filter(e=>{
+    if(e.type !== 'eval') return false;
+    const ts = new Date(e.ts).getTime();
+    return ts >= cutNew && (e.detail===sid || e.detail===S.students.find(s=>s.id===sid)?.name);
+  }).length;
+
+  const olderEvals = S.changelog.filter(e=>{
+    if(e.type !== 'eval') return false;
+    const ts = new Date(e.ts).getTime();
+    return ts >= cutOld && ts < cutNew && (e.detail===sid || e.detail===S.students.find(s=>s.id===sid)?.name);
+  }).length;
+
+  // استخدم totalM مباشرة كمؤشر تراكمي
+  // وخزّن snapshot أسبوعي في S إذا مش موجود
+  if(!S._snapshots) S._snapshots = {};
+  const snapKey = `${sid}_${new Date(cutNew).toISOString().slice(0,10)}`;
+  if(!S._snapshots[snapKey]) {
+    // أول مرة نحسب — خزّن الرقم الحالي كـ baseline
+    // بعد أسبوع هيكون هو المقارنة
+    S._snapshots[snapKey] = curTotal;
+  }
+
+  // أقدم snapshot متاح لهذا الطالب
+  const oldSnaps = Object.entries(S._snapshots)
+    .filter(([k])=> k.startsWith(sid+'_'))
+    .sort(([a],[b])=> a.localeCompare(b));
+
+  let delta = 0;
+  if(oldSnaps.length >= 2){
+    const oldest = oldSnaps[0][1];
+    delta = curTotal - oldest;
+  } else if(oldSnaps.length === 1){
+    delta = curTotal - (oldSnaps[0][1] || 0);
+  }
+
+  const trend = delta > 0 ? 'up' : delta < 0 ? 'down' : 'flat';
+  return { delta, newSkills: recentEvals, trend, curTotal };
+}
+
+// نسخة مبسطة سريعة — تقارن مجموع المهارات الحالي بأول snapshot مسجّل
+function studentProgressSimple(sid){
+  const cur = studentMastery(sid).totalM;
+  if(!S._snapshots) S._snapshots = {};
+
+  // ابحث عن أقدم snapshot
+  const snaps = Object.entries(S._snapshots)
+    .filter(([k])=> k.startsWith(sid+'_'))
+    .sort(([a],[b])=> a.localeCompare(b));
+
+  if(!snaps.length){
+    // أول مرة — سجّل baseline
+    const key = `${sid}_${today()}`;
+    S._snapshots[key] = cur;
+    return { delta:0, trend:'flat', label:'جديد' };
+  }
+
+  const baseline = snaps[0][1];
+  const delta = cur - baseline;
+  const trend = delta > 2 ? 'up' : delta > 0 ? 'up_slow' : delta < 0 ? 'down' : 'flat';
+
+  let label = '';
+  if(delta > 0) label = `+${delta} مهارة`;
+  else if(delta === 0) label = 'ثابت';
+  else label = `${delta} مهارة`;
+
+  return { delta, trend, label, baseline, cur };
+}
+
+// حفظ snapshot أسبوعي تلقائي
+function ensureWeeklySnapshot(){
+  if(!S._snapshots) S._snapshots = {};
+  const key_prefix = today(); // YYYY-MM-DD
+  S.students.forEach(s=>{
+    const key = `${s.id}_${key_prefix}`;
+    if(!S._snapshots[key]){
+      S._snapshots[key] = studentMastery(s.id).totalM;
+    }
+  });
+}
 
 function avatarStyle(sid){
   const idx = S.students.findIndex(s=>s.id===sid) % AVATAR_COLORS.length;
@@ -2521,12 +3169,15 @@ function renderStudentTable(list){
   const td=today();
   return `<div class="card"><div class="tbl-wrap"><table class="tbl">
     <thead><tr>
-      <th>#</th><th>الطالب</th><th>مستوى القراءة</th><th>مستوى الكتابة</th><th>الكلي</th><th>الحضور</th><th>الإجراءات</th>
+      <th>#</th><th>الطالب</th><th>مستوى القراءة</th><th>مستوى الكتابة</th><th>الكلي</th><th>التقدم</th><th>الحضور</th><th>الإجراءات</th>
     </tr></thead>
     <tbody>
     ${list.map((s,i)=>{
       const m=studentMastery(s.id);
+      const p=studentProgressSimple(s.id);
       const att=(S.attendance[td]||{})[s.id];
+      const trendIcon = p.delta>0?'↗':p.delta<0?'↘':'→';
+      const trendColor = p.delta>0?'var(--mint)':p.delta<0?'var(--ember)':'var(--muted2)';
       return `<tr>
         <td><span class="rank-circ">${i+1}</span></td>
         <td>
@@ -2559,6 +3210,12 @@ function renderStudentTable(list){
             </div>
           </div>
         </td>
+        <td>
+          <div style="font-size:0.88rem;font-weight:800;color:${trendColor};display:flex;align-items:center;gap:4px;" title="${p.delta>0?`تحسّن +${p.delta} مهارة`:p.delta<0?`تراجع ${p.delta}`:' لا تغيير'}">
+            <span style="font-size:1rem;">${trendIcon}</span>
+            <span>${p.label}</span>
+          </div>
+        </td>
         <td><span class="badge ${att==='p'?'badge-green':att==='a'?'badge-red':att==='e'?'badge-gold':'badge-gray'}">${att==='p'?'✅ حاضر':att==='a'?'❌ غائب':att==='e'?'📋 بعذر':'—'}</span></td>
         <td>
           <div style="display:flex;gap:6px;">
@@ -2581,9 +3238,12 @@ function renderStudentCards(list){
   return `<div class="student-cards-grid">
     ${list.map(s=>{
       const m=studentMastery(s.id);
+      const p=studentProgressSimple(s.id);
       const att=(S.attendance[td]||{})[s.id];
+      const trendIcon = p.delta>0?'↗':p.delta<0?'↘':'→';
+      const trendColor = p.delta>0?'var(--mint)':p.delta<0?'var(--ember)':'var(--muted2)';
+      const trendTitle = p.delta>0?`تحسّن +${p.delta} مهارة منذ البداية`:p.delta<0?`تراجع ${p.delta} مهارة`:'لا تغيير بعد';
       return `<div class="stu-card" onclick="openEval('${s.id}')">
-        ${m.total>=70?`<div class="stu-card-streak">⭐ ممتاز</div>`:''}
         <div class="stu-card-top">
           ${avatarHTML(s.id,48,'border-radius:14px;',true)}
           <div>
@@ -2596,7 +3256,10 @@ function renderStudentCards(list){
         <div class="stu-card-prog-label"><span>✍️ الكتابة</span><span>${m.wPct}%</span></div>
         <div class="prog-wrap"><div class="prog-bar ${masteryColor(m.wPct)}" style="width:${m.wPct}%"></div></div>
         <div style="display:flex;align-items:center;justify-content:space-between;margin-top:12px;">
-          <span class="badge badge-${masteryColor(m.total)}">الكلي: ${m.total}%</span>
+          <span class="badge badge-${masteryColor(m.total)}">${m.total}%</span>
+          <span style="font-size:0.80rem;font-weight:800;color:${trendColor}" title="${trendTitle}">
+            ${trendIcon} ${p.label}
+          </span>
           <span class="badge badge-${att==='p'?'green':att==='a'?'red':att==='e'?'gold':'gray'}">${att==='p'?'✅':att==='a'?'❌':att==='e'?'📋':'—'}</span>
         </div>
         <div class="stu-card-actions" onclick="event.stopPropagation()">
@@ -2897,7 +3560,7 @@ function renderSubjectPage(subId){
         </td>
         ${secStats.map(st=>`<td>
           <div style="display:flex;justify-content:space-between;font-size:0.76rem;color:var(--muted);margin-bottom:3px;">
-            <span>${st.m} أتقن</span><span>${st.t-st.m} لم يتقن</span>
+            <span>${st.m} أتقن</span><span>${st.t-st.m} لم يتقن بعد</span>
           </div>
           <div class="prog-wrap"><div class="prog-bar ${masteryColor(st.pct)}" style="width:${st.pct}%"></div></div>
           <span class="badge badge-${masteryColor(st.pct)}" style="margin-top:4px;">${st.pct}%</span>
@@ -3047,7 +3710,7 @@ function _buildSectionHTML(sec, subId, sid){
       <div class="eval-name">${sk}</div>
       <div class="eval-btns">
         <button class="ev-btn ev-m ${isMastered?'on':''}" onclick="setEvDyn('${subId}','${sec.id}',${i},'m')">✅ أتقن</button>
-        <button class="ev-btn ev-n ${isNot?'on':''}"  onclick="setEvDyn('${subId}','${sec.id}',${i},'n')">❌ لم يتقن</button>
+        <button class="ev-btn ev-n ${isNot?'on':''}"  onclick="setEvDyn('${subId}','${sec.id}',${i},'n')">❌ لم يتقن بعد</button>
       </div>
     </div>`;
   }).join('');
@@ -3060,7 +3723,7 @@ function _buildSectionHTML(sec, subId, sid){
       </div>
       <div style="display:flex;gap:7px;">
         <button class="btn btn-green btn-xs" onclick="setAllEvalDyn('${subId}','${sec.id}','m')">✅ كل أتقن</button>
-        <button class="btn btn-red btn-xs"   onclick="setAllEvalDyn('${subId}','${sec.id}','n')">❌ كل لم يتقن</button>
+        <button class="btn btn-red btn-xs"   onclick="setAllEvalDyn('${subId}','${sec.id}','n')">❌ كل لم يتقن بعد</button>
         <button class="btn btn-ghost btn-xs" onclick="clearEvalDyn('${subId}','${sec.id}')">↺ مسح</button>
       </div>
     </div>
@@ -3333,7 +3996,7 @@ function genStudentPDF(sid){
       let skillRows='';
       sec.skills.forEach((sk,i)=>{
         const v=secEv[i];
-        const statusAr=v==='m'?'✅ أتقن':v==='n'?'❌ لم يتقن':'⬜ لم يُقيَّم';
+        const statusAr=v==='m'?'✅ أتقن':v==='n'?'❌ لم يتقن بعد':'⬜ لم يُقيَّم';
         const rowBg=v==='m'?'#f0fdf4':v==='n'?'#fef2f2':'#f8faff';
         const clr=v==='m'?'#059669':v==='n'?'#dc2626':'#94a3b8';
         skillRows+=`<tr style="background:${rowBg}">
@@ -6078,7 +6741,7 @@ function _renderClassMap(sub,sec){
   <div class="card" style="margin-bottom:20px;">
     <div class="card-header"><h3>🌡️ خريطة الحرارة — كل طالب × كل محطة</h3>
       <div style="display:flex;gap:8px;font-size:0.76rem;color:var(--muted);font-weight:700;">
-        <span>🟢 أتقن</span><span>🟡 لم يتقن</span><span>⬜ لم يُقيَّم</span>
+        <span>🟢 أتقن</span><span>🟡 لم يتقن بعد</span><span>⬜ لم يُقيَّم</span>
       </div>
     </div>
     <div style="padding:16px;overflow-x:auto;">
@@ -6096,7 +6759,7 @@ function _renderClassMap(sub,sec){
           ${sec.skills.map((_,i)=>{
             const v=ev[i];
             const cls=v==='m'?'c-done':v==='n'?'c-partial':'c-none';
-            const tt=v==='m'?'✅ أتقن':v==='n'?'❌ لم يتقن':'⬜ لم يُقيَّم';
+            const tt=v==='m'?'✅ أتقن':v==='n'?'❌ لم يتقن بعد':'⬜ لم يُقيَّم';
             return `<div class="tm-class-cell ${cls}" title="${tt}"></div>`;
           }).join('')}
         </div>`;
@@ -6294,7 +6957,7 @@ function _tmShowStationInfo(subId,secId,skillIdx,event){
     <div class="tm-popup-title">📌 ${skill}</div>
     <div style="font-size:.78rem;color:var(--muted);margin-bottom:8px">${Math.round((done.length/S.students.length)*100)}% إتقان</div>
     ${done.length?`<div class="tm-popup-skill"><span style="color:var(--mint)">✅</span> أتقن: ${done.map(s=>s.name).join('، ')}</div>`:''}
-    ${not.length?`<div class="tm-popup-skill"><span style="color:var(--ember)">❌</span> لم يتقن: ${not.map(s=>s.name).join('، ')}</div>`:''}
+    ${not.length?`<div class="tm-popup-skill"><span style="color:var(--ember)">❌</span> لم يتقن بعد: ${not.map(s=>s.name).join('، ')}</div>`:''}
     ${none.length?`<div class="tm-popup-skill"><span style="opacity:.5">⬜</span> لم يُقيَّم: ${none.map(s=>s.name).join('، ')}</div>`:''}
   `;
   const rect=event.currentTarget?.getBoundingClientRect?.()||{top:event.clientY,left:event.clientX};
@@ -6317,7 +6980,7 @@ function _tmShowSkillDetail(i,subId,secId,sid,event){
     </div>
     <div style="display:flex;gap:8px;margin-top:10px;pointer-events:all;">
       <button class="btn btn-green btn-xs" onclick="setEvDyn('${subId}','${secId}',${i},'m');document.getElementById('tmPopup').style.display='none';showPage('treasuremap')">✅ أتقن</button>
-      <button class="btn btn-red btn-xs" onclick="setEvDyn('${subId}','${secId}',${i},'n');document.getElementById('tmPopup').style.display='none';showPage('treasuremap')">❌ لم يتقن</button>
+      <button class="btn btn-red btn-xs" onclick="setEvDyn('${subId}','${secId}',${i},'n');document.getElementById('tmPopup').style.display='none';showPage('treasuremap')">❌ لم يتقن بعد</button>
     </div>`;
   popup.style.pointerEvents='all';
   const rect=event.currentTarget?.getBoundingClientRect?.()||{top:event.clientY,left:event.clientX};
@@ -6769,6 +7432,1396 @@ document.addEventListener('touchend', e=>{
     e.target.click();
   }
 }, {passive:false});
+
+// ══════════════════════════════════════════════════════════════
+// 🖥️ CLASSROOM MODE v2 — Projector Layout
+// ══════════════════════════════════════════════════════════════
+
+const CM = {
+  open:false, currentView:'board',
+  timerTotal:45*60, timerLeft:45*60, timerRunning:false, timerInterval:null,
+  activityTotal:10*60,
+  wheelSpinning:false, wheelAngle:0, wheelVelocity:0, wheelRaf:null,
+  wheelHistory:[], wheelRemaining:[],
+  noiseStream:null, noiseAnalyser:null, noiseRaf:null, noiseEnabled:false,
+  lessonDuration:45, selectedSubId:null, starOfDay:null,
+  quickTimers:[], // [{label,left,total,running,interval}]
+};
+
+// ── Entry page ──────────────────────────────────────────────
+function renderClassroomMode(){
+  const subOpts = S.subjects.map(s=>`<option value="${s.id}">${s.icon||'📚'} ${s.name}</option>`).join('');
+  const skillOpts = S.subjects.flatMap(sub=>
+    sub.sections.flatMap(sec=>
+      sec.skills.map((sk,i)=>`<option value="${sub.id}:${sec.id}:${i}">${sub.name} — ${sec.name}: ${sk}</option>`)
+    )
+  ).join('');
+  return `
+  <div class="breadcrumb">🏠 <span class="sep">›</span> <span class="active">🖥️ وضع الحصة</span></div>
+  <div class="ph">
+    <div><div class="ph-title">🖥️ وضع الحصة — شاشة البروجكتور</div>
+    <div class="ph-sub">شاشة كاملة مصممة للعرض أمام الطلاب — عجلة · مؤقتات · لوحة شرف</div></div>
+  </div>
+  <div class="card" style="max-width:540px;margin:0 auto;">
+    <div class="card-header"><h3>⚙️ إعداد الحصة</h3></div>
+    <div class="card-body">
+      <div class="fg"><label>المادة</label><select id="cm_subSelect" onchange="cmUpdateSkillSelect()">${subOpts}</select></div>
+      <div class="fg"><label>المهارة المستهدفة اليوم</label>
+        <select id="cm_skillSelect"><option value="">— اختر مهارة محددة (اختياري) —</option>${skillOpts}</select>
+      </div>
+      <div class="fg"><label>مدة الحصة (دقيقة)</label>
+        <input type="number" id="cm_duration" value="45" min="5" max="90" /></div>
+      <div class="note-card" style="margin-top:4px;">
+        <span class="note-icon">💡</span>
+        <div>اضغط <strong>Space</strong> لتشغيل المؤقت · <strong>W</strong> للعجلة · <strong>H</strong> للوحة الشرف · <strong>Esc</strong> للإغلاق</div>
+      </div>
+      <button class="btn btn-primary" style="width:100%;font-size:1rem;padding:14px;margin-top:6px" onclick="openClassroomMode()">
+        🖥️ بدء وضع الحصة الكامل
+      </button>
+    </div>
+  </div>`;
+}
+
+function cmUpdateSkillSelect(){
+  const subId=document.getElementById('cm_subSelect')?.value;
+  const sub=S.subjects.find(s=>s.id===subId);
+  const sel=document.getElementById('cm_skillSelect');
+  if(!sel||!sub) return;
+  sel.innerHTML='<option value="">— اختر مهارة —</option>'+
+    sub.sections.flatMap(sec=>sec.skills.map((sk,i)=>`<option value="${sub.id}:${sec.id}:${i}">${sec.name}: ${sk}</option>`)).join('');
+}
+
+function openClassroomMode(){
+  const subId=document.getElementById('cm_subSelect')?.value||S.subjects[0]?.id;
+  const skillVal=document.getElementById('cm_skillSelect')?.value||'';
+  const dur=parseInt(document.getElementById('cm_duration')?.value)||45;
+  const sub=S.subjects.find(s=>s.id===subId);
+
+  CM.selectedSubId=subId;
+  CM.lessonDuration=dur;
+  CM.timerTotal=dur*60;
+  CM.timerLeft=dur*60;
+  CM.timerRunning=false;
+  CM.currentView='board';
+  CM.wheelHistory=[];
+  CM.wheelRemaining=[...S.students];
+  CM.starOfDay=null;
+
+  // Skill label
+  let skillLabel='لم تُحدَّد';
+  if(skillVal){
+    const parts=skillVal.split(':');
+    const sec=sub?.sections.find(s=>s.id===parts[1]);
+    const sk=sec?.skills[+parts[2]];
+    if(sk) skillLabel=sk;
+  }
+  document.getElementById('cmSkillLive').textContent='🎯 '+skillLabel;
+
+  document.getElementById('classroomOverlay').classList.add('open');
+  document.body.style.overflow='hidden';
+  CM.open=true;
+
+  cmSwitchView('board');
+  cmUpdateTimer();
+  cmUpdateBoardData();
+  cmStartClock();
+  cmInitNoise();
+  logChange('edit','فتح وضع الحصة',sub?.name||'');
+}
+
+function closeClassroomMode(){
+  document.getElementById('classroomOverlay').classList.remove('open');
+  document.body.style.overflow='';
+  CM.open=false;
+  clearInterval(CM.timerInterval); CM.timerInterval=null;
+  CM.timerRunning=false;
+  clearInterval(CM._clockInterval);
+  cmStopNoise();
+  cancelAnimationFrame(CM.wheelRaf);
+  CM.quickTimers.forEach(t=>{ clearInterval(t.interval); t.interval=null; });
+}
+
+// ── View switcher ───────────────────────────────────────────
+function cmSwitchView(view){
+  CM.currentView=view;
+  document.querySelectorAll('.cm-view').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.cm-view-tab').forEach(b=>b.classList.remove('active'));
+  const viewEl=document.getElementById('cmView-'+view);
+  const tabEl =document.getElementById('cmVTab-'+view);
+  if(viewEl) viewEl.classList.add('active');
+  if(tabEl)  tabEl.classList.add('active');
+
+  if(view==='board')  { cmUpdateBoardData(); }
+  if(view==='wheel')  { setTimeout(cmDrawWheel,50); }
+  if(view==='honor')  { cmBuildHonorView(); }
+  if(view==='games')  { if(!CM.games) cmGamesInit(); cmRenderGame(CM.games.activeGame||'quiz'); }
+}
+
+// ── CLOCK ───────────────────────────────────────────────────
+function cmStartClock(){
+  clearInterval(CM._clockInterval);
+  const tick=()=>{
+    const n=new Date();
+    const h=String(n.getHours()).padStart(2,'0');
+    const m=String(n.getMinutes()).padStart(2,'0');
+    const s=String(n.getSeconds()).padStart(2,'0');
+    const el=document.getElementById('cmClock');
+    const dl=document.getElementById('cmDateLive');
+    if(el) el.textContent=`${h}:${m}:${s}`;
+    if(dl) dl.textContent=fmtDate(today());
+  };
+  tick();
+  CM._clockInterval=setInterval(tick,1000);
+}
+
+// ── TIMER ───────────────────────────────────────────────────
+function fmtSecs(s){ return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0'); }
+
+function cmUpdateTimer(){
+  const el=document.getElementById('cmTimerDisplay');
+  const ring=document.getElementById('cmRingProg');
+  const btn=document.getElementById('cmTimerBtn');
+  if(!el||!ring) return;
+  const pct=CM.timerLeft/CM.timerTotal;
+  ring.style.strokeDashoffset=502*(1-pct);
+  el.textContent=fmtSecs(CM.timerLeft);
+  if(btn) btn.textContent=CM.timerRunning?'⏸ إيقاف':'▶ ابدأ';
+  el.className='cm-timer-time';
+  ring.className='ring-prog';
+  if(pct<=0.10){ el.classList.add('urgent'); ring.classList.add('urgent'); }
+  else if(pct<=0.25){ el.classList.add('warn'); ring.classList.add('warn'); }
+}
+
+function cmToggleTimer(){
+  if(CM.timerRunning){
+    clearInterval(CM.timerInterval); CM.timerInterval=null; CM.timerRunning=false;
+  } else {
+    if(CM.timerLeft<=0) cmResetTimer();
+    CM.timerRunning=true;
+    CM.timerInterval=setInterval(()=>{
+      CM.timerLeft--;
+      cmUpdateTimer();
+      if(CM.timerLeft<=0){
+        clearInterval(CM.timerInterval); CM.timerInterval=null; CM.timerRunning=false;
+        toast('🔔 انتهت الحصة!','info');
+      }
+    },1000);
+  }
+  cmUpdateTimer();
+}
+
+function cmResetTimer(){
+  clearInterval(CM.timerInterval); CM.timerInterval=null;
+  CM.timerRunning=false; CM.timerLeft=CM.timerTotal;
+  cmUpdateTimer();
+}
+
+function cmQuickTimer(min){
+  const btn=event?.target;
+  // Toggle: if already running this timer, cancel it
+  const existing=CM.quickTimers.find(t=>t.label===min+'د');
+  if(existing){
+    clearInterval(existing.interval); existing.interval=null;
+    CM.quickTimers=CM.quickTimers.filter(t=>t!==existing);
+    if(btn) btn.classList.remove('active');
+    return;
+  }
+  if(btn) btn.classList.add('active');
+  const t={label:min+'د',total:min*60,left:min*60,running:true,interval:null,btn};
+  CM.quickTimers.push(t);
+  t.interval=setInterval(()=>{
+    t.left--;
+    if(t.left<=0){
+      clearInterval(t.interval); t.interval=null;
+      CM.quickTimers=CM.quickTimers.filter(x=>x!==t);
+      if(btn) btn.classList.remove('active');
+      toast(`🔔 مؤقت ${t.label} انتهى!`,'info');
+    }
+  },1000);
+  toast(`⏱ مؤقت ${min} دقيقة بدأ`,'info');
+}
+
+// ── BOARD DATA ──────────────────────────────────────────────
+function cmUpdateBoardData(){
+  cmUpdateAttendanceGrid();
+  cmUpdateTopList();
+  cmInitEvalCard();
+  cmUpdateStarCard();
+}
+
+function cmUpdateAttendanceGrid(){
+  const grid=document.getElementById('cmAttGrid');
+  const summary=document.getElementById('cmAttSummary');
+  if(!grid) return;
+  const att=S.attendance[today()]||{};
+  const present=Object.values(att).filter(v=>v==='p').length;
+  const absent=Object.values(att).filter(v=>v==='a').length;
+  grid.innerHTML=S.students.map(s=>{
+    const v=att[s.id];
+    const cls=v==='p'?'present':v==='a'?'absent':'unknown';
+    const photoEl=s.photo
+      ?`<img src="${s.photo}" style="width:28px;height:28px;border-radius:50%;object-fit:cover;"/>`
+      :`<div style="width:28px;height:28px;border-radius:50%;${avatarStyle(s.id)};color:white;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;">${s.name.charAt(0)}</div>`;
+    return `<div class="cm-att-card ${cls}" onclick="cmToggleAttendance('${s.id}')" title="${v==='p'?'حاضر — اضغط للغياب':v==='a'?'غائب — اضغط لإزالة':'اضغط لتسجيل الحضور'}">
+      ${photoEl}
+      <div class="cm-att-name">${s.name.split(' ')[0]}</div>
+      <div style="font-size:0.72rem;margin-top:1px;">${v==='p'?'✅':v==='a'?'❌':'⬜'}</div>
+    </div>`;
+  }).join('');
+  if(summary) summary.textContent=`✅${present} ❌${absent}`;
+}
+
+function cmToggleAttendance(sid){
+  if(!S.attendance[today()]) S.attendance[today()]={};
+  const cur=S.attendance[today()][sid];
+  if(cur==='p') S.attendance[today()][sid]='a';
+  else if(cur==='a') delete S.attendance[today()][sid];
+  else S.attendance[today()][sid]='p';
+  save();
+  logChange('att','تسجيل حضور في وضع الحصة',S.students.find(s=>s.id===sid)?.name||'');
+  cmUpdateAttendanceGrid();
+}
+
+function cmMarkAllPresent(){
+  if(!S.attendance[today()]) S.attendance[today()]={};
+  S.students.forEach(s=>{ S.attendance[today()][s.id]='p'; });
+  save();
+  cmUpdateAttendanceGrid();
+  toast('✅ تم تسجيل حضور الجميع','success');
+}
+
+function cmUpdateTopList(){
+  const el=document.getElementById('cmTopList');
+  if(!el) return;
+  const sorted=[...S.students].sort((a,b)=>studentMastery(b.id).total-studentMastery(a.id).total);
+  el.innerHTML=sorted.map((s,i)=>{
+    const m=studentMastery(s.id);
+    const p=studentProgressSimple(s.id);
+    const pctColor=m.total>=70?'var(--mint)':m.total>=40?'var(--gold)':'var(--ember)';
+    const medal=i===0?'🥇':i===1?'🥈':i===2?'🥉':`${i+1}`;
+    const trendIcon=p.delta>0?'↗':p.delta<0?'↘':'→';
+    const trendColor=p.delta>0?'var(--mint)':p.delta<0?'var(--ember)':'rgba(255,255,255,0.30)';
+    const photoEl=s.photo
+      ?`<img src="${s.photo}" style="width:24px;height:24px;border-radius:50%;object-fit:cover;flex-shrink:0;"/>`
+      :`<div style="width:24px;height:24px;border-radius:50%;${avatarStyle(s.id)};color:white;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:900;flex-shrink:0;">${s.name.charAt(0)}</div>`;
+    return `<div class="cm-top-item">
+      <div class="cm-top-medal">${medal}</div>
+      ${photoEl}
+      <div class="cm-top-name">${s.name.split(' ')[0]}</div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:1px;">
+        <div class="cm-top-pct" style="color:${pctColor}">${m.total}%</div>
+        <div style="font-size:0.68rem;font-weight:800;color:${trendColor}">${trendIcon}${p.label}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function cmUpdateStarCard(){
+  const card=document.getElementById('cmStarCard');
+  if(!card) return;
+  if(CM.starOfDay){
+    const s=S.students.find(x=>x.id===CM.starOfDay);
+    if(s){ card.style.display='block'; document.getElementById('cmStarCardName').textContent=s.name; }
+  } else { card.style.display='none'; }
+}
+
+// ── Eval card ───────────────────────────────────────────────
+function cmInitEvalCard(){
+  const sel=document.getElementById('cmEvalSubSec');
+  if(!sel) return;
+  sel.innerHTML=S.subjects.flatMap(sub=>
+    sub.sections.map(sec=>`<option value="${sub.id}:${sec.id}">${sub.icon||'📚'}${sub.name} — ${sec.name}</option>`)
+  ).join('');
+  if(CM.selectedSubId){
+    const sub=S.subjects.find(s=>s.id===CM.selectedSubId);
+    if(sub?.sections[0]) sel.value=`${sub.id}:${sub.sections[0].id}`;
+  }
+  cmRenderEvalGrid();
+}
+
+function cmRenderEvalGrid(){
+  const sel=document.getElementById('cmEvalSubSec');
+  const grid=document.getElementById('cmEvalGrid');
+  if(!sel||!grid) return;
+  const [subId,secId]=sel.value.split(':');
+  const sub=S.subjects.find(s=>s.id===subId);
+  const sec=sub?.sections.find(s=>s.id===secId);
+  if(!sec){ grid.innerHTML='<div style="color:rgba(255,255,255,0.30);font-size:0.82rem;padding:8px;">اختر مادة وخانة</div>'; return; }
+
+  grid.innerHTML=S.students.map(s=>{
+    const val=((S.evals[s.id]||{})[subId]||{})[secId]||{};
+    const total=sec.skills.length;
+    const mastered=Object.values(val).filter(v=>v==='m').length;
+    const evaluated=Object.keys(val).length;
+    const pct=total?Math.round(mastered/total*100):0;
+    const statusClass=evaluated?(pct>=70?'ev-mastered':pct>0?'':'ev-not'):'';
+    const statusIcon=pct>=70?'✅':evaluated&&mastered>0?'🔄':evaluated?'❌':'⬜';
+    const photoEl=s.photo
+      ?`<img src="${s.photo}" style="width:22px;height:22px;border-radius:50%;object-fit:cover;flex-shrink:0;"/>`
+      :`<div style="width:22px;height:22px;border-radius:50%;${avatarStyle(s.id)};color:white;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:900;flex-shrink:0;">${s.name.charAt(0)}</div>`;
+    return `<div class="cm-eval-stu-btn ${statusClass}" onclick="cmEvalToggle('${s.id}','${subId}','${secId}')">
+      ${photoEl}
+      <div class="cm-eval-stu-name">${s.name.split(' ')[0]}</div>
+      <div class="cm-eval-stu-status">${statusIcon}</div>
+      <div style="position:absolute;bottom:0;left:0;height:3px;border-radius:0 0 9px 0;background:${pct>=70?'rgba(16,185,129,0.7)':pct>0?'rgba(245,158,11,0.6)':'rgba(255,255,255,0.05)'};width:${pct}%;transition:width .4s;"></div>
+    </div>`;
+  }).join('');
+}
+
+function cmEvalToggle(sid,subId,secId){
+  const sub=S.subjects.find(s=>s.id===subId);
+  const sec=sub?.sections.find(s=>s.id===secId);
+  const s=S.students.find(x=>x.id===sid);
+  if(!sec||!s) return;
+  const existing=document.getElementById('cmEvalPopup');
+  if(existing) existing.remove();
+  const popup=document.createElement('div');
+  popup.id='cmEvalPopup';
+  popup.style.cssText='position:fixed;inset:0;z-index:1200;background:rgba(0,0,0,0.75);backdrop-filter:blur(5px);display:flex;align-items:center;justify-content:center;';
+  popup.onclick=e=>{ if(e.target===popup){ popup.remove(); cmRenderEvalGrid(); } };
+  const curEval=((S.evals[sid]||{})[subId]||{})[secId]||{};
+  const skillRows=sec.skills.map((sk,i)=>{
+    const v=curEval[i];
+    return `<div style="display:flex;align-items:center;gap:10px;padding:9px 13px;border-radius:10px;background:${v==='m'?'rgba(16,185,129,0.12)':v==='n'?'rgba(239,68,68,0.10)':'rgba(255,255,255,0.04)'};border:1px solid ${v==='m'?'rgba(16,185,129,0.25)':v==='n'?'rgba(239,68,68,0.20)':'rgba(255,255,255,0.07)'};margin-bottom:6px;">
+      <span style="font-size:0.70rem;color:rgba(255,255,255,0.30);width:18px;text-align:center;font-weight:700">${i+1}</span>
+      <span style="flex:1;font-size:0.86rem;color:rgba(255,255,255,0.85);font-weight:600">${sk}</span>
+      <button onclick="cmEvalSet('${sid}','${subId}','${secId}',${i},'m')" style="padding:5px 11px;border-radius:7px;border:none;background:${v==='m'?'var(--mint)':'rgba(16,185,129,0.15)'};color:${v==='m'?'var(--ink)':'var(--mint)'};font-family:Tajawal,sans-serif;font-size:0.78rem;font-weight:800;cursor:none;">✅ أتقن</button>
+      <button onclick="cmEvalSet('${sid}','${subId}','${secId}',${i},'n')" style="padding:5px 11px;border-radius:7px;border:none;background:${v==='n'?'var(--ember)':'rgba(239,68,68,0.15)'};color:${v==='n'?'white':'var(--ember)'};font-family:Tajawal,sans-serif;font-size:0.78rem;font-weight:800;cursor:none;">❌ لم يتقن بعد</button>
+    </div>`;
+  }).join('');
+  const photoEl=s.photo
+    ?`<img src="${s.photo}" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid rgba(66,165,245,0.30);"/>`
+    :`<div style="width:44px;height:44px;border-radius:50%;${avatarStyle(sid)};color:white;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:900;">${s.name.charAt(0)}</div>`;
+  popup.innerHTML=`<div style="background:#111e33;border:1px solid rgba(255,255,255,0.10);border-radius:18px;padding:22px;width:460px;max-width:95vw;max-height:80vh;overflow-y:auto;direction:rtl;font-family:Tajawal,sans-serif;">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+      ${photoEl}
+      <div><div style="font-size:1rem;font-weight:900;color:white;">${s.name}</div>
+      <div style="font-size:0.74rem;color:rgba(255,255,255,0.40);">${sub.icon||'📚'} ${sub.name} — ${sec.name}</div></div>
+      <button onclick="document.getElementById('cmEvalPopup').remove();cmRenderEvalGrid();" style="margin-right:auto;width:28px;height:28px;border-radius:50%;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.07);color:rgba(255,255,255,0.60);font-size:13px;font-weight:900;cursor:none;font-family:sans-serif;">✕</button>
+    </div>
+    ${skillRows}
+    <div style="display:flex;gap:8px;margin-top:12px;">
+      <button onclick="cmEvalMarkAll('${sid}','${subId}','${secId}','m')" style="flex:1;padding:10px;border-radius:10px;border:none;background:rgba(16,185,129,0.18);color:var(--mint);font-family:Tajawal,sans-serif;font-size:0.84rem;font-weight:800;cursor:none;">✅ أتقن الكل</button>
+      <button onclick="cmEvalMarkAll('${sid}','${subId}','${secId}','n')" style="flex:1;padding:10px;border-radius:10px;border:none;background:rgba(239,68,68,0.15);color:var(--ember);font-family:Tajawal,sans-serif;font-size:0.84rem;font-weight:800;cursor:none;">❌ لم يتقن بعد أياً</button>
+    </div>
+  </div>`;
+  document.getElementById('classroomOverlay').appendChild(popup);
+}
+
+function cmEvalSet(sid,subId,secId,idx,val){
+  if(!S.evals[sid]) S.evals[sid]={};
+  if(!S.evals[sid][subId]) S.evals[sid][subId]={};
+  if(!S.evals[sid][subId][secId]) S.evals[sid][subId][secId]={};
+  if(S.evals[sid][subId][secId][idx]===val) delete S.evals[sid][subId][secId][idx];
+  else S.evals[sid][subId][secId][idx]=val;
+  save();
+  logChange('eval','تقييم في وضع الحصة',S.students.find(s=>s.id===sid)?.name||'');
+  const popup=document.getElementById('cmEvalPopup');
+  if(popup){ popup.remove(); cmEvalToggle(sid,subId,secId); }
+}
+
+function cmEvalMarkAll(sid,subId,secId,val){
+  const sub=S.subjects.find(s=>s.id===subId);
+  const sec=sub?.sections.find(s=>s.id===secId);
+  if(!sec) return;
+  if(!S.evals[sid]) S.evals[sid]={};
+  if(!S.evals[sid][subId]) S.evals[sid][subId]={};
+  S.evals[sid][subId][secId]={};
+  sec.skills.forEach((_,i)=>{ S.evals[sid][subId][secId][i]=val; });
+  save();
+  const popup=document.getElementById('cmEvalPopup');
+  if(popup){ popup.remove(); cmEvalToggle(sid,subId,secId); }
+  cmRenderEvalGrid();
+  cmUpdateTopList();
+}
+
+function cmPickStarOfDay(){
+  if(!S.students.length) return;
+  const sorted=[...S.students].sort((a,b)=>studentMastery(b.id).total-studentMastery(a.id).total);
+  CM.starOfDay=sorted[0].id;
+  cmUpdateStarCard();
+  confetti();
+  toast('⭐ نجمة اليوم: '+sorted[0].name,'success');
+}
+
+function cmStartQuickEval(){
+  if(!S.subjects.length||!S.students.length) return;
+  closeClassroomMode();
+  const sub=S.subjects.find(s=>s.id===CM.selectedSubId)||S.subjects[0];
+  startQuickEval(sub.id,sub.sections[0]?.id);
+}
+
+// ── WHEEL ───────────────────────────────────────────────────
+function cmDrawWheel(){
+  const canvas=document.getElementById('cmWheelCanvas');
+  if(!canvas) return;
+  const pool = CM.wheelRemaining.length ? CM.wheelRemaining : S.students;
+  if(!pool.length) return;
+  const ctx=canvas.getContext('2d');
+  const cx=190,cy=190,r=185,n=pool.length;
+  const colors=['#1565c0','#0e7490','#059669','#7c3aed','#dc2626','#d97706','#0284c7','#4f46e5','#0f766e','#9333ea'];
+  ctx.clearRect(0,0,380,380);
+  pool.forEach((s,i)=>{
+    const start=(i/n)*2*Math.PI+CM.wheelAngle;
+    const end=((i+1)/n)*2*Math.PI+CM.wheelAngle;
+    ctx.beginPath(); ctx.moveTo(cx,cy); ctx.arc(cx,cy,r,start,end); ctx.closePath();
+    ctx.fillStyle=colors[i%colors.length]; ctx.fill();
+    ctx.strokeStyle='rgba(0,0,0,0.20)'; ctx.lineWidth=2; ctx.stroke();
+    const mid=(start+end)/2;
+    ctx.save();
+    ctx.translate(cx+Math.cos(mid)*r*0.65,cy+Math.sin(mid)*r*0.65);
+    ctx.rotate(mid+Math.PI/2);
+    ctx.fillStyle='white'; ctx.font='bold 13px Tajawal,sans-serif';
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    const name=s.name.split(' ')[0];
+    ctx.fillText(name.length>7?name.substring(0,6)+'…':name,0,0);
+    ctx.restore();
+  });
+  // Center
+  ctx.beginPath(); ctx.arc(cx,cy,30,0,2*Math.PI);
+  ctx.fillStyle='#0a0f1e'; ctx.fill();
+  ctx.strokeStyle='rgba(255,255,255,0.10)'; ctx.lineWidth=3; ctx.stroke();
+  ctx.fillStyle='white'; ctx.font='bold 20px sans-serif';
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText('🎡',cx,cy);
+  // Show remaining count on canvas corner
+  ctx.fillStyle='rgba(255,255,255,0.35)';
+  ctx.font='bold 12px Tajawal,sans-serif';
+  ctx.textAlign='left'; ctx.textBaseline='top';
+  ctx.fillText(`متبقي: ${pool.length}/${S.students.length}`,8,8);
+}
+
+function cmSpinWheel(){
+  const pool = CM.wheelRemaining.length ? CM.wheelRemaining : S.students;
+  if(CM.wheelSpinning || !pool.length) return;
+
+  const btn=document.getElementById('cmSpinBtn');
+  CM.wheelSpinning=true;
+  if(btn){ btn.disabled=true; btn.textContent='⏳ جاري الدوران...'; }
+  document.getElementById('cmWheelResultBig').querySelector('.cm-wrb-text').textContent='...';
+  document.getElementById('cmWheelResultBig').querySelector('.cm-wrb-emoji').textContent='🎡';
+
+  CM.wheelVelocity=0.28+Math.random()*0.30;
+  function spin(){
+    CM.wheelAngle+=CM.wheelVelocity;
+    CM.wheelVelocity*=0.984;
+    cmDrawWheel();
+    if(CM.wheelVelocity>0.003){
+      CM.wheelRaf=requestAnimationFrame(spin);
+    } else {
+      CM.wheelSpinning=false;
+      const currentPool = CM.wheelRemaining.length ? CM.wheelRemaining : S.students;
+      const n = currentPool.length;
+      // Pointer is at TOP of canvas (angle = -π/2 from standard)
+      // Normalize wheel angle so pointer (top) maps correctly to segment
+      const norm = (((-(CM.wheelAngle + Math.PI/2) % (2*Math.PI)) + 2*Math.PI) % (2*Math.PI));
+      const idx = Math.floor(norm / (2*Math.PI / n)) % n;
+      const winner = currentPool[idx];
+      const m=studentMastery(winner.id);
+
+      // ── Remove winner from remaining pool ──
+      CM.wheelRemaining=CM.wheelRemaining.filter(s=>s.id!==winner.id);
+
+      // If pool exhausted — reset it silently for next round
+      const exhausted = CM.wheelRemaining.length === 0;
+      if(exhausted) CM.wheelRemaining=[...S.students];
+
+      // Update result display
+      const rb=document.getElementById('cmWheelResultBig');
+      rb.querySelector('.cm-wrb-emoji').textContent='🎉';
+      rb.querySelector('.cm-wrb-text').textContent=winner.name;
+      const remaining = exhausted ? S.students.length : CM.wheelRemaining.length;
+      document.getElementById('cmWheelSubBig').textContent=
+        `إتقان ${m.total}% · ${masteryLabel(m.total)}${exhausted?' · 🔄 تمت جميع الطلاب! جولة جديدة':''}`;
+
+      // Update btn
+      if(btn){
+        btn.disabled=false;
+        btn.textContent = exhausted
+          ? '🔄 جولة جديدة — أدِر العجلة'
+          : `🎡 أدِر العجلة (${CM.wheelRemaining.length} متبقي)`;
+      }
+
+      // History
+      CM.wheelHistory.unshift({name:winner.name,pct:m.total});
+      const hist=document.getElementById('cmWheelHistory');
+      if(hist) hist.innerHTML=CM.wheelHistory.slice(0,8).map((h,i)=>`
+        <div class="cm-hist-item">
+          <div class="cm-hist-num">${i+1}</div>
+          <div style="flex:1">${h.name}</div>
+          <div style="color:var(--sky3);font-weight:800">${h.pct}%</div>
+        </div>`).join('');
+
+      confetti();
+      // Redraw wheel without the winner
+      setTimeout(cmDrawWheel, 800);
+    }
+  }
+  spin();
+}
+
+// ── HONOR VIEW ──────────────────────────────────────────────
+function cmBuildHonorView(){
+  const el=document.getElementById('cmHonorDate');
+  if(el) el.textContent=fmtDate(today())+' · '+fullName();
+
+  const sorted=[...S.students]
+    .map(s=>({s,m:studentMastery(s.id),stars:((S.behavior[s.id]||{})[today()]||{}).stars||0}))
+    .sort((a,b)=>b.m.total-a.m.total);
+
+  // Podium (top 3)
+  const podium=document.getElementById('cmHonorPodium');
+  if(podium&&sorted.length>=1){
+    const order=sorted.length>=3?[sorted[1],sorted[0],sorted[2]]:[sorted[0]];
+    const classes=sorted.length>=3?['second','first','third']:['first'];
+    const sizes=sorted.length>=3?[64,80,56]:[80];
+    podium.innerHTML=order.map((item,i)=>{
+      if(!item) return '';
+      const medal=classes[i]==='first'?'🥇':classes[i]==='second'?'🥈':'🥉';
+      const pctColor=item.m.total>=70?'var(--mint)':item.m.total>=40?'var(--gold)':'var(--ember)';
+      const sz=sizes[i];
+      return `<div class="cm-podium-item ${classes[i]}">
+        <div style="font-size:1.5rem">${medal}</div>
+        <div class="cm-podium-avatar" style="${avatarStyle(item.s.id)};color:white;width:${sz}px;height:${sz}px;font-size:${Math.round(sz*0.38)}px">
+          ${item.s.photo
+            ?(`<img src="${item.s.photo}" style="width:${sz}px;height:${sz}px;border-radius:50%;object-fit:cover;" />`)
+            :item.s.name.charAt(0)}
+        </div>
+        <div class="cm-podium-name" style="max-width:130px">${item.s.name.split(' ').slice(0,2).join(' ')}</div>
+        <div class="cm-podium-pct" style="color:${pctColor};font-size:${classes[i]==='first'?'1.1rem':'0.88rem'}">${item.m.total}%</div>
+        <div class="cm-podium-base"></div>
+      </div>`;
+    }).join('');
+  }
+
+  // Rest
+  const rest=document.getElementById('cmHonorRest');
+  if(rest){
+    rest.innerHTML=sorted.slice(3).map((item,i)=>{
+      const pctColor=item.m.total>=70?'var(--mint)':item.m.total>=40?'var(--gold)':'var(--ember)';
+      return `<div class="cm-rest-chip">
+        <span style="font-weight:900;color:rgba(255,255,255,0.38)">${i+4}</span>
+        ${item.s.photo?`<img src="${item.s.photo}" style="width:24px;height:24px;border-radius:50%;object-fit:cover" />`
+          :`<div style="width:24px;height:24px;border-radius:50%;${avatarStyle(item.s.id)};color:white;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900">${item.s.name.charAt(0)}</div>`}
+        ${item.s.name.split(' ')[0]}
+        <span style="color:${pctColor};font-weight:900">${item.m.total}%</span>
+      </div>`;
+    }).join('');
+  }
+}
+
+// ── NOISE ───────────────────────────────────────────────────
+function cmInitNoise(){
+  if(!navigator.mediaDevices||!window.AudioContext) return;
+  navigator.mediaDevices.getUserMedia({audio:true,video:false})
+    .then(stream=>{
+      CM.noiseStream=stream;
+      const actx=new AudioContext();
+      const src=actx.createMediaStreamSource(stream);
+      const analyser=actx.createAnalyser();
+      analyser.fftSize=256;
+      src.connect(analyser);
+      CM.noiseAnalyser=analyser;
+      CM.noiseEnabled=true;
+      cmNoiseLoop();
+    }).catch(()=>{});
+}
+
+function cmNoiseLoop(){
+  if(!CM.noiseEnabled||!CM.noiseAnalyser) return;
+  const data=new Uint8Array(CM.noiseAnalyser.fftSize);
+  CM.noiseAnalyser.getByteTimeDomainData(data);
+  let sum=0; data.forEach(v=>{const d=v-128;sum+=d*d;});
+  const pct=Math.min(100,Math.sqrt(sum/data.length)*3);
+  const fill=document.getElementById('cmNoiseFill');
+  if(fill){
+    fill.style.width=pct+'%';
+    fill.style.background=pct>70?'var(--ember)':pct>40?'var(--gold)':'var(--mint)';
+  }
+  if(pct>80){
+    const al=document.getElementById('cmNoiseAlert');
+    if(al){al.classList.add('show');setTimeout(()=>al.classList.remove('show'),550);}
+  }
+  CM.noiseRaf=requestAnimationFrame(cmNoiseLoop);
+}
+
+function cmStopNoise(){
+  CM.noiseEnabled=false;
+  cancelAnimationFrame(CM.noiseRaf);
+  CM.noiseStream?.getTracks().forEach(t=>t.stop());
+  CM.noiseStream=null; CM.noiseAnalyser=null;
+}
+
+// ── KEYBOARD ────────────────────────────────────────────────
+document.addEventListener('keydown',e=>{
+  if(!CM.open) return;
+  if(e.key==='Escape'){ closeClassroomMode(); return; }
+  if(e.key===' '){e.preventDefault();cmToggleTimer();return;}
+  if(e.key==='r'||e.key==='ر'){cmResetTimer();return;}
+  if(e.key==='w'||e.key==='و'){cmSwitchView('wheel');setTimeout(cmSpinWheel,200);return;}
+  if(e.key==='h'||e.key==='ه'){cmSwitchView('honor');return;}
+  if(e.key==='b'||e.key==='ب'){cmSwitchView('board');return;}
+});
+
+// ══════════════════════════════════════════════════════════════
+// 🎮 CLASSROOM GAMES ENGINE
+// ══════════════════════════════════════════════════════════════
+
+// ── Default starter questions ──────────────────────────────
+const GAMES_DEFAULT = {
+  quiz: [
+    { q:'ما عدد حروف اللغة العربية؟', choices:['٢٦','٢٨','٣٠','٣٢'], ans:1 },
+    { q:'أيّ حرف يأتي بعد حرف الدال؟', choices:['ذال','راء','زاي','سين'], ans:0 },
+    { q:'كم عدد أيام الأسبوع؟', choices:['خمسة','ستة','سبعة','ثمانية'], ans:2 },
+    { q:'ما اسم عاصمة المملكة العربية السعودية؟', choices:['جدة','الرياض','مكة','الدمام'], ans:1 },
+    { q:'أيّ الكلمات التالية تبدأ بحرف ب؟', choices:['تفاحة','برتقالة','جوافة','ليمون'], ans:1 },
+  ],
+  hot: [
+    { q:'اذكر ثلاثة أسماء حيوانات' },
+    { q:'ما معنى كلمة "شجاع"؟' },
+    { q:'اذكر يوماً من أيام الأسبوع' },
+    { q:'ما عكس كلمة كبير؟' },
+    { q:'اذكر ثلاثة ألوان' },
+    { q:'ما الفاكهة التي تكون صفراء؟' },
+  ],
+  race: [
+    { q:'ما عدد أصابع اليد الواحدة؟', ans:'خمسة أصابع' },
+    { q:'ما الحرف الأول من الأبجدية؟', ans:'ألف' },
+    { q:'أيّ الفصول يكون دافئاً؟', ans:'الربيع والصيف' },
+    { q:'ما لون السماء في النهار؟', ans:'أزرق' },
+    { q:'كم يوماً في الشهر غالباً؟', ans:'ثلاثون يوماً' },
+  ],
+  word: [
+    { word:'كتاب', hint:'تقرأ فيه', hidden:[1,3] },
+    { word:'مدرسة', hint:'تذهب إليها كل يوم', hidden:[0,2,4] },
+    { word:'قلم', hint:'تكتب به', hidden:[1] },
+    { word:'شمس', hint:'تضيء النهار', hidden:[0,2] },
+    { word:'بيت', hint:'تسكن فيه', hidden:[1] },
+    { word:'سماء', hint:'فوقنا', hidden:[0,2] },
+  ]
+};
+
+// ── CM.games state ──────────────────────────────────────────
+function cmGamesInit(){
+  if(!CM.games){
+    CM.games = {
+      activeGame: 'quiz',
+      quizIdx: 0,
+      quizRevealed: false,
+      quizScore: 0,        // عدد الإجابات الصحيحة في الجولة
+      quizAnswered: 0,     // عدد الأسئلة التي تمت الإجابة عليها
+      quizSessionDone: false, // هل انتهت الجولة؟
+      QUIZ_SESSION_LEN: 5, // عدد أسئلة الجولة
+      hotIdx: 0,
+      hotStudentIdx: 0,
+      raceScores: {},
+      wordIdx: 0,
+      wordRevealed: false,
+      // load from S or defaults (filter deleted defaults)
+      questions: (()=>{
+        const del = S.gamesBank?._deleted || {};
+        const mg = (t) => [
+          ...(S.gamesBank?.[t]||[]),
+          ...GAMES_DEFAULT[t].filter((_,i)=>!(del[t]||[]).includes(i))
+        ];
+        return { quiz:mg('quiz'), hot:mg('hot'), race:mg('race'), word:mg('word') };
+      })()
+    };
+    // init race scores
+    S.students.forEach(s=>{ CM.games.raceScores[s.id] = 0; });
+  }
+}
+
+function cmSelectGame(game){
+  if(!CM.games) cmGamesInit();
+  CM.games.activeGame = game;
+  document.querySelectorAll('.cm-game-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('cgBtn-'+game)?.classList.add('active');
+  cmRenderGame(game);
+}
+
+function cmRenderGame(game){
+  const el = document.getElementById('cmGamesMain');
+  if(!el) return;
+  if(!CM.games) cmGamesInit();
+  const g = CM.games;
+  const qs = g.questions[game] || [];
+
+  if(game === 'quiz')  el.innerHTML = cmBuildQuiz(qs);
+  if(game === 'hot')   el.innerHTML = cmBuildHot(qs);
+  if(game === 'race')  el.innerHTML = cmBuildRace(qs);
+  if(game === 'word')  el.innerHTML = cmBuildWord(qs);
+}
+
+// ── GAME 1: من سيربح المليون ────────────────────────────────
+function cmBuildQuiz(qs){
+  if(!qs.length) return `<div style="color:rgba(255,255,255,0.35);text-align:center;padding:40px">لا توجد أسئلة — أضف من بنك الأسئلة</div>`;
+  const g = CM.games;
+  const N = g.QUIZ_SESSION_LEN || 5;
+  const sessionQs = qs.slice(0, N); // أول N سؤال من القائمة
+
+  // ── شاشة النهاية ────────────────────────────────────────
+  if(g.quizSessionDone) return cmBuildQuizFinale(sessionQs);
+
+  const qPos = g.quizIdx % sessionQs.length; // موضع السؤال داخل الجولة
+  const q = sessionQs[qPos];
+  const letters = ['أ','ب','ج','د'];
+  if(!g.quizHidden) g.quizHidden = new Set();
+  const used50 = g.quiz50Used || false;
+
+  const choicesHTML = q.choices ? `<div class="cg-choices">
+    ${q.choices.map((c,i)=>{
+      if(g.quizHidden.has(i)) return `<div class="cg-choice cg-choice-hidden" id="cgChoice_${i}"><span style="font-size:1.4rem;opacity:0.20">✕</span></div>`;
+      return `<div style="position:relative;display:flex;align-items:stretch;gap:0;">
+        <button class="cg-choice" id="cgChoice_${i}" onclick="cmQuizReveal(${i},${q.ans})" style="flex:1;border-radius:${g.quizRevealed?'13px':'13px 0 0 13px'};">
+          <span class="cg-choice-label">${letters[i]}</span> ${c}
+        </button>
+        ${!g.quizRevealed ? `<button class="cg-remove-btn" onclick="cmQuizRemoveChoice(${i})" title="احذف هذا الخيار">✕</button>` : ''}
+      </div>`;
+    }).join('')}
+  </div>` : `<button class="cm-btn cm-btn-primary" style="margin:16px auto 0;display:block" onclick="cmQuizRevealOpen()">🔍 عرض الإجابة</button>`;
+
+  // شريط تقدم الجولة
+  const progressDots = Array.from({length:N},(_,i)=>{
+    const cls = i < g.quizAnswered ? (g.quizAnswers?.[i] ? 'cg-dot-correct' : 'cg-dot-wrong') : (i===qPos?'cg-dot-current':'cg-dot-empty');
+    return `<div class="cg-progress-dot ${cls}"></div>`;
+  }).join('');
+
+  return `
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div style="font-size:0.84rem;color:rgba(255,255,255,0.45);font-weight:700">السؤال ${qPos+1} من ${N}</div>
+      <div style="display:flex;gap:5px;align-items:center;">${progressDots}</div>
+      <div style="font-size:0.84rem;font-weight:900;color:var(--mint)">✅ ${g.quizScore||0}</div>
+    </div>
+    <div style="display:flex;gap:7px;flex-wrap:wrap;">
+      ${q.choices && !g.quizRevealed ? `
+        <button class="cm-btn ${used50?'cg-used':'cm-btn-ghost'}" style="padding:6px 14px;font-size:0.82rem;${used50?'opacity:0.4;pointer-events:none;':''}" onclick="cmQuiz50()">🚨 50/50</button>` : ''}
+      <button class="cm-btn cm-btn-ghost" style="padding:6px 14px;font-size:0.80rem" onclick="cmQuizShuffle()">🔀 خلط</button>
+    </div>
+  </div>
+  <div class="cg-question-card">
+    <div class="cg-question-num">🎯 من سيربح المليون</div>
+    <div class="cg-question-text">${q.q}</div>
+    ${choicesHTML}
+  </div>
+  ${q.choices && g.quizRevealed ? `
+    <div class="cg-result">
+      <div class="cg-result-emoji">🎉</div>
+      <div class="cg-result-title">الإجابة الصحيحة</div>
+      <div class="cg-result-sub" style="font-size:1.2rem;color:var(--mint);font-weight:800;margin-top:4px;">${q.choices[q.ans]}</div>
+      ${qPos < N-1 ? `<button class="cm-btn cm-btn-primary" style="margin-top:14px;padding:10px 28px;font-size:1rem" onclick="cmQuizNext()">السؤال التالي ←</button>` 
+                   : `<button class="cm-btn cm-btn-primary" style="margin-top:14px;padding:10px 28px;font-size:1rem;background:linear-gradient(135deg,var(--gold),var(--ember))" onclick="cmQuizShowFinale()">🏆 عرض النتائج</button>`}
+    </div>` : ''}
+  `;
+}
+
+function cmBuildQuizFinale(sessionQs){
+  const g = CM.games;
+  const N = sessionQs.length;
+  const score = g.quizScore || 0;
+  const pct = Math.round(score/N*100);
+
+  // تحديد الميدالية والرسالة
+  let medal, msg, color, bg;
+  if(pct===100){
+    medal='🏆'; msg='مثالي! أجبت على كل الأسئلة بشكل صحيح!';
+    color='#fbbf24'; bg='rgba(245,158,11,0.15)';
+  } else if(pct>=80){
+    medal='🥇'; msg='ممتاز جداً! أداء رائع!';
+    color='#fbbf24'; bg='rgba(245,158,11,0.12)';
+  } else if(pct>=60){
+    medal='🥈'; msg='جيد جداً! استمر في التحسن!';
+    color='rgba(255,255,255,0.70)'; bg='rgba(255,255,255,0.07)';
+  } else if(pct>=40){
+    medal='🥉'; msg='جيد! نتدرب أكثر في المرة القادمة.';
+    color='#cd7f32'; bg='rgba(205,127,50,0.12)';
+  } else {
+    medal='💪'; msg='لا بأس! المحاولة تُعلّم — هيا نحاول مرة أخرى!';
+    color='rgba(255,255,255,0.50)'; bg='rgba(255,255,255,0.05)';
+  }
+
+  // قائمة الأسئلة مع النتائج
+  const reviewRows = sessionQs.map((q,i)=>{
+    const correct = g.quizAnswers?.[i];
+    const answered = g.quizAnswers && g.quizAnswers[i] !== undefined;
+    const icon = !answered ? '⬜' : correct ? '✅' : '❌';
+    const ansText = q.choices ? q.choices[q.ans] : '—';
+    return `<div style="display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border-radius:10px;background:${correct?'rgba(16,185,129,0.08)':'rgba(239,68,68,0.06)'};border:1px solid ${correct?'rgba(16,185,129,0.20)':'rgba(239,68,68,0.15)'};margin-bottom:7px;">
+      <div style="font-size:1.2rem;flex-shrink:0">${icon}</div>
+      <div style="flex:1;">
+        <div style="font-size:1rem;font-weight:700;color:rgba(255,255,255,0.85)">${q.q}</div>
+        <div style="font-size:0.84rem;color:${correct?'var(--mint)':'rgba(255,255,255,0.40)'};margin-top:3px;">الإجابة: ${ansText}</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  return `
+  <div style="text-align:center;padding:20px 0 16px;animation:popIn 0.5s cubic-bezier(0.34,1.56,0.64,1);">
+    <div style="font-size:5rem;margin-bottom:8px;animation:starFloat 1.5s ease-in-out infinite alternate">${medal}</div>
+    <div style="font-size:2.8rem;font-weight:900;color:${color};letter-spacing:-1px;line-height:1">${score} / ${N}</div>
+    <div style="font-size:1.3rem;font-weight:700;color:rgba(255,255,255,0.60);margin:6px 0 4px">${pct}% صحيح</div>
+    <div style="font-size:1rem;color:rgba(255,255,255,0.45);max-width:400px;margin:0 auto 20px">${msg}</div>
+    
+    <!-- نقاط نتيجة كل سؤال -->
+    <div style="display:flex;justify-content:center;gap:8px;margin-bottom:20px;">
+      ${Array.from({length:N},(_,i)=>`
+        <div style="width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.4rem;background:${g.quizAnswers?.[i]?'rgba(16,185,129,0.20)':'rgba(239,68,68,0.15)'};border:2px solid ${g.quizAnswers?.[i]?'rgba(16,185,129,0.40)':'rgba(239,68,68,0.30)'}">
+          ${g.quizAnswers?.[i]?'✅':'❌'}
+        </div>`).join('')}
+    </div>
+  </div>
+
+  <!-- مراجعة الأسئلة -->
+  <div style="max-height:260px;overflow-y:auto;margin-bottom:16px;">${reviewRows}</div>
+
+  <!-- أزرار -->
+  <div style="display:flex;gap:10px;justify-content:center;">
+    <button class="cm-btn cm-btn-primary" style="font-size:1rem;padding:12px 28px" onclick="cmQuizRestart()">
+      🔄 جولة جديدة
+    </button>
+    <button class="cm-btn cm-btn-ghost" style="font-size:1rem;padding:12px 20px" onclick="cmQuizShuffle()">
+      🔀 خلط وإعادة
+    </button>
+  </div>`;
+}
+
+function cmQuizShowFinale(){
+  CM.games.quizSessionDone = true;
+  cmRenderGame('quiz');
+  confetti();
+}
+
+function cmQuizRestart(){
+  const g = CM.games;
+  g.quizIdx = 0;
+  g.quizScore = 0;
+  g.quizAnswered = 0;
+  g.quizAnswers = {};
+  g.quizSessionDone = false;
+  g.quizRevealed = false;
+  g.quizHidden = new Set();
+  g.quiz50Used = false;
+  cmRenderGame('quiz');
+}
+
+function cmQuizRemoveChoice(idx){
+  if(!CM.games.quizHidden) CM.games.quizHidden = new Set();
+  // Can't remove the correct answer
+  const qs = CM.games.questions.quiz;
+  const q  = qs[CM.games.quizIdx % qs.length];
+  if(idx === q.ans){ toast('لا يمكن حذف الإجابة الصحيحة!','error'); return; }
+  if(CM.games.quizHidden.has(idx)){ CM.games.quizHidden.delete(idx); }
+  else { CM.games.quizHidden.add(idx); }
+  cmRenderGame('quiz');
+}
+
+function cmQuiz50(){
+  if(CM.games.quiz50Used) return;
+  const qs = CM.games.questions.quiz;
+  const q  = qs[CM.games.quizIdx % qs.length];
+  if(!q.choices) return;
+  if(!CM.games.quizHidden) CM.games.quizHidden = new Set();
+  // Pick 2 wrong answers randomly and hide them
+  const wrongs = [0,1,2,3].filter(i=> i !== q.ans && !CM.games.quizHidden.has(i));
+  const toHide = wrongs.sort(()=>Math.random()-0.5).slice(0,2);
+  toHide.forEach(i=> CM.games.quizHidden.add(i));
+  CM.games.quiz50Used = true;
+  cmRenderGame('quiz');
+  toast('🚨 تم حذف خيارين خاطئين!','info');
+}
+
+function cmQuizReveal(chosen, correct){
+  const g = CM.games;
+  const isCorrect = chosen === correct;
+  const N = g.QUIZ_SESSION_LEN || 5;
+  const sessionQs = g.questions.quiz.slice(0, N);
+  const qPos = g.quizIdx % sessionQs.length;
+  if(!g.quizAnswers) g.quizAnswers = {};
+  // Only record if not already answered
+  if(g.quizAnswers[qPos] === undefined){
+    g.quizAnswers[qPos] = isCorrect;
+    if(isCorrect) g.quizScore = (g.quizScore||0) + 1;
+    g.quizAnswered = (g.quizAnswered||0) + 1;
+  }
+  document.querySelectorAll('.cg-choice:not(.cg-choice-hidden)').forEach(btn=>{
+    const i = parseInt(btn.id.replace('cgChoice_',''));
+    if(isNaN(i)) return;
+    if(i===correct) btn.classList.add('correct');
+    else if(i===chosen && !isCorrect) btn.classList.add('wrong');
+    btn.onclick=null;
+  });
+  document.querySelectorAll('.cg-remove-btn').forEach(b=>b.remove());
+  g.quizRevealed = true;
+  if(isCorrect) confetti();
+  cmRenderGame('quiz');
+}
+
+function cmQuizRevealOpen(){
+  CM.games.quizRevealed = true;
+  cmRenderGame('quiz');
+}
+
+function cmQuizNext(){
+  const g = CM.games;
+  const N = g.QUIZ_SESSION_LEN || 5;
+  const sessionQs = g.questions.quiz.slice(0, N);
+  const qPos = g.quizIdx % sessionQs.length;
+  if(qPos >= N - 1){ cmQuizShowFinale(); return; }
+  g.quizIdx++;
+  g.quizRevealed = false;
+  g.quizHidden = new Set();
+  g.quiz50Used = false;
+  cmRenderGame('quiz');
+}
+
+function cmQuizPrev(){
+  CM.games.quizIdx = Math.max(0, CM.games.quizIdx-1);
+  CM.games.quizRevealed = false;
+  CM.games.quizHidden = new Set();
+  CM.games.quiz50Used = false;
+  cmRenderGame('quiz');
+}
+
+function cmQuizShuffle(){
+  CM.games.questions.quiz = CM.games.questions.quiz.sort(()=>Math.random()-0.5);
+  cmQuizRestart();
+  toast('🔀 تم خلط الأسئلة','info');
+}
+
+// ── GAME 2: الكرسي الساخن ───────────────────────────────────
+function cmBuildHot(qs){
+  if(!qs.length || !S.students.length) return `<div style="color:rgba(255,255,255,0.35);text-align:center;padding:40px">لا توجد أسئلة أو طلاب</div>`;
+  const g = CM.games;
+  const q = qs[g.hotIdx % qs.length];
+  const s = S.students[g.hotStudentIdx % S.students.length];
+  const photoEl = s.photo
+    ? `<img src="${s.photo}" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid rgba(239,68,68,0.40);margin-bottom:8px;"/>`
+    : `<div style="width:80px;height:80px;border-radius:50%;${avatarStyle(s.id)};color:white;display:flex;align-items:center;justify-content:center;font-size:34px;font-weight:900;border:3px solid rgba(239,68,68,0.40);margin:0 auto 8px;">${s.name.charAt(0)}</div>`;
+  return `
+  <div class="cg-chair-display">
+    <div style="font-size:0.78rem;color:rgba(255,255,255,0.35);font-weight:700;text-transform:uppercase;letter-spacing:1px">💣 الكرسي الساخن</div>
+    ${photoEl}
+    <div class="cg-chair-student">${s.name}</div>
+    <div class="cg-chair-question">${q.q}</div>
+    <div class="cg-chair-btns">
+      <button class="cg-chair-btn yes" onclick="cmHotAnswer(true)">✅ أجاب</button>
+      <button class="cg-chair-btn pass" onclick="cmHotAnswer(null)">⏭ مرّر</button>
+      <button class="cg-chair-btn no" onclick="cmHotAnswer(false)">❌ لم يجب</button>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:8px;">
+      <button class="cm-btn cm-btn-ghost" style="font-size:0.80rem" onclick="cmHotNextQ()">سؤال جديد 🎲</button>
+      <button class="cm-btn cm-btn-ghost" style="font-size:0.80rem" onclick="cmHotNextStudent()">طالب آخر 👤</button>
+    </div>
+  </div>`;
+}
+
+function cmHotAnswer(correct){
+  const g = CM.games;
+  const s = S.students[g.hotStudentIdx % S.students.length];
+  if(correct === true){
+    if(!CM.games.raceScores[s.id]) CM.games.raceScores[s.id]=0;
+    CM.games.raceScores[s.id]++;
+    confetti();
+    toast(`✅ ${s.name} أجاب بشكل صحيح! +1 نقطة`,'success');
+  } else if(correct === false){
+    toast(`❌ ${s.name} لم يجب`,'error');
+  }
+  g.hotStudentIdx++;
+  g.hotIdx++;
+  cmRenderGame('hot');
+}
+function cmHotNextQ(){ CM.games.hotIdx++; cmRenderGame('hot'); }
+function cmHotNextStudent(){ CM.games.hotStudentIdx++; cmRenderGame('hot'); }
+
+// ── GAME 3: سباق الإجابات ───────────────────────────────────
+function cmBuildRace(qs){
+  if(!qs.length) return `<div style="color:rgba(255,255,255,0.35);text-align:center;padding:40px">لا توجد أسئلة</div>`;
+  const g = CM.games;
+  const q = qs[g.quizIdx % qs.length]; // reuse quizIdx for race
+  return `
+  <div style="font-size:0.78rem;color:rgba(255,255,255,0.35);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">⏱️ سباق الإجابات — من يرفع يده أولاً يفوز</div>
+  <div class="cg-race-question">${q.q}</div>
+  <div style="display:flex;gap:8px;margin-bottom:16px;align-items:center;flex-wrap:wrap;">
+    <button class="cm-btn cm-btn-primary" onclick="cmRaceReveal()">🔍 عرض الإجابة</button>
+    <button class="cm-btn cm-btn-ghost" onclick="cmRaceNext()">سؤال جديد →</button>
+    <div id="cgRaceAnswer" style="font-size:1rem;font-weight:800;color:var(--mint);display:none;padding:8px 16px;background:rgba(16,185,129,0.10);border-radius:10px;border:1px solid rgba(16,185,129,0.25);">${q.ans||''}</div>
+  </div>
+  <div style="font-size:0.78rem;color:rgba(255,255,255,0.35);font-weight:800;letter-spacing:1px;margin-bottom:8px">اضغط على الطالب لإعطائه نقطة</div>
+  <div class="cg-race-scores">
+    ${S.students.map(s=>{
+      const pts = g.raceScores[s.id]||0;
+      const photoEl = s.photo
+        ? `<img src="${s.photo}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;margin-bottom:5px;"/>`
+        : `<div style="width:36px;height:36px;border-radius:50%;${avatarStyle(s.id)};color:white;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;margin:0 auto 5px;">${s.name.charAt(0)}</div>`;
+      return `<div class="cg-score-card" onclick="cmRaceAddPoint('${s.id}')" id="cgScore_${s.id}">
+        ${photoEl}
+        <div class="cg-score-name">${s.name.split(' ')[0]}</div>
+        <div class="cg-score-pts">${pts}</div>
+      </div>`;
+    }).join('')}
+  </div>
+  <div style="margin-top:12px;">
+    <button class="cm-btn cm-btn-ghost" style="font-size:0.78rem" onclick="cmRaceReset()">🔄 تصفير النقاط</button>
+  </div>`;
+}
+
+function cmRaceReveal(){
+  const el=document.getElementById('cgRaceAnswer');
+  if(el) el.style.display='block';
+}
+function cmRaceNext(){
+  CM.games.quizIdx++;
+  document.getElementById('cgRaceAnswer') && (document.getElementById('cgRaceAnswer').style.display='none');
+  cmRenderGame('race');
+}
+function cmRaceAddPoint(sid){
+  if(!CM.games.raceScores[sid]) CM.games.raceScores[sid]=0;
+  CM.games.raceScores[sid]++;
+  const card=document.getElementById('cgScore_'+sid);
+  if(card){
+    card.classList.add('buzzing');
+    card.querySelector('.cg-score-pts').textContent=CM.games.raceScores[sid];
+    setTimeout(()=>card.classList.remove('buzzing'),400);
+  }
+  const s=S.students.find(x=>x.id===sid);
+  toast(`⭐ ${s?.name} +1 نقطة`,'success');
+}
+function cmRaceReset(){
+  S.students.forEach(s=>{ CM.games.raceScores[s.id]=0; });
+  cmRenderGame('race');
+}
+
+// ── GAME 4: أكمل الكلمة ─────────────────────────────────────
+function cmBuildWord(qs){
+  if(!qs.length) return `<div style="color:rgba(255,255,255,0.35);text-align:center;padding:40px">لا توجد كلمات</div>`;
+  const g = CM.games;
+  const q = qs[g.wordIdx % qs.length];
+  const hidden = q.hidden || [1];
+  const displayed = q.word.split('').map((ch,i)=> hidden.includes(i)?'_':ch).join('  ');
+  return `
+  <div style="font-size:0.78rem;color:rgba(255,255,255,0.35);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:16px">🔤 أكمل الكلمة — الكلمة ${(g.wordIdx%qs.length)+1} / ${qs.length}</div>
+  <div class="cg-word-display">${displayed}</div>
+  <div class="cg-word-hint">💡 تلميح: ${q.hint||'—'}</div>
+  <div class="cg-word-reveal ${g.wordRevealed?'show':''}" id="cgWordReveal">✅ الكلمة: ${q.word}</div>
+  <div style="display:flex;gap:10px;margin-top:18px;flex-wrap:wrap;">
+    <button class="cm-btn cm-btn-primary" onclick="cmWordReveal()">🔍 أظهر الكلمة</button>
+    <button class="cm-btn cm-btn-ghost" onclick="cmWordNext()">كلمة جديدة →</button>
+    <button class="cm-btn cm-btn-ghost" onclick="cmWordPrev()">← السابقة</button>
+    <button class="cm-btn cm-btn-ghost" onclick="cmWordShuffle()">🔀 خلط</button>
+  </div>`;
+}
+
+function cmWordReveal(){
+  CM.games.wordRevealed=true;
+  const el=document.getElementById('cgWordReveal');
+  if(el){ el.classList.add('show'); }
+  confetti();
+}
+function cmWordNext(){ CM.games.wordIdx++; CM.games.wordRevealed=false; cmRenderGame('word'); }
+function cmWordPrev(){ CM.games.wordIdx=Math.max(0,CM.games.wordIdx-1); CM.games.wordRevealed=false; cmRenderGame('word'); }
+function cmWordShuffle(){ CM.games.questions.word=CM.games.questions.word.sort(()=>Math.random()-0.5); CM.games.wordIdx=0; CM.games.wordRevealed=false; cmRenderGame('word'); toast('🔀 تم خلط الكلمات','info'); }
+
+// ── Override cmSwitchView to handle games ─────────────────────
+// (merged into original below — no duplicate needed)
+
+// ── GAMES BANK PAGE (outside classroom) ─────────────────────
+function renderGamesBank(){
+  if(!S.gamesBank) S.gamesBank={ quiz:[], hot:[], race:[], word:[] };
+  const deleted = S.gamesBank._deleted || {};
+
+  // دمج المضاف + الافتراضي (مع استثناء المحذوف من الافتراضي)
+  const mergeQ = (type) => {
+    const customs  = S.gamesBank[type] || [];
+    const defaults = GAMES_DEFAULT[type].filter((_,i)=>!(deleted[type]||[]).includes(i));
+    return [...customs, ...defaults];
+  };
+
+  const allQ = {
+    quiz: mergeQ('quiz'),
+    hot:  mergeQ('hot'),
+    race: mergeQ('race'),
+    word: mergeQ('word'),
+  };
+  const games = [
+    { id:'quiz',  icon:'🎯', name:'من سيربح المليون', desc:'أسئلة باختيار من متعدد', qs:allQ.quiz,
+      addForm:`<div style="display:flex;flex-direction:column;gap:8px;">
+        <input id="gba_quiz_q" class="fg input" placeholder="السؤال..." style="padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-family:'Tajawal',sans-serif;font-size:0.90rem;outline:none;background:var(--card);color:var(--ink);text-align:right;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+          <input id="gba_quiz_a" placeholder="الخيار أ" style="padding:8px 11px;border:1px solid var(--border);border-radius:8px;font-family:'Tajawal',sans-serif;font-size:0.86rem;outline:none;background:var(--card);color:var(--ink);text-align:right;">
+          <input id="gba_quiz_b" placeholder="الخيار ب" style="padding:8px 11px;border:1px solid var(--border);border-radius:8px;font-family:'Tajawal',sans-serif;font-size:0.86rem;outline:none;background:var(--card);color:var(--ink);text-align:right;">
+          <input id="gba_quiz_c" placeholder="الخيار ج" style="padding:8px 11px;border:1px solid var(--border);border-radius:8px;font-family:'Tajawal',sans-serif;font-size:0.86rem;outline:none;background:var(--card);color:var(--ink);text-align:right;">
+          <input id="gba_quiz_d" placeholder="الخيار د" style="padding:8px 11px;border:1px solid var(--border);border-radius:8px;font-family:'Tajawal',sans-serif;font-size:0.86rem;outline:none;background:var(--card);color:var(--ink);text-align:right;">
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <label style="font-size:0.84rem;font-weight:700;color:var(--muted)">الإجابة الصحيحة:</label>
+          <select id="gba_quiz_ans" style="padding:7px 12px;border:1px solid var(--border);border-radius:8px;font-family:'Tajawal',sans-serif;font-size:0.86rem;outline:none;background:var(--card);color:var(--ink);">
+            <option value="0">أ</option><option value="1">ب</option><option value="2">ج</option><option value="3">د</option>
+          </select>
+          <button class="btn btn-primary btn-sm" onclick="gbAddQuiz()">➕ إضافة</button>
+        </div>
+      </div>`
+    },
+    { id:'hot', icon:'💣', name:'الكرسي الساخن', desc:'أسئلة مفتوحة — أجب أو مرّر', qs:allQ.hot,
+      addForm:`<div style="display:flex;gap:8px;align-items:center;">
+        <input id="gba_hot_q" class="fg input" placeholder="السؤال المفتوح..." style="flex:1;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-family:'Tajawal',sans-serif;font-size:0.90rem;outline:none;background:var(--card);color:var(--ink);text-align:right;">
+        <button class="btn btn-primary btn-sm" onclick="gbAddHot()">➕ إضافة</button>
+      </div>`
+    },
+    { id:'race', icon:'⏱️', name:'سباق الإجابات', desc:'سؤال بإجابة واحدة — أسرع يفوز', qs:allQ.race,
+      addForm:`<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <input id="gba_race_q" placeholder="السؤال..." style="flex:2;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-family:'Tajawal',sans-serif;font-size:0.90rem;outline:none;background:var(--card);color:var(--ink);text-align:right;">
+        <input id="gba_race_a" placeholder="الإجابة..." style="flex:1;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-family:'Tajawal',sans-serif;font-size:0.90rem;outline:none;background:var(--card);color:var(--ink);text-align:right;">
+        <button class="btn btn-primary btn-sm" onclick="gbAddRace()">➕ إضافة</button>
+      </div>`
+    },
+    { id:'word', icon:'🔤', name:'أكمل الكلمة', desc:'كلمة بحروف مخفية', qs:allQ.word,
+      addForm:`<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <input id="gba_word_w" placeholder="الكلمة..." style="flex:1;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-family:'Tajawal',sans-serif;font-size:0.90rem;outline:none;background:var(--card);color:var(--ink);text-align:right;">
+        <input id="gba_word_h" placeholder="التلميح..." style="flex:2;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-family:'Tajawal',sans-serif;font-size:0.90rem;outline:none;background:var(--card);color:var(--ink);text-align:right;">
+        <button class="btn btn-primary btn-sm" onclick="gbAddWord()">➕ إضافة</button>
+      </div>`
+    },
+  ];
+
+  return `
+  <div class="breadcrumb">🏠 <span class="sep">›</span> <span class="active">🎮 بنك الأسئلة</span></div>
+  <div class="ph">
+    <div><div class="ph-title">🎮 بنك الأسئلة والألعاب</div>
+    <div class="ph-sub">أضف أسئلتك الخاصة — تظهر تلقائياً في وضع الحصة</div></div>
+    <div class="ph-actions">
+      <button class="btn btn-primary" onclick="showPage('classroom_mode')">🖥️ وضع الحصة</button>
+    </div>
+  </div>
+  ${games.map(g=>`
+  <div class="gb-game-section">
+    <div class="gb-game-header">
+      <div class="gb-game-icon">${g.icon}</div>
+      <div>
+        <div class="gb-game-title">${g.name}</div>
+        <div style="font-size:0.76rem;color:var(--muted)">${g.desc}</div>
+      </div>
+      <div class="gb-game-count">${g.qs.length} سؤال</div>
+    </div>
+    <div style="padding:14px 16px;border-bottom:1px solid var(--border);">${g.addForm}</div>
+    <div>
+      ${g.qs.map((q,i)=>gbRenderItem(g.id,q,i)).join('')}
+    </div>
+  </div>`).join('')}`;
+}
+
+function gbRenderItem(type, q, i){
+  const bankLen = (S.gamesBank?.[type]||[]).length;
+  const isCustom = i < bankLen;
+  const letters = ['أ','ب','ج','د'];
+  let text='', extra='';
+  if(type==='quiz'){
+    text=q.q;
+    extra=`<div class="gb-q-choices">${(q.choices||[]).map((c,ci)=>`<span class="gb-q-choice ${ci===q.ans?'correct':''}">${letters[ci]} ${c}</span>`).join('')}</div>`;
+  } else if(type==='hot'){ text=q.q; }
+  else if(type==='race'){ text=q.q; extra=`<div style="font-size:0.76rem;color:var(--mint);font-weight:700;margin-top:3px;">✅ ${q.ans||'—'}</div>`; }
+  else if(type==='word'){ text=q.word; extra=`<div style="font-size:0.76rem;color:var(--muted);margin-top:2px;">💡 ${q.hint||''}</div>`; }
+
+  return `<div class="gb-q-item" id="gbItem_${type}_${i}" style="${isCustom?'background:rgba(21,101,192,0.04);':''}">
+    <div class="gb-q-num" style="${isCustom?'background:var(--c-accent-bg);border-color:var(--c-accent-border);color:var(--sky);':''}">
+      ${i+1}
+    </div>
+    <div class="gb-q-body">
+      <div class="gb-q-text">${text}</div>
+      ${extra}
+    </div>
+    <div class="gb-q-actions">
+      <button class="btn btn-ghost btn-xs" onclick="gbOpenEdit('${type}',${i})" title="تعديل">✏️</button>
+      <button class="btn btn-red btn-xs" onclick="gbDelete('${type}',${i})" title="حذف">🗑️</button>
+    </div>
+  </div>`;
+}
+
+function gbDelete(type, i){
+  if(!confirm('حذف هذا السؤال؟')) return;
+  const bankLen = (S.gamesBank?.[type]||[]).length;
+  if(!S.gamesBank) S.gamesBank={quiz:[],hot:[],race:[],word:[]};
+
+  if(i < bankLen){
+    // سؤال مضاف — احذفه من البنك مباشرة
+    S.gamesBank[type].splice(i, 1);
+  } else {
+    // سؤال افتراضي — أضفه للـ "deleted list" عشان يختفي
+    if(!S.gamesBank._deleted) S.gamesBank._deleted={};
+    if(!S.gamesBank._deleted[type]) S.gamesBank._deleted[type]=[];
+    // احفظ index الافتراضي (بعد خصم البنك)
+    const defaultIdx = i - bankLen;
+    S.gamesBank._deleted[type].push(defaultIdx);
+  }
+  save(); CM.games=null; showPage('games_bank');
+  toast('✅ تم الحذف','success');
+}
+
+function gbOpenEdit(type, i){
+  const bankLen = (S.gamesBank?.[type]||[]).length;
+  const isCustom = i < bankLen;
+  const allQ = [
+    ...(S.gamesBank?.[type]||[]),
+    ...GAMES_DEFAULT[type]
+  ];
+  const q = allQ[i];
+  if(!q) return;
+  const letters = ['أ','ب','ج','د'];
+
+  document.querySelectorAll('.gb-edit-form').forEach(el=>el.remove());
+  document.querySelectorAll('.gb-q-item').forEach(el=>el.style.border='');
+
+  const item = document.getElementById(`gbItem_${type}_${i}`);
+  if(!item) return;
+  item.style.border = '1.5px solid var(--sky)';
+
+  const form = document.createElement('div');
+  form.className = 'gb-edit-form';
+  form.style.cssText = 'padding:14px 16px;background:var(--c-accent-bg);border:1.5px solid var(--c-accent-border);border-top:none;border-radius:0 0 12px 12px;display:flex;flex-direction:column;gap:9px;';
+
+  let inner = '';
+  const inp = (id,val,ph='')=>`<input type="text" id="${id}" value="${(val||'').replace(/"/g,'&quot;')}" placeholder="${ph}" style="padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-family:'Tajawal',sans-serif;font-size:0.90rem;outline:none;background:var(--card);color:var(--ink);text-align:right;width:100%">`;
+
+  if(type==='quiz'){
+    inner = `
+      <div class="fg" style="margin:0"><label>السؤال</label>${inp('gbe_q', q.q)}</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+        ${[0,1,2,3].map(ci=>`
+          <div style="position:relative;">
+            <input type="text" id="gbe_c${ci}" value="${((q.choices||[])[ci]||'').replace(/"/g,'&quot;')}" placeholder="الخيار ${letters[ci]}"
+              style="padding:8px 11px;padding-left:32px;border:1.5px solid ${q.ans===ci?'var(--mint)':'var(--border)'};border-radius:8px;font-family:'Tajawal',sans-serif;font-size:0.86rem;outline:none;background:var(--card);color:var(--ink);text-align:right;width:100%;cursor:text"
+              onfocus="gbMarkCorrect(${ci})">
+            <span style="position:absolute;left:8px;top:50%;transform:translateY(-50%);font-size:0.72rem;font-weight:900;width:18px;height:18px;border-radius:50%;background:${q.ans===ci?'var(--mint)':'var(--border)'};color:${q.ans===ci?'white':'var(--muted)'};display:flex;align-items:center;justify-content:center;" id="gbe_label_${ci}">${letters[ci]}</span>
+          </div>`).join('')}
+      </div>
+      <input type="hidden" id="gbe_ans" value="${q.ans||0}">
+      <div style="font-size:0.76rem;color:var(--muted)">💡 اضغط على الخيار لتعيينه كإجابة صحيحة</div>`;
+  } else if(type==='hot'){
+    inner = `<div class="fg" style="margin:0"><label>السؤال</label>${inp('gbe_q', q.q)}</div>`;
+  } else if(type==='race'){
+    inner = `
+      <div class="fg" style="margin:0"><label>السؤال</label>${inp('gbe_q', q.q)}</div>
+      <div class="fg" style="margin:0"><label>الإجابة</label>${inp('gbe_a', q.ans)}</div>`;
+  } else if(type==='word'){
+    inner = `
+      <div class="fg" style="margin:0"><label>الكلمة</label>${inp('gbe_w', q.word)}</div>
+      <div class="fg" style="margin:0"><label>التلميح</label>${inp('gbe_h', q.hint)}</div>`;
+  }
+
+  form.innerHTML = inner + `
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-primary btn-sm" onclick="gbSaveEdit('${type}',${i},${isCustom})">💾 حفظ</button>
+      <button class="btn btn-ghost btn-sm" onclick="gbCancelEdit()">إلغاء</button>
+    </div>`;
+  item.after(form);
+  form.querySelector('input:not([type=hidden])')?.focus();
+}
+
+function gbMarkCorrect(ci){
+  document.getElementById('gbe_ans').value = ci;
+  [0,1,2,3].forEach(j=>{
+    const inp = document.getElementById('gbe_c'+j);
+    const lbl = document.getElementById('gbe_label_'+j);
+    if(inp){ inp.style.border = j===ci ? '1.5px solid var(--mint)' : '1.5px solid var(--border)'; }
+    if(lbl){ lbl.style.background = j===ci ? 'var(--mint)' : 'var(--border)'; lbl.style.color = j===ci ? 'white' : 'var(--muted)'; }
+  });
+}
+
+function gbSaveEdit(type, i, isCustom){
+  if(!S.gamesBank) S.gamesBank={quiz:[],hot:[],race:[],word:[]};
+  const bankLen = S.gamesBank[type].length;
+
+  // بناء الكائن الجديد
+  let updated = {};
+  if(type==='quiz'){
+    const newQ=document.getElementById('gbe_q')?.value.trim();
+    const c0=document.getElementById('gbe_c0')?.value.trim();
+    const c1=document.getElementById('gbe_c1')?.value.trim();
+    const c2=document.getElementById('gbe_c2')?.value.trim();
+    const c3=document.getElementById('gbe_c3')?.value.trim();
+    const ans=parseInt(document.getElementById('gbe_ans')?.value)||0;
+    if(!newQ||!c0||!c1||!c2||!c3){toast('أكمل كل الحقول','error');return;}
+    updated={q:newQ,choices:[c0,c1,c2,c3],ans};
+  } else if(type==='hot'){
+    const newQ=document.getElementById('gbe_q')?.value.trim();
+    if(!newQ){toast('أدخل السؤال','error');return;}
+    updated={q:newQ};
+  } else if(type==='race'){
+    const newQ=document.getElementById('gbe_q')?.value.trim();
+    const newA=document.getElementById('gbe_a')?.value.trim();
+    if(!newQ){toast('أدخل السؤال','error');return;}
+    updated={q:newQ,ans:newA};
+  } else if(type==='word'){
+    const newW=document.getElementById('gbe_w')?.value.trim();
+    const newH=document.getElementById('gbe_h')?.value.trim();
+    if(!newW){toast('أدخل الكلمة','error');return;}
+    const hidden=newW.length>2?[Math.floor(newW.length/2)]:[];
+    updated={word:newW,hint:newH,hidden};
+  }
+
+  if(isCustom){
+    // تعديل مباشر في البنك
+    S.gamesBank[type][i] = updated;
+  } else {
+    // افتراضي — أضف نسخة معدّلة للبنك، واحذف الأصلي
+    const defaultIdx = i - bankLen;
+    S.gamesBank[type].push(updated);
+    if(!S.gamesBank._deleted) S.gamesBank._deleted={};
+    if(!S.gamesBank._deleted[type]) S.gamesBank._deleted[type]=[];
+    S.gamesBank._deleted[type].push(defaultIdx);
+  }
+  save(); CM.games=null;
+  gbCancelEdit();
+  showPage('games_bank');
+  toast('✅ تم حفظ التعديل','success');
+}
+
+function gbCancelEdit(){
+  document.querySelectorAll('.gb-edit-form').forEach(el=>el.remove());
+  document.querySelectorAll('.gb-q-item').forEach(el=>el.style.border='');
+}
+
+function gbAddQuiz(){
+  if(!S.gamesBank) S.gamesBank={quiz:[],hot:[],race:[],word:[]};
+  const q=document.getElementById('gba_quiz_q')?.value.trim();
+  const a=document.getElementById('gba_quiz_a')?.value.trim();
+  const b=document.getElementById('gba_quiz_b')?.value.trim();
+  const c=document.getElementById('gba_quiz_c')?.value.trim();
+  const d=document.getElementById('gba_quiz_d')?.value.trim();
+  const ans=parseInt(document.getElementById('gba_quiz_ans')?.value)||0;
+  if(!q||!a||!b||!c||!d){toast('أكمل السؤال والخيارات الأربعة','error');return;}
+  S.gamesBank.quiz.push({q,choices:[a,b,c,d],ans});
+  save(); CM.games=null; showPage('games_bank');
+  toast('✅ تم إضافة السؤال','success');
+}
+function gbAddHot(){
+  if(!S.gamesBank) S.gamesBank={quiz:[],hot:[],race:[],word:[]};
+  const q=document.getElementById('gba_hot_q')?.value.trim();
+  if(!q){toast('أدخل السؤال','error');return;}
+  S.gamesBank.hot.push({q});
+  save(); CM.games=null; showPage('games_bank');
+  toast('✅ تم إضافة السؤال','success');
+}
+function gbAddRace(){
+  if(!S.gamesBank) S.gamesBank={quiz:[],hot:[],race:[],word:[]};
+  const q=document.getElementById('gba_race_q')?.value.trim();
+  const a=document.getElementById('gba_race_a')?.value.trim();
+  if(!q){toast('أدخل السؤال','error');return;}
+  S.gamesBank.race.push({q,ans:a});
+  save(); CM.games=null; showPage('games_bank');
+  toast('✅ تم إضافة السؤال','success');
+}
+function gbAddWord(){
+  if(!S.gamesBank) S.gamesBank={quiz:[],hot:[],race:[],word:[]};
+  const w=document.getElementById('gba_word_w')?.value.trim();
+  const h=document.getElementById('gba_word_h')?.value.trim();
+  if(!w){toast('أدخل الكلمة','error');return;}
+  // Auto-hide middle chars
+  const hidden=w.length>2?[Math.floor(w.length/2)]:[];
+  S.gamesBank.word.push({word:w,hint:h,hidden});
+  save(); CM.games=null; showPage('games_bank');
+  toast('✅ تم إضافة الكلمة','success');
+}
 
 // ══════════════════════════════════════════════
 // INIT
