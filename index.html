@@ -1489,15 +1489,15 @@ body.dark .dark-toggle::after { content:'🌙'; transform:translateX(20px); }
 
 /* ══ GAMES CSS ═════════════════════════════════════════════ */
 .cm-games-fullscreen{display:flex;gap:0;height:100%;}
-.cm-games-sidebar{width:200px;flex-shrink:0;display:flex;flex-direction:column;gap:10px;padding:4px 0;border-left:1px solid rgba(255,255,255,0.07);}
+.cm-games-sidebar{width:200px;flex-shrink:0;display:flex;flex-direction:column;gap:10px;padding:4px 0 12px;border-left:1px solid rgba(255,255,255,0.07);overflow-y:auto;}
 .cm-games-title{font-size:0.80rem;font-weight:900;color:rgba(255,255,255,0.40);letter-spacing:1px;text-transform:uppercase;padding:0 8px 8px;border-bottom:1px solid rgba(255,255,255,0.07);}
 .cm-games-list{display:flex;flex-direction:column;gap:7px;}
-.cm-game-btn{display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:11px 13px;border-radius:12px;border:1px solid rgba(255,255,255,0.07);background:rgba(255,255,255,0.03);cursor:none;transition:all 0.13s;text-align:right;font-family:'Tajawal',sans-serif;}
+.cm-game-btn{display:flex;flex-direction:column;align-items:flex-start;gap:1px;padding:9px 11px;border-radius:12px;border:1px solid rgba(255,255,255,0.07);background:rgba(255,255,255,0.03);cursor:none;transition:all 0.13s;text-align:right;font-family:'Tajawal',sans-serif;}
 .cm-game-btn:hover{background:rgba(255,255,255,0.08);border-color:rgba(255,255,255,0.14);}
 .cm-game-btn.active{background:rgba(66,165,245,0.12);border-color:rgba(66,165,245,0.28);}
-.cg-icon{font-size:1.4rem;}
-.cg-name{font-size:0.82rem;font-weight:800;color:rgba(255,255,255,0.85);}
-.cg-sub{font-size:0.68rem;color:rgba(255,255,255,0.35);font-weight:600;}
+.cg-icon{font-size:1.2rem;}
+.cg-name{font-size:0.80rem;font-weight:800;color:rgba(255,255,255,0.85);}
+.cg-sub{font-size:0.66rem;color:rgba(255,255,255,0.35);font-weight:600;}
 .cm-games-main{flex:1;padding:20px 24px;overflow-y:auto;display:flex;flex-direction:column;gap:16px;}
 
 /* Quiz game */
@@ -1871,6 +1871,7 @@ body.dark .dark-toggle::after { content:'🌙'; transform:translateX(20px); }
     <div class="tb-right">
       <div class="tb-save"><div class="pulse-dot"></div> محفوظ تلقائياً</div>
       <button class="dark-toggle" id="darkToggle" onclick="toggleDark()" title="الوضع الليلي"></button>
+      <button id="sfxToggle" onclick="SFX.toggle();this.title=SFX._enabled?'صوت مفعّل':'صوت مكتوم';this.style.opacity=SFX._enabled?'1':'0.4';" title="صوت مفعّل" style="background:none;border:none;color:white;font-size:17px;padding:6px 8px;border-radius:10px;cursor:none;opacity:1;transition:opacity 0.2s;">🔊</button>
       <button class="tb-notif" id="notifBtn" style="background:none;border:none;color:white;font-size:18px;padding:6px 8px;border-radius:10px;" onclick="openCmd()" title="بحث سريع Ctrl+K">🔍</button>
       <button class="tb-notif" id="notifBtn2" onclick="toggleNotif()">
         🔔
@@ -1966,6 +1967,7 @@ body.dark .dark-toggle::after { content:'🌙'; transform:translateX(20px); }
       <button class="nav-btn" id="nav-classroom" onclick="showPage('classroom')"><span class="nav-icon">🎓</span> استيراد Classroom</button>
       <button class="nav-btn" id="nav-photos" onclick="showPage('photos')"><span class="nav-icon">📷</span> صور الطلاب</button>
       <button class="nav-btn" id="nav-profile" onclick="showPage('profile')"><span class="nav-icon">⚙️</span> الملف الشخصي</button>
+      <button class="nav-btn" id="nav-compare" onclick="showPage('compare')"><span class="nav-icon">📊</span> مقارنة الفصول</button>
       <button class="nav-btn" id="nav-about" onclick="showPage('about')"><span class="nav-icon">💙</span> حول التطبيق</button>
 
       <div class="sb-teacher-card" id="sbTeacherCard">
@@ -2459,6 +2461,16 @@ body.dark .dark-toggle::after { content:'🌙'; transform:translateX(20px); }
               <div class="cg-name">ما هذا؟</div>
               <div class="cg-sub">صورة + تخمين</div>
             </button>
+            <button class="cm-game-btn" id="cgBtn-versus" onclick="cmSelectGame('versus')">
+              <div class="cg-icon">🏆</div>
+              <div class="cg-name">فصلي ضد فصلي</div>
+              <div class="cg-sub">فريقان يتنافسان</div>
+            </button>
+            <button class="cm-game-btn" id="cgBtn-opposite" onclick="cmSelectGame('opposite')">
+              <div class="cg-icon">✏️</div>
+              <div class="cg-name">كلمة وعكسها</div>
+              <div class="cg-sub">سلسلة سريعة</div>
+            </button>
           </div>
           <button class="cm-btn cm-btn-ghost" style="width:100%;justify-content:center;margin-top:auto;font-size:0.80rem" onclick="cmSwitchView('board')">← السبورة</button>
         </div>
@@ -2860,7 +2872,7 @@ function doLogout(){
 // ══════════════════════════════════════════════
 // NAVIGATION
 // ══════════════════════════════════════════════
-const PAGES=['dash','students','attend','arabic','reports','analytics','gradebook','notes','seatmap','behavior','goals','planner','meetings','insights','treasuremap','classroom_mode','games_bank','photos','changelog','classroom','curriculum','profile','about'];
+const PAGES=['dash','students','attend','arabic','reports','analytics','gradebook','notes','seatmap','behavior','goals','planner','meetings','insights','treasuremap','classroom_mode','games_bank','photos','changelog','classroom','curriculum','profile','about','compare'];
 function showPage(p){
   PAGES.forEach(id=>{
     const n=document.getElementById('nav-'+id);
@@ -2878,7 +2890,7 @@ function showPage(p){
     meetings:renderMeetings, insights:renderInsights, treasuremap:renderTreasureMap,
     classroom_mode:renderClassroomMode, games_bank:renderGamesBank, photos:renderPhotoManager,
     changelog:renderChangelog, classroom:renderClassroomImport,
-    about:renderAbout, profile:renderProfile, curriculum:renderCurriculum
+    about:renderAbout, compare:renderCompare, profile:renderProfile, curriculum:renderCurriculum
   };
   const subMatch=S.subjects.find(s=>s.id===p);
   if(subMatch){ c.innerHTML=renderSubjectPage(p); }
@@ -5517,6 +5529,85 @@ function stopQE(){
 // ══════════════════════════════════════════════
 // CONFETTI
 // ══════════════════════════════════════════════
+// ══════════════════════════════════════════════
+// 🎵 SOUND ENGINE — Web Audio API
+// ══════════════════════════════════════════════
+const SFX = {
+  _ctx: null,
+  _enabled: localStorage.getItem('bs_sfx') !== 'off',
+  _unlocked: false,
+
+  ctx(){
+    if(!this._ctx) this._ctx = new (window.AudioContext||window.webkitAudioContext)();
+    // Resume if suspended (browser autoplay policy)
+    if(this._ctx.state === 'suspended') this._ctx.resume();
+    return this._ctx;
+  },
+
+  // Call once on first user interaction to unlock audio
+  unlock(){
+    if(this._unlocked) return;
+    try{
+      const ctx = this.ctx();
+      const buf = ctx.createBuffer(1,1,22050);
+      const src = ctx.createBufferSource();
+      src.buffer = buf;
+      src.connect(ctx.destination);
+      src.start(0);
+      this._unlocked = true;
+    }catch(e){}
+  },
+
+  play(type){
+    if(!this._enabled) return;
+    try{
+      const ctx = this.ctx();
+      if(ctx.state === 'suspended'){ ctx.resume().then(()=>this._playNow(type,ctx)); return; }
+      this._playNow(type, ctx);
+    } catch(e){}
+  },
+
+  _playNow(type, ctx){
+    const g = ctx.createGain();
+    g.connect(ctx.destination);
+    const sounds = {
+      correct: ()=>{ this._tone(ctx,g,523,0,0.10); this._tone(ctx,g,659,0.12,0.10); this._tone(ctx,g,784,0.24,0.18); },
+      wrong:   ()=>{ this._tone(ctx,g,300,0,0.10,{type:'sawtooth'}); this._tone(ctx,g,220,0.12,0.18,{type:'sawtooth'}); },
+      confetti:()=>{ [523,659,784,1047].forEach((f,i)=>this._tone(ctx,g,f,i*0.08,0.12)); },
+      point:   ()=>{ this._tone(ctx,g,880,0,0.06); this._tone(ctx,g,1100,0.08,0.12); },
+      reveal:  ()=>{ this._tone(ctx,g,440,0,0.08); this._tone(ctx,g,554,0.10,0.14); },
+      pass:    ()=>{ this._tone(ctx,g,350,0,0.08,{type:'triangle'}); this._tone(ctx,g,300,0.10,0.10,{type:'triangle'}); },
+      tick:    ()=>{ this._tone(ctx,g,800,0,0.04,{type:'square'}); },
+      finish:  ()=>{ [523,659,784,1047,1319].forEach((f,i)=>this._tone(ctx,g,f,i*0.09,0.14)); },
+    };
+    sounds[type]?.();
+  },
+
+  _tone(ctx, g, freq, delay, dur, opts={}){
+    const o = ctx.createOscillator();
+    const og = ctx.createGain();
+    o.type = opts.type || 'sine';
+    o.frequency.value = freq;
+    o.connect(og); og.connect(g);
+    const t = ctx.currentTime + delay;
+    og.gain.setValueAtTime(0.35, t);
+    og.gain.exponentialRampToValueAtTime(0.001, t + dur);
+    o.start(t); o.stop(t + dur + 0.05);
+  },
+
+  toggle(){
+    this._enabled = !this._enabled;
+    localStorage.setItem('bs_sfx', this._enabled?'on':'off');
+    const btn = document.getElementById('sfxToggle');
+    if(btn){ btn.textContent = this._enabled?'🔊':'🔇'; btn.style.opacity = this._enabled?'1':'0.45'; }
+    if(this._enabled) this.play('tick'); // test sound
+  }
+};
+
+// Unlock audio on first click anywhere
+document.addEventListener('click', ()=>SFX.unlock(), {once:true});
+document.addEventListener('touchstart', ()=>SFX.unlock(), {once:true});
+
 function confetti(){
   const colors=['#10b981','#f59e0b','#1565c0','#7c3aed','#ef4444','#fbbf24'];
   for(let i=0;i<40;i++){
@@ -8298,7 +8389,31 @@ const GAMES_DEFAULT = {
     { word:'بيت', hint:'تسكن فيه', hidden:[1] },
     { word:'سماء', hint:'فوقنا', hidden:[0,2] },
   ],
-  imgquiz: []  // صور يضيفها المعلم من بنك الأسئلة
+  imgquiz: [],  // صور يضيفها المعلم من بنك الأسئلة
+  versus: [
+    { q:'ما عدد أصابع اليدين معاً؟', ans:'عشرة' },
+    { q:'ما عكس كلمة كبير؟', ans:'صغير' },
+    { q:'ما اسم عاصمة المملكة؟', ans:'الرياض' },
+    { q:'كم يوماً في الأسبوع؟', ans:'سبعة' },
+    { q:'ما الحرف الذي يأتي بعد الألف؟', ans:'الباء' },
+    { q:'ما لون العشب؟', ans:'أخضر' },
+    { q:'كم شهراً في السنة؟', ans:'اثنا عشر شهراً' },
+    { q:'ما عكس النهار؟', ans:'الليل' },
+  ],
+  opposite: [
+    { word:'كبير', opposite:'صغير' },
+    { word:'سريع', opposite:'بطيء' },
+    { word:'قريب', opposite:'بعيد' },
+    { word:'طويل', opposite:'قصير' },
+    { word:'ثقيل', opposite:'خفيف' },
+    { word:'جميل', opposite:'قبيح' },
+    { word:'ساخن', opposite:'بارد' },
+    { word:'قديم', opposite:'جديد' },
+    { word:'صعب', opposite:'سهل' },
+    { word:'فرح', opposite:'حزين' },
+    { word:'نظيف', opposite:'وسخ' },
+    { word:'قوي', opposite:'ضعيف' },
+  ]
 };
 
 // ── CM.games state ──────────────────────────────────────────
@@ -8314,11 +8429,19 @@ function cmGamesInit(){
       QUIZ_SESSION_LEN: 5, // عدد أسئلة الجولة
       hotIdx: 0,
       hotStudentIdx: 0,
+      hotResult: null,
+      _hotNextAction: null,
       raceScores: {},
       wordIdx: 0,
       wordRevealed: false,
       imgquizIdx: 0,
       imgquizRevealed: false,
+      versusIdx: 0,
+      versusScores: { a:0, b:0 },
+      versusRevealed: false,
+      oppositeIdx: 0,
+      oppositeRevealed: false,
+      oppositeChain: [],   // سلسلة الإجابات الصحيحة المتتالية
       // load from S or defaults (filter deleted defaults)
       questions: (()=>{
         const del = S.gamesBank?._deleted || {};
@@ -8326,7 +8449,11 @@ function cmGamesInit(){
           ...(S.gamesBank?.[t]||[]),
           ...( GAMES_DEFAULT[t]||[] ).filter((_,i)=>!(del[t]||[]).includes(i))
         ];
-        return { quiz:mg('quiz'), hot:mg('hot'), race:mg('race'), word:mg('word'), imgquiz:mg('imgquiz') };
+        return {
+          quiz:mg('quiz'), hot:mg('hot'), race:mg('race'),
+          word:mg('word'), imgquiz:mg('imgquiz'),
+          versus:mg('versus'), opposite:mg('opposite')
+        };
       })()
     };
     // init race scores
@@ -8354,6 +8481,8 @@ function cmRenderGame(game){
   if(game === 'race')    el.innerHTML = cmBuildRace(qs);
   if(game === 'word')    el.innerHTML = cmBuildWord(qs);
   if(game === 'imgquiz') el.innerHTML = cmBuildImgQuiz(qs);
+  if(game === 'versus')  el.innerHTML = cmBuildVersus(qs);
+  if(game === 'opposite')el.innerHTML = cmBuildOpposite(qs);
 }
 
 // ── GAME 1: من سيربح المليون ────────────────────────────────
@@ -8492,7 +8621,7 @@ function cmBuildQuizFinale(sessionQs){
 function cmQuizShowFinale(){
   CM.games.quizSessionDone = true;
   cmRenderGame('quiz');
-  confetti();
+  confetti(); SFX.play('finish');
 }
 
 function cmQuizRestart(){
@@ -8596,6 +8725,34 @@ function cmQuizShuffle(){
 function cmBuildHot(qs){
   if(!qs.length || !S.students.length) return `<div style="color:rgba(255,255,255,0.35);text-align:center;padding:40px">لا توجد أسئلة أو طلاب</div>`;
   const g = CM.games;
+
+  // ── شاشة النتيجة بعد الإجابة ─────────────────────────
+  if(g.hotResult){
+    const r = g.hotResult;
+    const s = S.students[r.studentIdx % S.students.length];
+    const photoEl = s.photo
+      ? `<img src="${s.photo}" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid ${r.type==='yes'?'rgba(16,185,129,0.60)':'rgba(245,158,11,0.40)'};margin-bottom:8px;"/>`
+      : `<div style="width:80px;height:80px;border-radius:50%;${avatarStyle(s.id)};color:white;display:flex;align-items:center;justify-content:center;font-size:34px;font-weight:900;border:3px solid ${r.type==='yes'?'rgba(16,185,129,0.60)':'rgba(245,158,11,0.40)'};margin:0 auto 8px;">${s.name.charAt(0)}</div>`;
+    return `
+    <div class="cg-chair-display">
+      <div style="font-size:0.78rem;color:rgba(255,255,255,0.35);font-weight:700;text-transform:uppercase;letter-spacing:1px">💣 الكرسي الساخن</div>
+      ${photoEl}
+      <div class="cg-chair-student">${s.name}</div>
+      ${r.type==='yes'
+        ? `<div style="font-size:2.5rem;font-weight:900;color:var(--mint);text-align:center;animation:popIn 0.4s cubic-bezier(0.34,1.56,0.64,1)">✅ أجاب صح! 🌟</div>
+           <div style="font-size:0.88rem;color:rgba(255,255,255,0.40);margin-top:4px;">يكمل في الكرسي — سؤال جديد</div>`
+        : r.type==='no'
+          ? `<div style="font-size:2rem;font-weight:900;color:var(--gold);text-align:center;">لا بأس 💪</div>
+             <div style="font-size:0.88rem;color:rgba(255,255,255,0.40);margin-top:4px;">دور الطالب التالي</div>`
+          : `<div style="font-size:2rem;font-weight:900;color:rgba(255,255,255,0.50);text-align:center;">⏭ مرّر</div>`
+      }
+      <button class="cg-chair-btn yes" style="font-size:1.1rem;padding:14px 36px;margin-top:8px" onclick="cmHotConfirmNext()">
+        التالي →
+      </button>
+    </div>`;
+  }
+
+  // ── شاشة السؤال الرئيسية ──────────────────────────────
   const q = qs[g.hotIdx % qs.length];
   const s = S.students[g.hotStudentIdx % S.students.length];
   const photoEl = s.photo
@@ -8608,9 +8765,9 @@ function cmBuildHot(qs){
     <div class="cg-chair-student">${s.name}</div>
     <div class="cg-chair-question">${q.q}</div>
     <div class="cg-chair-btns">
-      <button class="cg-chair-btn yes" onclick="cmHotAnswer(true)">✅ أجاب</button>
+      <button class="cg-chair-btn yes"  onclick="cmHotAnswer(true)">✅ أجاب</button>
       <button class="cg-chair-btn pass" onclick="cmHotAnswer(null)">⏭ مرّر</button>
-      <button class="cg-chair-btn no" onclick="cmHotAnswer(false)">❌ لم يجب</button>
+      <button class="cg-chair-btn no"   onclick="cmHotAnswer(false)">❌ لم يجب</button>
     </div>
     <div style="display:flex;gap:10px;margin-top:8px;">
       <button class="cm-btn cm-btn-ghost" style="font-size:0.80rem" onclick="cmHotNextQ()">سؤال جديد 🎲</button>
@@ -8622,20 +8779,57 @@ function cmBuildHot(qs){
 function cmHotAnswer(correct){
   const g = CM.games;
   const s = S.students[g.hotStudentIdx % S.students.length];
+
   if(correct === true){
+    // ✅ أجاب صح — نقطة + نفس الطالب + سؤال جديد مباشرة
     if(!CM.games.raceScores[s.id]) CM.games.raceScores[s.id]=0;
     CM.games.raceScores[s.id]++;
-    confetti();
-    toast(`✅ ${s.name} أجاب بشكل صحيح! +1 نقطة`,'success');
+    confetti(); SFX.play('point');
+    g.hotResult = { type:'yes', studentIdx: g.hotStudentIdx, keepStudent: true };
+    g._hotNextAction = 'newQ'; // نفس الطالب، سؤال جديد
+
   } else if(correct === false){
-    toast(`❌ ${s.name} لم يجب`,'error');
+    // ❌ لم يجب — طالب جديد + سؤال جديد
+    SFX.play('wrong');
+    g.hotResult = { type:'no', studentIdx: g.hotStudentIdx, keepStudent: false };
+    g._hotNextAction = 'newStudent';
+
+  } else {
+    // ⏭ مرّر — طالب جديد فوراً بدون شاشة وسيطة
+    SFX.play('pass');
+    g.hotStudentIdx++;
+    g.hotIdx++;
+    g.hotResult = null;
+    cmRenderGame('hot');
+    return;
   }
-  g.hotStudentIdx++;
-  g.hotIdx++;
   cmRenderGame('hot');
 }
-function cmHotNextQ(){ CM.games.hotIdx++; cmRenderGame('hot'); }
-function cmHotNextStudent(){ CM.games.hotStudentIdx++; cmRenderGame('hot'); }
+
+function cmHotConfirmNext(){
+  const g = CM.games;
+  g.hotResult = null;
+  if(g._hotNextAction === 'newQ'){
+    g.hotIdx++; // سؤال جديد، نفس الطالب — hotStudentIdx لا يتغير
+  } else {
+    g.hotStudentIdx++; // طالب جديد
+    g.hotIdx++;
+  }
+  g._hotNextAction = null;
+  cmRenderGame('hot');
+}
+
+function cmHotNextQ(){
+  CM.games.hotIdx++;
+  CM.games.hotResult = null;
+  cmRenderGame('hot');
+}
+function cmHotNextStudent(){
+  CM.games.hotStudentIdx++;
+  CM.games.hotIdx++;
+  CM.games.hotResult = null;
+  cmRenderGame('hot');
+}
 
 // ── GAME 3: سباق الإجابات ───────────────────────────────────
 function cmBuildRace(qs){
@@ -8716,7 +8910,7 @@ function cmBuildWord(qs){
 }
 
 function cmWordReveal(){
-  CM.games.wordRevealed=true;
+  SFX.play('reveal'); CM.games.wordRevealed=true;
   const el=document.getElementById('cgWordReveal');
   if(el){ el.classList.add('show'); }
   confetti();
@@ -8724,6 +8918,180 @@ function cmWordReveal(){
 function cmWordNext(){ CM.games.wordIdx++; CM.games.wordRevealed=false; cmRenderGame('word'); }
 function cmWordPrev(){ CM.games.wordIdx=Math.max(0,CM.games.wordIdx-1); CM.games.wordRevealed=false; cmRenderGame('word'); }
 function cmWordShuffle(){ CM.games.questions.word=CM.games.questions.word.sort(()=>Math.random()-0.5); CM.games.wordIdx=0; CM.games.wordRevealed=false; cmRenderGame('word'); toast('🔀 تم خلط الكلمات','info'); }
+
+// ── GAME 6: فصلي ضد فصلي ────────────────────────────────────
+function cmBuildVersus(qs){
+  if(!qs.length) return `<div style="color:rgba(255,255,255,0.35);text-align:center;padding:40px">لا توجد أسئلة — أضف من بنك الأسئلة</div>`;
+  const g = CM.games;
+  const idx = g.versusIdx % qs.length;
+  const q = qs[idx];
+  const sa = g.versusScores.a || 0;
+  const sb = g.versusScores.b || 0;
+
+  // اسم الفريق من state أو افتراضي
+  const nameA = g.versusNameA || '🔴 الفريق الأحمر';
+  const nameB = g.versusNameB || '🔵 الفريق الأزرق';
+
+  return `
+  <!-- لوحة النتائج -->
+  <div style="display:flex;align-items:stretch;gap:12px;margin-bottom:16px;">
+    <div style="flex:1;background:rgba(239,68,68,0.12);border:2px solid rgba(239,68,68,${sa>sb?'0.50':'0.20'});border-radius:16px;padding:14px;text-align:center;">
+      <div style="font-size:0.80rem;font-weight:800;color:rgba(255,255,255,0.50);margin-bottom:4px;">${nameA}</div>
+      <div style="font-size:3.5rem;font-weight:900;color:${sa>sb?'var(--ember)':'rgba(255,255,255,0.70)'};line-height:1">${sa}</div>
+      <button class="cm-btn cm-btn-ghost" style="width:100%;justify-content:center;margin-top:10px;font-size:0.82rem;color:rgba(239,68,68,0.80);border-color:rgba(239,68,68,0.25);" onclick="cmVersusPoint('a')">
+        ✅ نقطة للفريق
+      </button>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;">
+      <div style="font-size:1.5rem;font-weight:900;color:rgba(255,255,255,0.30)">VS</div>
+      <div style="font-size:0.74rem;color:rgba(255,255,255,0.25);font-weight:700">${idx+1}/${qs.length}</div>
+    </div>
+    <div style="flex:1;background:rgba(66,165,245,0.12);border:2px solid rgba(66,165,245,${sb>sa?'0.50':'0.20'});border-radius:16px;padding:14px;text-align:center;">
+      <div style="font-size:0.80rem;font-weight:800;color:rgba(255,255,255,0.50);margin-bottom:4px;">${nameB}</div>
+      <div style="font-size:3.5rem;font-weight:900;color:${sb>sa?'var(--sky3)':'rgba(255,255,255,0.70)'};line-height:1">${sb}</div>
+      <button class="cm-btn cm-btn-ghost" style="width:100%;justify-content:center;margin-top:10px;font-size:0.82rem;color:rgba(66,165,245,0.80);border-color:rgba(66,165,245,0.25);" onclick="cmVersusPoint('b')">
+        ✅ نقطة للفريق
+      </button>
+    </div>
+  </div>
+
+  <!-- السؤال -->
+  <div class="cg-question-card" style="text-align:center;">
+    <div class="cg-question-num">🏆 فصلي ضد فصلي — من يجاوب أسرع؟</div>
+    <div class="cg-question-text">${q.q}</div>
+    ${g.versusRevealed
+      ? `<div style="margin-top:14px;padding:14px 24px;background:rgba(16,185,129,0.12);border:1.5px solid rgba(16,185,129,0.30);border-radius:12px;font-size:1.5rem;font-weight:900;color:var(--mint);">${q.ans}</div>`
+      : `<button class="cm-btn cm-btn-primary" style="margin:14px auto 0;display:block;font-size:0.92rem;padding:10px 28px" onclick="cmVersusReveal()">🔍 الإجابة</button>`
+    }
+  </div>
+
+  <!-- أدوات -->
+  <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;align-items:center;">
+    <button class="cm-btn cm-btn-ghost" style="font-size:0.82rem" onclick="cmVersusNext()">سؤال جديد ←</button>
+    <button class="cm-btn cm-btn-ghost" style="font-size:0.82rem" onclick="cmVersusShuffle()">🔀 خلط</button>
+    <button class="cm-btn cm-btn-ghost" style="font-size:0.78rem;opacity:0.55" onclick="cmVersusReset()">🔄 تصفير</button>
+    <button class="cm-btn cm-btn-ghost" style="font-size:0.78rem;opacity:0.55" onclick="cmVersusRename()">✏️ أسماء الفرق</button>
+  </div>`;
+}
+
+function cmVersusPoint(team){
+  if(!CM.games.versusScores) CM.games.versusScores={a:0,b:0};
+  CM.games.versusScores[team]++;
+  const winner = team==='a'?(CM.games.versusNameA||'الفريق الأحمر'):(CM.games.versusNameB||'الفريق الأزرق');
+  confetti(); SFX.play('point');
+  toast(`✅ نقطة لـ ${winner}!`,'success');
+  cmVersusNext();
+}
+function cmVersusReveal(){
+  CM.games.versusRevealed=true;
+  cmRenderGame('versus');
+}
+function cmVersusNext(){
+  CM.games.versusIdx++;
+  CM.games.versusRevealed=false;
+  cmRenderGame('versus');
+}
+function cmVersusShuffle(){
+  CM.games.questions.versus=CM.games.questions.versus.sort(()=>Math.random()-0.5);
+  CM.games.versusIdx=0; CM.games.versusRevealed=false;
+  cmRenderGame('versus'); toast('🔀 تم خلط الأسئلة','info');
+}
+function cmVersusReset(){
+  CM.games.versusScores={a:0,b:0};
+  CM.games.versusIdx=0; CM.games.versusRevealed=false;
+  cmRenderGame('versus'); toast('🔄 تم تصفير النتائج','info');
+}
+function cmVersusRename(){
+  const a=prompt('اسم الفريق الأحمر:',CM.games.versusNameA||'الفريق الأحمر');
+  if(a?.trim()) CM.games.versusNameA=a.trim();
+  const b=prompt('اسم الفريق الأزرق:',CM.games.versusNameB||'الفريق الأزرق');
+  if(b?.trim()) CM.games.versusNameB=b.trim();
+  cmRenderGame('versus');
+}
+
+// ── GAME 7: كلمة وعكسها ──────────────────────────────────────
+function cmBuildOpposite(qs){
+  if(!qs.length) return `<div style="color:rgba(255,255,255,0.35);text-align:center;padding:40px">لا توجد كلمات — أضف من بنك الأسئلة</div>`;
+  const g = CM.games;
+  const idx = g.oppositeIdx % qs.length;
+  const q = qs[idx];
+  const chain = g.oppositeChain || [];
+
+  return `
+  <!-- سلسلة الإجابات -->
+  ${chain.length ? `
+  <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;align-items:center;">
+    <span style="font-size:0.76rem;color:rgba(255,255,255,0.35);font-weight:700;">السلسلة:</span>
+    ${chain.slice(-6).map((c,i)=>`
+      <span style="padding:3px 10px;border-radius:99px;font-size:0.80rem;font-weight:700;background:${i%2===0?'rgba(66,165,245,0.15)':'rgba(16,185,129,0.15)'};color:${i%2===0?'var(--sky3)':'var(--mint)'};">
+        ${c}
+      </span>`).join('<span style="color:rgba(255,255,255,0.20);font-size:0.80rem;">↔</span>')}
+    ${chain.length>6?`<span style="color:rgba(255,255,255,0.25);font-size:0.76rem;">...وأكثر</span>`:''}
+  </div>` : ''}
+
+  <!-- الكلمة الحالية -->
+  <div style="text-align:center;padding:28px 20px;background:rgba(255,255,255,0.04);border:1.5px solid rgba(255,255,255,0.10);border-radius:18px;margin-bottom:14px;">
+    <div style="font-size:0.80rem;font-weight:800;color:rgba(255,255,255,0.30);letter-spacing:1px;text-transform:uppercase;margin-bottom:12px;">✏️ كلمة وعكسها</div>
+    <div style="font-size:3.5rem;font-weight:900;color:white;letter-spacing:-1px;margin-bottom:8px;">${q.word}</div>
+    <div style="font-size:1rem;color:rgba(255,255,255,0.35);font-weight:700;">ما عكس هذه الكلمة؟</div>
+    ${g.oppositeRevealed
+      ? `<div style="margin-top:16px;font-size:2.5rem;font-weight:900;color:var(--mint);animation:popIn 0.35s cubic-bezier(0.34,1.56,0.64,1);">${q.opposite}</div>`
+      : ''
+    }
+  </div>
+
+  <!-- أزرار -->
+  <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+    ${!g.oppositeRevealed
+      ? `<button class="cm-btn cm-btn-primary" style="font-size:1rem;padding:12px 32px" onclick="cmOppositeReveal()">🔍 عرض العكس</button>`
+      : `<button class="cm-btn cm-btn-primary" style="font-size:1rem;padding:12px 32px;background:linear-gradient(135deg,var(--mint),var(--sky))" onclick="cmOppositeCorrect()">✅ صح — التالي</button>
+         <button class="cm-btn cm-btn-ghost"   style="font-size:1rem;padding:12px 28px" onclick="cmOppositeSkip()">⏭ تخطى</button>`
+    }
+    <button class="cm-btn cm-btn-ghost" style="font-size:0.80rem" onclick="cmOppositeShuffle()">🔀 خلط</button>
+    <button class="cm-btn cm-btn-ghost" style="font-size:0.78rem;opacity:0.55" onclick="cmOppositeReset()">🔄 من البداية</button>
+  </div>
+
+  <!-- عداد السلسلة -->
+  ${chain.length>=3?`
+  <div style="text-align:center;margin-top:14px;padding:10px;background:rgba(245,158,11,0.10);border-radius:12px;border:1px solid rgba(245,158,11,0.25);">
+    <span style="font-size:0.88rem;font-weight:800;color:var(--gold);">🔥 سلسلة ${chain.length} صحيح متتالي!</span>
+  </div>`:''}`;
+}
+
+function cmOppositeReveal(){
+  CM.games.oppositeRevealed=true;
+  cmRenderGame('opposite');
+}
+function cmOppositeCorrect(){
+  SFX.play('correct');
+  const g=CM.games;
+  const q=g.questions.opposite[g.oppositeIdx%g.questions.opposite.length];
+  if(!g.oppositeChain) g.oppositeChain=[];
+  // أضف الكلمة والعكس للسلسلة
+  if(!g.oppositeChain.length) g.oppositeChain.push(q.word);
+  g.oppositeChain.push(q.opposite);
+  if(g.oppositeChain.length>=5) confetti();
+  g.oppositeIdx++;
+  g.oppositeRevealed=false;
+  cmRenderGame('opposite');
+}
+function cmOppositeSkip(){
+  SFX.play('wrong');
+  CM.games.oppositeIdx++;
+  CM.games.oppositeRevealed=false;
+  CM.games.oppositeChain=[];
+  cmRenderGame('opposite');
+  toast('تم التخطي — السلسلة انكسرت','info');
+}
+function cmOppositeShuffle(){
+  CM.games.questions.opposite=CM.games.questions.opposite.sort(()=>Math.random()-0.5);
+  CM.games.oppositeIdx=0; CM.games.oppositeRevealed=false; CM.games.oppositeChain=[];
+  cmRenderGame('opposite'); toast('🔀 تم خلط الكلمات','info');
+}
+function cmOppositeReset(){
+  CM.games.oppositeIdx=0; CM.games.oppositeRevealed=false; CM.games.oppositeChain=[];
+  cmRenderGame('opposite');
+}
 
 // ── GAME 5: ما هذا؟ — لعبة الصور ────────────────────────────
 function cmBuildImgQuiz(qs){
@@ -8788,7 +9156,7 @@ function cmBuildImgQuiz(qs){
 
 function cmImgQuizReveal(){
   CM.games.imgquizRevealed = true;
-  confetti();
+  confetti(); SFX.play('reveal');
   cmRenderGame('imgquiz');
 }
 function cmImgQuizNext(){
@@ -8830,6 +9198,8 @@ function renderGamesBank(){
     race: mergeQ('race'),
     word: mergeQ('word'),
     imgquiz: mergeQ('imgquiz'),
+    versus: mergeQ('versus'),
+    opposite: mergeQ('opposite'),
   };
   const games = [
     { id:'quiz',  icon:'🎯', name:'من سيربح المليون', desc:'أسئلة باختيار من متعدد', qs:allQ.quiz,
@@ -8888,6 +9258,20 @@ function renderGamesBank(){
         </div>
       </div>`
     },
+    { id:'versus', icon:'🏆', name:'فصلي ضد فصلي', desc:'أسئلة للتنافس بين فريقين', qs:allQ.versus,
+      addForm:`<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <input id="gba_vs_q" placeholder="السؤال..." style="flex:2;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-family:'Tajawal',sans-serif;font-size:0.90rem;outline:none;background:var(--card);color:var(--ink);text-align:right;">
+        <input id="gba_vs_a" placeholder="الإجابة..." style="flex:1;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-family:'Tajawal',sans-serif;font-size:0.90rem;outline:none;background:var(--card);color:var(--ink);text-align:right;">
+        <button class="btn btn-primary btn-sm" onclick="gbAddVersus()">➕ إضافة</button>
+      </div>`
+    },
+    { id:'opposite', icon:'✏️', name:'كلمة وعكسها', desc:'سلسلة كلمة وضدها', qs:allQ.opposite,
+      addForm:`<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <input id="gba_op_w" placeholder="الكلمة..." style="flex:1;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-family:'Tajawal',sans-serif;font-size:0.90rem;outline:none;background:var(--card);color:var(--ink);text-align:right;">
+        <input id="gba_op_o" placeholder="العكس..." style="flex:1;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-family:'Tajawal',sans-serif;font-size:0.90rem;outline:none;background:var(--card);color:var(--ink);text-align:right;">
+        <button class="btn btn-primary btn-sm" onclick="gbAddOpposite()">➕ إضافة</button>
+      </div>`
+    },
   ];
 
   return `
@@ -8933,6 +9317,14 @@ function gbRenderItem(type, q, i){
       <img src="${q.img}" style="width:48px;height:48px;object-fit:cover;border-radius:8px;border:1px solid var(--border);flex-shrink:0;" />
       ${q.hint?`<span style="font-size:0.76rem;color:var(--muted)">💡 ${q.hint}</span>`:''}
     </div>`;
+  }
+  else if(type==='versus'){
+    text=q.q;
+    extra=`<div style="font-size:0.76rem;color:var(--mint);font-weight:700;margin-top:3px;">✅ ${q.ans||'—'}</div>`;
+  }
+  else if(type==='opposite'){
+    text=q.word;
+    extra=`<div style="font-size:0.76rem;color:var(--sky);font-weight:700;margin-top:3px;">↔ ${q.opposite||'—'}</div>`;
   }
 
   return `<div class="gb-q-item" id="gbItem_${type}_${i}" style="${isCustom?'background:rgba(21,101,192,0.04);':''}">
@@ -9019,6 +9411,14 @@ function gbOpenEdit(type, i){
     inner = `
       <div class="fg" style="margin:0"><label>الكلمة</label>${inp('gbe_w', q.word)}</div>
       <div class="fg" style="margin:0"><label>التلميح</label>${inp('gbe_h', q.hint)}</div>`;
+  } else if(type==='versus'){
+    inner = `
+      <div class="fg" style="margin:0"><label>السؤال</label>${inp('gbe_q', q.q)}</div>
+      <div class="fg" style="margin:0"><label>الإجابة</label>${inp('gbe_a', q.ans)}</div>`;
+  } else if(type==='opposite'){
+    inner = `
+      <div class="fg" style="margin:0"><label>الكلمة</label>${inp('gbe_w', q.word)}</div>
+      <div class="fg" style="margin:0"><label>العكس</label>${inp('gbe_o', q.opposite)}</div>`;
   } else if(type==='imgquiz'){
     inner = `
       <div class="fg" style="margin:0"><label>الإجابة الصحيحة</label>${inp('gbe_iq_ans', q.answer)}</div>
@@ -9091,6 +9491,16 @@ function gbSaveEdit(type, i, isCustom){
     if(!newImg){toast('الصورة مطلوبة','error');return;}
     updated={img:newImg, answer:newAns, hint:newHint||''};
     _gbEditImgData=null;
+  } else if(type==='versus'){
+    const newQ=document.getElementById('gbe_q')?.value.trim();
+    const newA=document.getElementById('gbe_a')?.value.trim();
+    if(!newQ){toast('أدخل السؤال','error');return;}
+    updated={q:newQ,ans:newA};
+  } else if(type==='opposite'){
+    const newW=document.getElementById('gbe_w')?.value.trim();
+    const newO=document.getElementById('gbe_o')?.value.trim();
+    if(!newW||!newO){toast('أدخل الكلمة وعكسها','error');return;}
+    updated={word:newW,opposite:newO};
   }
 
   if(isCustom){
@@ -9156,8 +9566,30 @@ function gbAddWord(){
   toast('✅ تم إضافة الكلمة','success');
 }
 
-let _gbImgData = null;     // صورة الإضافة الجديدة
-let _gbEditImgData = null; // صورة التعديل
+let _gbImgData = null;
+let _gbEditImgData = null;
+
+function gbAddVersus(){
+  if(!S.gamesBank) S.gamesBank={quiz:[],hot:[],race:[],word:[],imgquiz:[],versus:[],opposite:[]};
+  if(!S.gamesBank.versus) S.gamesBank.versus=[];
+  const q=document.getElementById('gba_vs_q')?.value.trim();
+  const a=document.getElementById('gba_vs_a')?.value.trim();
+  if(!q){toast('أدخل السؤال','error');return;}
+  S.gamesBank.versus.push({q,ans:a||''});
+  save(); CM.games=null; showPage('games_bank');
+  toast('✅ تم إضافة السؤال','success');
+}
+
+function gbAddOpposite(){
+  if(!S.gamesBank) S.gamesBank={quiz:[],hot:[],race:[],word:[],imgquiz:[],versus:[],opposite:[]};
+  if(!S.gamesBank.opposite) S.gamesBank.opposite=[];
+  const w=document.getElementById('gba_op_w')?.value.trim();
+  const o=document.getElementById('gba_op_o')?.value.trim();
+  if(!w||!o){toast('أدخل الكلمة وعكسها','error');return;}
+  S.gamesBank.opposite.push({word:w,opposite:o});
+  save(); CM.games=null; showPage('games_bank');
+  toast('✅ تم إضافة الكلمة','success');
+}
 
 function gbPreviewImgQuiz(input){
   const file = input.files[0];
@@ -9629,6 +10061,204 @@ function cmClearSlides(){
   document.getElementById('cmSlidesNav').style.display='none';
   const countEl=document.getElementById('cmImgCount');
   if(countEl) countEl.textContent='';
+}
+
+// ══════════════════════════════════════════════════════════════
+// 📊 COMPARE CLASSES — مقارنة الفصول
+// ══════════════════════════════════════════════════════════════
+function renderCompare(){
+  const classes = getAllClasses();
+  if(classes.length < 2){
+    return `
+    <div class="breadcrumb">🏠 <span class="sep">›</span> <span class="active">📊 مقارنة الفصول</span></div>
+    <div class="empty">
+      <div class="empty-emoji">📊</div>
+      <h3>تحتاج فصلين على الأقل</h3>
+      <p>أضف فصلاً ثانياً من زر الفصل في الأعلى</p>
+      <button class="btn btn-primary" onclick="openClassSwitcher()">➕ إضافة فصل</button>
+    </div>`;
+  }
+
+  // Load data for each class
+  const classData = classes.map(c=>{
+    try{
+      const raw = localStorage.getItem(getClassStorageKey(c.id));
+      if(!raw) return { ...c, students:[], subjects:[], evals:{}, attendance:{} };
+      const d = JSON.parse(raw);
+      return { ...c, students:d.students||[], subjects:d.subjects||[], evals:d.evals||{}, attendance:d.attendance||{} };
+    }catch(e){ return {...c, students:[], subjects:[], evals:{}, attendance:{}}; }
+  });
+
+  // Compute metrics per class
+  const metrics = classData.map(c=>{
+    const stuCount = c.students.length;
+    if(!stuCount) return { ...c, avgMastery:0, topStudent:null, attRate:0, masteredSkills:0, totalSkills:0 };
+
+    // Average mastery
+    let totalM=0, totalT=0;
+    c.students.forEach(s=>{
+      c.subjects.forEach(sub=>{
+        sub.sections?.forEach(sec=>{
+          const ev=((c.evals[s.id]||{})[sub.id]||{})[sec.id]||{};
+          totalM+=Object.values(ev).filter(v=>v==='m').length;
+          totalT+=sec.skills?.length||0;
+        });
+      });
+    });
+    const avgMastery = totalT ? Math.round(totalM/c.students.length/totalT*100) : 0;
+    const masteredSkills = totalT ? Math.round(totalM/c.students.length) : 0;
+
+    // Top student
+    const stuScores = c.students.map(s=>{
+      let m=0,t=0;
+      c.subjects.forEach(sub=>sub.sections?.forEach(sec=>{
+        const ev=((c.evals[s.id]||{})[sub.id]||{})[sec.id]||{};
+        m+=Object.values(ev).filter(v=>v==='m').length;
+        t+=sec.skills?.length||0;
+      }));
+      return {s, pct:t?Math.round(m/t*100):0};
+    }).sort((a,b)=>b.pct-a.pct);
+    const topStudent = stuScores[0]?.s;
+    const topPct = stuScores[0]?.pct||0;
+
+    // Attendance rate (last 30 days)
+    const today = new Date();
+    let attP=0, attTotal=0;
+    for(let i=0;i<30;i++){
+      const d=new Date(today); d.setDate(d.getDate()-i);
+      const key=d.toISOString().slice(0,10);
+      const dayAtt=c.attendance[key];
+      if(dayAtt && Object.keys(dayAtt).length){
+        attP+=Object.values(dayAtt).filter(v=>v==='p').length;
+        attTotal+=Object.keys(dayAtt).length;
+      }
+    }
+    const attRate = attTotal ? Math.round(attP/attTotal*100) : 0;
+
+    // Per-subject mastery
+    const subjectMastery = c.subjects.map(sub=>{
+      let m=0,t=0;
+      c.students.forEach(s=>{
+        sub.sections?.forEach(sec=>{
+          const ev=((c.evals[s.id]||{})[sub.id]||{})[sec.id]||{};
+          m+=Object.values(ev).filter(v=>v==='m').length;
+          t+=sec.skills?.length||0;
+        });
+      });
+      return {name:sub.name, icon:sub.icon||'📚', pct:t?Math.round(m/c.students.length/t*100):0};
+    });
+
+    return {...c, avgMastery, masteredSkills, totalSkills:totalT, topStudent, topPct, attRate, subjectMastery, stuCount};
+  });
+
+  // Find best class per metric
+  const bestMastery = metrics.reduce((a,b)=>b.avgMastery>a.avgMastery?b:a, metrics[0]);
+  const bestAtt     = metrics.reduce((a,b)=>b.attRate>a.attRate?b:a, metrics[0]);
+
+  // All subjects union
+  const allSubNames = [...new Set(metrics.flatMap(m=>m.subjectMastery.map(s=>s.name)))];
+
+  return `
+  <div class="breadcrumb">🏠 <span class="sep">›</span> <span class="active">📊 مقارنة الفصول</span></div>
+  <div class="ph">
+    <div><div class="ph-title">📊 مقارنة الفصول</div>
+    <div class="ph-sub">مقارنة ${classes.length} فصول — الإتقان والحضور والتقدم</div></div>
+  </div>
+
+  <!-- Overview cards -->
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;margin-bottom:24px;">
+    ${metrics.map((m,i)=>{
+      const colors = ['var(--sky)','var(--mint)','var(--gold)','var(--plum)','var(--ember)'];
+      const col = colors[i%colors.length];
+      const isBestM = m.id===bestMastery.id;
+      const isBestA = m.id===bestAtt.id;
+      return `<div class="card" style="border-top:3px solid ${col};position:relative;">
+        ${isBestM?`<div style="position:absolute;top:10px;left:10px;background:${col};color:white;font-size:0.68rem;font-weight:900;padding:2px 8px;border-radius:99px;">🏆 الأعلى إتقاناً</div>`:''}
+        <div class="card-body" style="padding-top:${isBestM?'30px':'14px'}">
+          <div style="font-size:1rem;font-weight:900;color:var(--ink2);margin-bottom:2px;">${m.name}</div>
+          <div style="font-size:0.78rem;color:var(--muted);margin-bottom:14px;">${m.note||''} · ${m.stuCount} طالب</div>
+
+          <!-- Mastery bar -->
+          <div style="margin-bottom:10px;">
+            <div style="display:flex;justify-content:space-between;font-size:0.78rem;font-weight:700;color:var(--muted);margin-bottom:4px;">
+              <span>⭐ متوسط الإتقان</span><span style="color:${col};font-size:0.92rem;">${m.avgMastery}%</span>
+            </div>
+            <div style="height:8px;background:var(--border);border-radius:99px;overflow:hidden;">
+              <div style="height:100%;width:${m.avgMastery}%;background:${col};border-radius:99px;transition:width 0.8s ease;"></div>
+            </div>
+          </div>
+
+          <!-- Attendance bar -->
+          <div style="margin-bottom:14px;">
+            <div style="display:flex;justify-content:space-between;font-size:0.78rem;font-weight:700;color:var(--muted);margin-bottom:4px;">
+              <span>📋 نسبة الحضور</span><span>${m.attRate}%</span>
+            </div>
+            <div style="height:8px;background:var(--border);border-radius:99px;overflow:hidden;">
+              <div style="height:100%;width:${m.attRate}%;background:var(--mint);border-radius:99px;"></div>
+            </div>
+          </div>
+
+          <!-- Top student -->
+          ${m.topStudent ? `<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--surface);border-radius:10px;border:1px solid var(--border);">
+            <span style="font-size:1rem">🥇</span>
+            <div>
+              <div style="font-size:0.80rem;font-weight:800;color:var(--ink2);">${m.topStudent.name.split(' ').slice(0,2).join(' ')}</div>
+              <div style="font-size:0.72rem;color:var(--muted);">الأعلى إتقاناً — ${m.topPct}%</div>
+            </div>
+          </div>` : '<div style="font-size:0.78rem;color:var(--muted2);">لا يوجد بيانات تقييم</div>'}
+        </div>
+      </div>`;
+    }).join('')}
+  </div>
+
+  <!-- Subject comparison table -->
+  ${allSubNames.length ? `
+  <div class="card">
+    <div class="card-header"><h3>📚 مقارنة المواد</h3></div>
+    <div class="card-body" style="padding:0;">
+      <div class="tbl-wrap"><table class="tbl">
+        <thead><tr>
+          <th>المادة</th>
+          ${metrics.map(m=>`<th style="text-align:center;">${m.name}</th>`).join('')}
+          <th style="text-align:center;">الأفضل</th>
+        </tr></thead>
+        <tbody>
+        ${allSubNames.map(subName=>{
+          const vals = metrics.map(m=>{
+            const sub = m.subjectMastery?.find(s=>s.name===subName);
+            return sub?.pct||0;
+          });
+          const maxVal = Math.max(...vals);
+          const subIcon = metrics.flatMap(m=>m.subjectMastery).find(s=>s.name===subName)?.icon||'📚';
+          const bestIdx = vals.indexOf(maxVal);
+          return `<tr>
+            <td><span style="font-weight:700;">${subIcon} ${subName}</span></td>
+            ${vals.map((v,i)=>`<td style="text-align:center;">
+              <div style="display:flex;flex-direction:column;align-items:center;gap:3px;">
+                <span style="font-weight:900;color:${v===maxVal&&maxVal>0?'var(--sky)':'var(--ink2)'};">${v}%</span>
+                <div style="width:50px;height:5px;background:var(--border);border-radius:99px;overflow:hidden;">
+                  <div style="height:100%;width:${v}%;background:${v===maxVal&&maxVal>0?'var(--sky)':'var(--muted2)'};border-radius:99px;"></div>
+                </div>
+              </div>
+            </td>`).join('')}
+            <td style="text-align:center;font-weight:800;color:var(--sky);">${maxVal>0?metrics[bestIdx]?.name:'—'}</td>
+          </tr>`;
+        }).join('')}
+        </tbody>
+      </table></div>
+    </div>
+  </div>` : ''}
+
+  <!-- Summary insight -->
+  <div class="note-card" style="margin-top:16px;">
+    <span class="note-icon">💡</span>
+    <div>
+      <strong>أبرز الملاحظات:</strong><br>
+      ${bestMastery.avgMastery>0?`🏆 <strong>${bestMastery.name}</strong> الأعلى إتقاناً بمتوسط ${bestMastery.avgMastery}%. `:''}
+      ${bestAtt.attRate>0?`✅ <strong>${bestAtt.name}</strong> الأفضل حضوراً بنسبة ${bestAtt.attRate}%.`:''}
+      ${metrics.every(m=>m.avgMastery===0)?'لا يوجد بيانات تقييم بعد في أي فصل.':''}
+    </div>
+  </div>`;
 }
 
 // ══════════════════════════════════════════════
