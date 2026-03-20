@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -1878,7 +1879,7 @@ body.dark .dark-toggle::after { content:'🌙'; transform:translateX(20px); }
         <span class="notif-badge" id="notifCount">3</span>
       </button>
       <div class="tb-user" onclick="showPage('profile')">
-        <div class="tb-avatar" id="tbAvatar">م</div>
+        <div class="tb-avatar" id="tbAvatar" style="overflow:hidden;padding:0;"></div>
         <span class="tb-username" id="tbName">المعلم</span>
       </div>
       <button class="tb-logout" onclick="doLogout()">خروج</button>
@@ -1971,7 +1972,7 @@ body.dark .dark-toggle::after { content:'🌙'; transform:translateX(20px); }
       <button class="nav-btn" id="nav-about" onclick="showPage('about')"><span class="nav-icon">💙</span> حول التطبيق</button>
 
       <div class="sb-teacher-card" id="sbTeacherCard">
-        <div class="sb-teacher-avatar" id="sbAvatar">م</div>
+        <div class="sb-teacher-avatar" id="sbAvatar" style="overflow:hidden;padding:0;"></div>
         <div class="sb-teacher-name" id="sbName">—</div>
         <div class="sb-teacher-role">معلم · الصف الأول الابتدائي</div>
         <div class="sb-quick-actions">
@@ -2649,7 +2650,7 @@ function saveClassMeta(meta){
 }
 
 const S = {
-  user: null, teacher: {n1:'',n2:'',n3:''},
+  user: null, teacher: {n1:'',n2:'',n3:'',photo:''},
   students: [], attendance: {}, evals: {}, notes: [],
   subjects: JSON.parse(JSON.stringify(DEFAULT_SUBJECTS)),
   behavior: {}, goals: [], grades: { columns:[], rows:{} },
@@ -2834,8 +2835,24 @@ function enterApp(){
   document.getElementById('app').style.display='block';
   document.getElementById('tbName').textContent=S.teacher.n1||'معلم';
   const tbLogo=document.getElementById('tbLogoImg'); if(tbLogo) tbLogo.src=SCHOOL_LOGO;
-  document.getElementById('tbAvatar').textContent=S.teacher.n1.charAt(0)||'م';
-  document.getElementById('sbAvatar').textContent=S.teacher.n1.charAt(0)||'م';
+  // Teacher avatar — photo or initial
+  function _setTeacherAvatars(){
+    const initial = S.teacher.n1.charAt(0)||'م';
+    ['tbAvatar','sbAvatar'].forEach(id=>{
+      const el=document.getElementById(id);
+      if(!el) return;
+      if(S.teacher.photo){
+        el.style.background='none';
+        el.style.boxShadow='0 4px 16px rgba(0,0,0,0.25)';
+        el.innerHTML=`<img src="${S.teacher.photo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;" />`;
+      } else {
+        el.style.background='';
+        el.style.boxShadow='';
+        el.innerHTML=`<span style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:inherit;font-weight:900;">${initial}</span>`;
+      }
+    });
+  }
+  _setTeacherAvatars();
   document.getElementById('sbName').textContent=fullName();
   document.getElementById('nb-students').textContent=S.students.length;
   document.getElementById('nb-notes').textContent=S.notes.length;
@@ -4313,7 +4330,8 @@ function genStudentPDF(sid){
 
   <!-- Header -->
   <div class="report-header">
-    <div style="display:flex;align-items:center;gap:14px;">
+    <!-- صف العلوي: شعار المدرسة + اسمها -->
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;">
       <img src="${SCHOOL_LOGO}" style="width:64px;height:64px;object-fit:contain;background:white;border-radius:10px;padding:4px;flex-shrink:0;" />
       <div>
         <div class="rh-badge">📋 تقرير رسمي</div>
@@ -4321,10 +4339,17 @@ function genStudentPDF(sid){
         <div class="rh-sub">كشف متابعة طالب — الصف الأول الابتدائي</div>
       </div>
     </div>
-    <div class="rh-meta">
-      <span>👩‍🏫 ${fullName()}</span>
-      <span>📅 ${fmtDate(today())}</span>
-      <span>🆔 رقم الجلوس: ${s.num||'—'}</span>
+    <!-- صف المعلم: صورة كبيرة + اسم كبير -->
+    <div style="display:flex;align-items:center;gap:14px;background:rgba(255,255,255,0.10);border-radius:12px;padding:12px 16px;">
+      ${S.teacher.photo
+        ? `<img src="${S.teacher.photo}" style="width:54px;height:54px;border-radius:50%;object-fit:cover;border:3px solid rgba(255,255,255,0.60);flex-shrink:0;box-shadow:0 3px 10px rgba(0,0,0,0.25);" />`
+        : `<div style="width:54px;height:54px;border-radius:50%;background:linear-gradient(135deg,#f59e0b,#ef4444);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:900;color:white;flex-shrink:0;border:3px solid rgba(255,255,255,0.40);">${fullName().charAt(0)||'م'}</div>`
+      }
+      <div>
+        <div style="font-size:1.15em;font-weight:900;color:#fff;letter-spacing:0.2px;">${fullName()}</div>
+        <div style="font-size:0.82em;opacity:0.70;margin-top:2px;">المعلم المسؤول · ${fmtDate(today())}</div>
+      </div>
+      <div style="margin-right:auto;font-size:0.82em;opacity:0.70;">🆔 رقم الجلوس: ${s.num||'—'}</div>
     </div>
   </div>
 
@@ -4693,16 +4718,23 @@ function downloadClassPDF(){
   <button class="pbtn secondary" onclick="window.close()">✕ إغلاق</button>
 </div>
 <div class="header">
-  <div>
-    <div style="display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:10px;">
-      <img src="${SCHOOL_LOGO}" style="width:60px;height:60px;object-fit:contain;" />
-      <h1 style="margin:0;font-size:1.3em;">مدارس البشرى الأهلية — تقرير الفصل — ${subLabel}</h1>
+  <div style="display:flex;align-items:center;gap:16px;flex:1;">
+    <img src="${SCHOOL_LOGO}" style="width:56px;height:56px;object-fit:contain;background:rgba(255,255,255,0.15);border-radius:10px;padding:4px;flex-shrink:0;" />
+    <div>
+      <h1 style="margin:0;font-size:1.25em;">مدارس البشرى الأهلية — تقرير الفصل</h1>
+      <div class="meta">${subLabel} · الصف الأول الابتدائي · ${today()}</div>
     </div>
-    <div class="meta">الصف الأول الابتدائي · المعلم: ${fullName()} · التاريخ: ${today()}</div>
   </div>
-  <div style="text-align:left;font-size:.9em">
-    <div>👥 ${S.students.length} طالب</div>
-    <div>⭐ متوسط الإتقان: ${avgMastery}%</div>
+  <!-- Teacher info -->
+  <div style="display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.12);border-radius:10px;padding:8px 14px;flex-shrink:0;">
+    ${S.teacher.photo
+      ? `<img src="${S.teacher.photo}" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,0.55);flex-shrink:0;" />`
+      : `<div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#f59e0b,#ef4444);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:900;color:white;flex-shrink:0;">${fullName().charAt(0)||'م'}</div>`
+    }
+    <div>
+      <div style="font-size:1em;font-weight:900;color:#fff;">${fullName()}</div>
+      <div style="font-size:0.76em;opacity:0.70;">المعلم المسؤول</div>
+    </div>
   </div>
 </div>
 <div class="stats-row">
@@ -5179,36 +5211,62 @@ function delNote(id){
 // ══════════════════════════════════════════════
 function renderProfile(){
   const totalMastery=S.students.length?Math.round(S.students.reduce((a,s)=>a+studentMastery(s.id).total,0)/S.students.length):0;
+  const avatarHTML = S.teacher.photo
+    ? `<img src="${S.teacher.photo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" />`
+    : `<span style="font-size:40px;font-weight:900;color:white;">${S.teacher.n1.charAt(0)||'م'}</span>`;
+
   return `
-  <div class="breadcrumb">🏠 <span class="sep">›</span> <span class="active">الملف الشخصي</span></div>
+  <div class="breadcrumb">🏠 <span class="sep">›</span> <span class="active">⚙️ الإعدادات</span></div>
   <div class="ph"><div><div class="ph-title">⚙️ الملف الشخصي والإعدادات</div></div></div>
-  <div style="display:grid;grid-template-columns:1fr 2fr;gap:20px;">
+
+  <div style="display:grid;grid-template-columns:300px 1fr;gap:20px;align-items:start;">
+
+    <!-- LEFT: Profile card -->
     <div>
-      <div class="card" style="padding:24px;text-align:center;margin-bottom:14px;">
-        <div style="width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,var(--ink2),var(--sky));display:flex;align-items:center;justify-content:center;font-size:36px;font-weight:900;color:white;margin:0 auto 14px;box-shadow:0 8px 24px rgba(21,101,192,0.35);">${S.teacher.n1.charAt(0)||'م'}</div>
-        <div style="font-size:1.2rem;font-weight:900;color:var(--ink2);">${fullName()}</div>
-        <div style="color:var(--muted);font-size:0.85rem;margin:4px 0 16px;">معلم الصف الأول الابتدائي</div>
-        <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
-          <span class="badge badge-blue">📚 لغتي</span>
-          <span class="badge badge-green">🏫 البشرى الأهلية</span>
+      <!-- Photo card -->
+      <div class="card" style="padding:28px;text-align:center;margin-bottom:14px;">
+        <!-- Avatar with upload -->
+        <div style="position:relative;width:100px;height:100px;margin:0 auto 16px;">
+          <div style="width:100px;height:100px;border-radius:50%;background:linear-gradient(135deg,var(--sky),var(--plum));display:flex;align-items:center;justify-content:center;overflow:hidden;box-shadow:0 8px 24px rgba(21,101,192,0.30);border:3px solid var(--c-accent-border);">
+            ${avatarHTML}
+          </div>
+          <!-- Upload overlay -->
+          <label for="teacherPhotoInput" style="position:absolute;bottom:0;left:50%;transform:translateX(-50%);background:var(--sky);color:white;border-radius:99px;padding:3px 10px;font-size:0.70rem;font-weight:800;cursor:pointer;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,0.20);">
+            📷 تغيير
+            <input type="file" id="teacherPhotoInput" accept="image/*" style="display:none" onchange="saveTeacherPhoto(this)" />
+          </label>
+        </div>
+        <div style="font-size:1.15rem;font-weight:900;color:var(--ink2);">${fullName()||'المعلم'}</div>
+        <div style="color:var(--muted);font-size:0.82rem;margin:4px 0 14px;">مدارس البشرى الأهلية</div>
+        ${S.teacher.photo?`<button class="btn btn-ghost btn-sm" onclick="removeTeacherPhoto()" style="font-size:0.76rem;opacity:0.6;">🗑️ حذف الصورة</button>`:''}
+        <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:12px;">
+          <span class="badge badge-blue">🏫 البشرى الأهلية</span>
+          <span class="badge badge-green">📚 ${S.students.length} طالب</span>
         </div>
       </div>
-      <div class="card" style="padding:18px;">
-        <div style="font-weight:800;color:var(--ink2);margin-bottom:12px;">📊 إحصائيات سريعة</div>
+
+      <!-- Stats -->
+      <div class="card" style="padding:18px;margin-bottom:14px;">
+        <div style="font-weight:800;color:var(--ink2);margin-bottom:12px;">📊 إحصائياتك</div>
         ${[
-          ['👥 الطلاب',S.students.length],
-          ['⭐ متوسط الإتقان',totalMastery+'%'],
-          ['📝 الملاحظات',S.notes.length],
-          ['📅 أيام الحضور المسجلة',Object.keys(S.attendance).length],
-        ].map(([l,v])=>`<div style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border);font-size:0.88rem;">
+          ['👥 الطلاب', S.students.length],
+          ['⭐ متوسط الإتقان', totalMastery+'%'],
+          ['📅 أيام مسجّلة', Object.keys(S.attendance).length],
+          ['📝 الملاحظات', S.notes.length],
+          ['🎯 الأهداف النشطة', S.goals.filter(g=>!g.done).length],
+          ['🏫 الفصول', getAllClasses().length],
+        ].map(([l,v])=>`<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:0.86rem;">
           <span style="color:var(--muted);">${l}</span>
           <span style="font-weight:800;color:var(--ink2);">${v}</span>
         </div>`).join('')}
       </div>
     </div>
+
+    <!-- RIGHT: Settings + Help -->
     <div>
+      <!-- Edit info -->
       <div class="card" style="padding:22px;margin-bottom:14px;">
-        <div style="font-weight:800;color:var(--ink2);margin-bottom:18px;">✏️ تعديل البيانات الشخصية</div>
+        <div style="font-weight:800;color:var(--ink2);margin-bottom:18px;">✏️ البيانات الشخصية</div>
         <div class="form-row">
           <div class="fg"><label>الاسم الأول</label><input type="text" id="pn1" value="${S.teacher.n1}" /></div>
           <div class="fg"><label>الاسم الثاني</label><input type="text" id="pn2" value="${S.teacher.n2}" /></div>
@@ -5216,49 +5274,117 @@ function renderProfile(){
         <div class="fg"><label>اللقب</label><input type="text" id="pn3" value="${S.teacher.n3}" /></div>
         <button class="btn btn-primary" onclick="saveProfile()">💾 حفظ التغييرات</button>
       </div>
-      <div class="card" style="padding:22px;">
+
+      <!-- Data tools -->
+      <div class="card" style="padding:22px;margin-bottom:14px;">
         <div style="font-weight:800;color:var(--ink2);margin-bottom:14px;">🛠️ أدوات البيانات</div>
-        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
           <button class="btn btn-ghost" onclick="exportData()">📤 تصدير JSON</button>
           <button class="btn btn-ghost" onclick="importDataClick()">📥 استيراد JSON</button>
           <input type="file" id="importFile" style="display:none;" accept=".json" onchange="importData(this)" />
-          <button class="btn btn-ghost" onclick="saveOfflineSnapshot();toast('تم حفظ نسخة offline ✅','success')">📦 حفظ للاستخدام offline</button>
-          <button class="btn btn-red" onclick="clearAllData()">🗑️ حذف كل البيانات</button>
+          <button class="btn btn-ghost" onclick="saveOfflineSnapshot();toast('تم حفظ نسخة offline ✅','success')">📦 Offline</button>
+          <button class="btn btn-red" onclick="clearAllData()">🗑️ حذف الكل</button>
         </div>
-        <!-- PWA Status card -->
-        <div style="margin-top:14px;background:linear-gradient(135deg,rgba(21,101,192,0.07),rgba(16,185,129,0.05));border:1.5px solid rgba(21,101,192,0.15);border-radius:var(--r-sm);padding:14px 16px;">
-          <div style="font-weight:800;color:var(--ink2);margin-bottom:8px;font-size:0.90rem;">📲 حالة وضع عدم الاتصال</div>
-          <div style="display:flex;flex-direction:column;gap:6px;font-size:0.84rem;color:var(--muted);">
-            <div id="pwaOnlineStatus" style="display:flex;align-items:center;gap:7px;">
-              <div id="pwaColorDot" style="width:9px;height:9px;border-radius:50%;background:var(--mint)"></div>
-              <span id="pwaOnlineText">جاري الفحص...</span>
-            </div>
-            <div>📦 البيانات محفوظة في المتصفح — تعمل بدون إنترنت تلقائياً</div>
-            <div>🔋 الأصول الخارجية (Chart.js، الخطوط) تُحفظ عند الاتصال</div>
-            <div id="pwaInstallStatus">✅ التطبيق محفوظ محلياً</div>
+        <div style="margin-top:12px;background:var(--surface);border-radius:10px;padding:12px 14px;border:1px solid var(--border);">
+          <div style="display:flex;align-items:center;gap:8px;font-size:0.84rem;color:var(--muted);">
+            <div id="pwaColorDot" style="width:8px;height:8px;border-radius:50%;background:var(--mint);flex-shrink:0;"></div>
+            <span id="pwaOnlineText">جاري الفحص...</span>
           </div>
-          <button class="btn btn-primary btn-sm" style="margin-top:10px" onclick="installPWA()">📲 تثبيت كتطبيق</button>
-        </div>
-        <div class="note-card" style="margin-top:10px;">
-          <span class="note-icon">💡</span>
-          <div>بياناتك محفوظة في <strong>localStorage</strong> وهي موجودة حتى بدون إنترنت. اضغط "حفظ للاستخدام offline" لحفظ نسخة كاملة في <strong>IndexedDB</strong>.</div>
         </div>
       </div>
+
+      <!-- HELP & CONCEPTS -->
+      <div class="card" style="padding:22px;">
+        <div style="font-weight:800;color:var(--ink2);margin-bottom:18px;">📖 دليل الاستخدام والمفاهيم</div>
+        ${[
+          { icon:'🌱', title:'في بداية رحلته (<40%)', desc:'الطالب بدأ يتعلم المهارة — يحتاج تكرار وتدريب إضافي. ليس حكماً على قدرته، بل وصف لمرحلته الحالية.' },
+          { icon:'📈', title:'يتقدم بشكل جيد (40-70%)', desc:'الطالب يُظهر فهماً جيداً ويتحسن — استمر في التشجيع والتعزيز.' },
+          { icon:'🏆', title:'أتقن المهارة (70%+)', desc:'الطالب أتقن المهارة — يمكن الانتقال لمهارة أصعب أو تعميق الفهم.' },
+          { icon:'📸', title:'الحضور', desc:'✅ حاضر · ❌ غائب · 📋 بعذر. سجّل الحضور يومياً لتتبع أنماط الغياب وإرسال تقارير للأولياء.' },
+          { icon:'🗺️', title:'خريطة الكنز', desc:'نظام تحفيز بصري — كل مهارة تُتقن تحرّك الطالب خطوة على الخريطة وتعطيه شارة وشهادة.' },
+          { icon:'🖥️', title:'وضع الحصة', desc:'شاشة كاملة للبروجكتور — مؤقت + حضور + عجلة عشوائية + ألعاب + لوحة شرف + عرض الشرائح.' },
+          { icon:'🎮', title:'الألعاب التعليمية', desc:'7 ألعاب مدمجة: المليون · الكرسي الساخن · سباق الإجابات · أكمل الكلمة · ما هذا؟ · فصلي ضد فصلي · كلمة وعكسها.' },
+          { icon:'📊', title:'مؤشر التقدم', desc:'↗ يعني تحسّن عن البداية · → ثابت · ↘ تراجع. يُحسب بمقارنة المهارات الحالية بأول تسجيل.' },
+          { icon:'🏫', title:'الفصول المتعددة', desc:'اضغط على اسم الفصل في الأعلى للتبديل. كل فصل له بياناته المستقلة تماماً.' },
+          { icon:'💾', title:'حفظ البيانات', desc:'تحفظ تلقائياً كل 5 ثواني في المتصفح. للنسخ الاحتياطي: ⚙️ الإعدادات ← تصدير JSON.' },
+        ].map(h=>`
+          <div style="display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);">
+            <div style="width:36px;height:36px;border-radius:10px;background:var(--surface);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;">${h.icon}</div>
+            <div>
+              <div style="font-size:0.86rem;font-weight:800;color:var(--ink2);margin-bottom:3px;">${h.title}</div>
+              <div style="font-size:0.80rem;color:var(--muted);line-height:1.5;">${h.desc}</div>
+            </div>
+          </div>`).join('')}
+      </div>
     </div>
-  </div>
-  `;
+  </div>`;
 }
 
 function saveProfile(){
-  S.teacher.n1=document.getElementById('pn1').value.trim()||S.teacher.n1;
-  S.teacher.n2=document.getElementById('pn2').value.trim()||S.teacher.n2;
-  S.teacher.n3=document.getElementById('pn3').value.trim()||S.teacher.n3;
+  S.teacher.n1=document.getElementById('pn1')?.value.trim()||S.teacher.n1;
+  S.teacher.n2=document.getElementById('pn2')?.value.trim()||S.teacher.n2;
+  S.teacher.n3=document.getElementById('pn3')?.value.trim()||S.teacher.n3;
+  // Photo handled by saveTeacherPhoto()
   save();
   document.getElementById('tbName').textContent=S.teacher.n1;
-  document.getElementById('tbAvatar').textContent=S.teacher.n1.charAt(0);
-  document.getElementById('sbAvatar').textContent=S.teacher.n1.charAt(0);
   document.getElementById('sbName').textContent=fullName();
-  toast('تم حفظ الملف الشخصي ✅','success');
+  // Update avatars
+  const initial=S.teacher.n1.charAt(0)||'م';
+  ['tbAvatar','sbAvatar'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(!el) return;
+    if(S.teacher.photo){
+      el.style.background='none';
+      el.style.boxShadow='0 4px 16px rgba(0,0,0,0.25)';
+      el.innerHTML=`<img src="${S.teacher.photo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;" />`;
+    } else {
+      el.style.background='';
+      el.style.boxShadow='';
+      el.innerHTML=`<span style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:inherit;font-weight:900;">${initial}</span>`;
+    }
+  });
+  toast('✅ تم حفظ الملف الشخصي','success');
+  showPage('profile');
+}
+
+function saveTeacherPhoto(input){
+  const file=input.files[0];
+  if(!file) return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    // Compress to 200x200
+    const img=new Image();
+    img.onload=()=>{
+      const canvas=document.createElement('canvas');
+      canvas.width=200; canvas.height=200;
+      const ctx=canvas.getContext('2d');
+      const size=Math.min(img.width,img.height);
+      const ox=(img.width-size)/2, oy=(img.height-size)/2;
+      ctx.drawImage(img,ox,oy,size,size,0,0,200,200);
+      S.teacher.photo=canvas.toDataURL('image/jpeg',0.85);
+      save();
+      // Refresh avatars immediately
+      ['tbAvatar','sbAvatar'].forEach(id=>{
+        const el=document.getElementById(id);
+        if(!el) return;
+        el.style.background='none';
+        el.style.boxShadow='0 4px 16px rgba(0,0,0,0.25)';
+        el.innerHTML=`<img src="${S.teacher.photo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;" />`;
+      });
+      showPage('profile');
+      toast('✅ تم حفظ الصورة','success');
+    };
+    img.src=e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function removeTeacherPhoto(){
+  if(!confirm('حذف الصورة الشخصية؟')) return;
+  S.teacher.photo='';
+  save();
+  showPage('profile');
+  toast('تم حذف الصورة','success');
 }
 
 function exportData(){
@@ -9669,13 +9795,32 @@ function renderAbout(){
     </div>
   </div>
 
-  <!-- بطاقة الإشراف -->
-  <div class="card" style="max-width:560px;margin:0 auto 18px;border:1.5px solid rgba(21,101,192,0.20);background:linear-gradient(135deg,rgba(21,101,192,0.04),rgba(245,158,11,0.03));">
-    <div class="card-body" style="text-align:center;padding:24px 20px;">
-      <div style="font-size:1rem;font-weight:800;color:var(--muted2);letter-spacing:1px;text-transform:uppercase;margin-bottom:14px;">تحت إشراف</div>
-      <div style="width:70px;height:70px;border-radius:50%;background:linear-gradient(135deg,var(--sky),var(--plum));display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:900;color:white;margin:0 auto 12px;box-shadow:0 6px 20px rgba(21,101,192,0.25);">Z</div>
-      <div style="font-size:1.15rem;font-weight:900;color:var(--ink2);margin-bottom:2px;">Eng. Ziad El-Sayed Abd El-Malek Ahmed</div>
-      <div style="font-size:0.84rem;color:var(--muted);margin-bottom:4px;">المهندس / زياد السيد عبد الملك أحمد</div>
+  <!-- بطاقة الفريق -->
+  <div class="card" style="max-width:560px;margin:0 auto 18px;border:1.5px solid rgba(21,101,192,0.15);background:linear-gradient(135deg,rgba(21,101,192,0.04),rgba(124,58,237,0.03));">
+    <div class="card-body" style="padding:24px 20px;">
+
+      <!-- المطوّر -->
+      <div style="text-align:center;margin-bottom:20px;">
+        <div style="font-size:0.72rem;font-weight:900;color:var(--sky);letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;background:rgba(66,165,245,0.10);border:1px solid rgba(66,165,245,0.20);border-radius:99px;padding:4px 14px;display:inline-block;">
+          ⚙️ القائم على تطوير النظام
+        </div>
+        <div style="width:66px;height:66px;border-radius:50%;background:linear-gradient(135deg,var(--sky),var(--plum));display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:900;color:white;margin:0 auto 10px;box-shadow:0 6px 20px rgba(21,101,192,0.30);">Z</div>
+        <div style="font-size:1.10rem;font-weight:900;color:var(--ink2);margin-bottom:2px;">Eng. Ziad El-Sayed Abd El-Malek Ahmed</div>
+        <div style="font-size:0.84rem;color:var(--muted);">المهندس / زياد السيد عبد الملك أحمد</div>
+      </div>
+
+      <div style="height:1px;background:var(--border);margin:0 0 20px;"></div>
+
+      <!-- المشرف -->
+      <div style="text-align:center;">
+        <div style="font-size:0.72rem;font-weight:900;color:var(--gold);letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;background:rgba(245,158,11,0.10);border:1px solid rgba(245,158,11,0.20);border-radius:99px;padding:4px 14px;display:inline-block;">
+          🎓 تحت إشراف
+        </div>
+        <div style="width:66px;height:66px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--ember));display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:900;color:white;margin:0 auto 10px;box-shadow:0 6px 20px rgba(245,158,11,0.25);">س</div>
+        <div style="font-size:1.10rem;font-weight:900;color:var(--ink2);margin-bottom:2px;">الأستاذ / سيد عبد الملك أحمد</div>
+        <div style="font-size:0.84rem;color:var(--muted);">النظام تم تحت إشرافه وتوجيهه</div>
+      </div>
+
     </div>
   </div>
 
