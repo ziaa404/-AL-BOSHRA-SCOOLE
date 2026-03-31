@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -86,6 +85,22 @@ body:has(button:hover) #cursor { background: var(--gold); }
 ::-webkit-scrollbar { width: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 99px; }
+
+
+/* ══════════════════════════════════════════════════
+   LICENSE SCREEN
+══════════════════════════════════════════════════ */
+#licenseScreen{position:fixed;inset:0;z-index:9999;background:linear-gradient(135deg,#060d1a 0%,#0f1e38 50%,#0a1628 100%);display:flex;align-items:center;justify-content:center;font-family:'Tajawal',sans-serif;direction:rtl;}
+.lic-box{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.09);border-radius:24px;padding:40px 36px;width:440px;max-width:94vw;text-align:center;box-shadow:0 32px 80px rgba(0,0,0,0.60),inset 0 1px 0 rgba(255,255,255,0.08);backdrop-filter:blur(16px);position:relative;z-index:1;}
+.lic-title{font-size:1.40rem;font-weight:900;color:white;margin-bottom:3px;letter-spacing:-0.3px;}
+.lic-sub{font-size:0.84rem;color:rgba(255,255,255,0.40);margin-bottom:24px;}
+.lic-input{width:100%;padding:14px 42px 14px 16px;border-radius:13px;border:1.5px solid rgba(255,255,255,0.14);background:rgba(255,255,255,0.06);color:white;font-family:'Tajawal',sans-serif;font-size:0.88rem;outline:none;text-align:center;direction:ltr;transition:border-color 0.2s;margin-bottom:12px;}
+.lic-input:focus{border-color:rgba(66,165,245,0.60);background:rgba(66,165,245,0.06);}
+.lic-input::placeholder{color:rgba(255,255,255,0.20);direction:rtl;}
+.lic-btn{width:100%;padding:14px;border-radius:13px;border:none;background:linear-gradient(135deg,#1565c0,#7c3aed);color:white;font-family:'Tajawal',sans-serif;font-size:1rem;font-weight:900;cursor:pointer;transition:all 0.18s;margin-bottom:12px;box-shadow:0 6px 20px rgba(21,101,192,0.35);}
+.lic-btn:hover{transform:translateY(-1px);box-shadow:0 8px 28px rgba(21,101,192,0.50);}
+.lic-error{background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.28);border-radius:11px;padding:10px 14px;font-size:0.84rem;color:#fca5a5;display:none;margin-bottom:12px;}
+.lic-expiry{background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.28);border-radius:11px;padding:10px 14px;font-size:0.84rem;color:#6ee7b7;margin-top:12px;display:none;}
 
 /* ══════════════════════════════════════════════════
    LOGIN SCREEN
@@ -1810,6 +1825,73 @@ body.dark .dark-toggle::after { content:'🌙'; transform:translateX(20px); }
 <!-- ══════════════════════════════════════════
   LOGIN
 ══════════════════════════════════════════ -->
+<div id="licenseScreen" style="display:none;">
+
+  <!-- Animated background -->
+  <div style="position:absolute;inset:0;overflow:hidden;pointer-events:none;">
+    <div style="position:absolute;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(21,101,192,0.25),transparent);top:-100px;right:-100px;animation:orbFloat 8s ease-in-out infinite alternate;"></div>
+    <div style="position:absolute;width:400px;height:400px;border-radius:50%;background:radial-gradient(circle,rgba(124,58,237,0.20),transparent);bottom:-80px;left:-80px;animation:orbFloat 10s ease-in-out infinite alternate-reverse;"></div>
+    <div style="position:absolute;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,rgba(245,158,11,0.15),transparent);top:40%;left:10%;animation:orbFloat 6s ease-in-out infinite alternate;"></div>
+  </div>
+
+  <div class="lic-box">
+    <!-- Logo -->
+    <div style="position:relative;margin-bottom:22px;">
+      <div style="width:96px;height:96px;border-radius:22px;background:white;margin:0 auto;display:flex;align-items:center;justify-content:center;overflow:hidden;box-shadow:0 12px 40px rgba(0,0,0,0.35),0 0 0 1px rgba(255,255,255,0.10);">
+        <img id="licLogoImg" style="width:88px;height:88px;object-fit:contain;" />
+      </div>
+      <!-- Glow ring -->
+      <div style="position:absolute;inset:-4px;border-radius:26px;border:1.5px solid rgba(66,165,245,0.30);pointer-events:none;"></div>
+    </div>
+
+    <div class="lic-title">مدارس البشرى الأهلية</div>
+    <div style="font-size:0.78rem;color:rgba(255,255,255,0.35);margin-bottom:6px;font-weight:700;letter-spacing:1px;text-transform:uppercase;">منصة المعلم الذكية</div>
+    <div class="lic-sub">أدخل كلمة السر للدخول إلى النظام</div>
+
+    <!-- Error -->
+    <div class="lic-error" id="licError"></div>
+
+    <!-- Input -->
+    <div style="position:relative;margin-bottom:12px;">
+      <div style="position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:1rem;pointer-events:none;">🔑</div>
+      <input type="password" class="lic-input" id="licKeyInput"
+        placeholder="أدخل كلمة السر..."
+        autocomplete="off" onkeydown="if(event.key==='Enter')activateLicense()"
+        style="padding-right:42px;" />
+    </div>
+
+    <!-- Button -->
+    <button class="lic-btn" onclick="activateLicense()">
+      دخول ←
+    </button>
+
+    <!-- Success -->
+    <div class="lic-expiry" id="licExpiry"></div>
+
+    <!-- Divider -->
+    <div style="display:flex;align-items:center;gap:10px;margin:16px 0 14px;">
+      <div style="flex:1;height:1px;background:rgba(255,255,255,0.08);"></div>
+      <span style="font-size:0.72rem;color:rgba(255,255,255,0.20);font-weight:700;">للدعم الفني</span>
+      <div style="flex:1;height:1px;background:rgba(255,255,255,0.08);"></div>
+    </div>
+
+    <!-- WhatsApp contact -->
+    <a href="https://wa.me/201007579619" target="_blank"
+      style="display:flex;align-items:center;justify-content:center;gap:8px;padding:10px 20px;border-radius:12px;background:rgba(37,211,102,0.12);border:1px solid rgba(37,211,102,0.25);color:#4ade80;text-decoration:none;font-size:0.84rem;font-weight:800;transition:background 0.15s;"
+      onmouseover="this.style.background='rgba(37,211,102,0.22)'"
+      onmouseout="this.style.background='rgba(37,211,102,0.12)'">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+      </svg>
+      واتساب +20 100 757 9619
+    </a>
+
+    <div style="margin-top:14px;font-size:0.70rem;color:rgba(255,255,255,0.18);text-align:center;">
+      Eng. Ziad El-Sayed Abd El-Malek Ahmed © 2025
+    </div>
+  </div>
+</div>
+
 <div id="loginScreen">
   <div class="login-bg-art">
     <div class="orb orb1"></div>
@@ -2490,27 +2572,50 @@ body.dark .dark-toggle::after { content:'🌙'; transform:translateX(20px); }
 
         <!-- Sidebar: controls -->
         <div class="cm-slides-sidebar">
-          <div class="cm-games-title">📽️ عرض الشرائح</div>
+          <div class="cm-games-title">📽️ عرض وفيديو</div>
 
           <!-- Method 1: Link -->
           <div class="cm-slides-section">
-            <div class="cm-slides-section-title">🔗 رابط Google Slides / OneDrive</div>
-            <input type="url" id="cmSlidesUrl" placeholder="https://docs.google.com/presentation/..."
+            <div class="cm-slides-section-title">🔗 رابط Google Slides / YouTube</div>
+            <input type="url" id="cmSlidesUrl" placeholder="https://..."
               dir="ltr" style="width:100%;padding:8px 10px;border:1.5px solid rgba(255,255,255,0.15);border-radius:9px;background:rgba(255,255,255,0.07);color:white;font-size:0.80rem;outline:none;font-family:'Tajawal',sans-serif;box-sizing:border-box;" />
             <button class="cm-btn cm-btn-primary" style="width:100%;justify-content:center;margin-top:6px;font-size:0.82rem" onclick="cmLoadSlideUrl()">
-              ▶ عرض الرابط
+              ▶ عرض
             </button>
-            <div style="font-size:0.68rem;color:rgba(255,255,255,0.30);margin-top:4px;line-height:1.5">
-              Google Slides: ملف → نشر على الويب → نسخ الرابط<br>
-              OneDrive: مشاركة → تضمين → نسخ الرابط
+            <div style="font-size:0.65rem;color:rgba(255,255,255,0.28);margin-top:4px;line-height:1.5">
+              Google Slides: ملف ← نشر على الويب<br>
+              YouTube: مشاركة ← تضمين ← نسخ src
             </div>
           </div>
 
           <div class="cm-slides-divider"></div>
 
-          <!-- Method 2: Image slides -->
+          <!-- Method 2: Video file -->
           <div class="cm-slides-section">
-            <div class="cm-slides-section-title">🖼️ رفع صور الشرائح</div>
+            <div class="cm-slides-section-title">🎬 رفع فيديو</div>
+            <label class="cm-upload-label" for="cmSlidesVideo">
+              📁 اختر فيديو (MP4/WebM)
+              <input type="file" id="cmSlidesVideo" accept="video/*" onchange="cmLoadVideo(this)" style="display:none" />
+            </label>
+            <div id="cmVideoName" style="font-size:0.70rem;color:rgba(255,255,255,0.35);margin-top:4px;"></div>
+            <!-- Video controls -->
+            <div id="cmVideoControls" style="display:none;margin-top:8px;display:none;">
+              <div style="display:flex;gap:6px;">
+                <button class="cm-btn cm-btn-primary" style="flex:1;justify-content:center;font-size:0.80rem" onclick="cmVideoToggle()" id="cmVidPlayBtn">▶ تشغيل</button>
+                <button class="cm-btn cm-btn-ghost" style="padding:6px 10px;font-size:0.80rem" onclick="cmVideoMute()" id="cmVidMuteBtn">🔊</button>
+              </div>
+              <input type="range" id="cmVideoSeek" min="0" max="100" value="0"
+                style="width:100%;margin-top:6px;accent-color:var(--sky3);"
+                oninput="cmVideoSeek(this.value)" />
+              <div id="cmVideoTime" style="font-size:0.70rem;color:rgba(255,255,255,0.40);text-align:center;margin-top:2px;">0:00 / 0:00</div>
+            </div>
+          </div>
+
+          <div class="cm-slides-divider"></div>
+
+          <!-- Method 3: Image slides -->
+          <div class="cm-slides-section">
+            <div class="cm-slides-section-title">🖼️ صور الشرائح</div>
             <label class="cm-upload-label" for="cmSlidesImages">
               📁 اختر صور (PNG/JPG)
               <input type="file" id="cmSlidesImages" multiple accept="image/*" onchange="cmLoadImageSlides(this)" style="display:none" />
@@ -2520,7 +2625,7 @@ body.dark .dark-toggle::after { content:'🌙'; transform:translateX(20px); }
 
           <div class="cm-slides-divider"></div>
 
-          <!-- Method 3: PDF -->
+          <!-- Method 4: PDF -->
           <div class="cm-slides-section">
             <div class="cm-slides-section-title">📄 رفع PDF</div>
             <label class="cm-upload-label" for="cmSlidesPdf">
@@ -2531,7 +2636,7 @@ body.dark .dark-toggle::after { content:'🌙'; transform:translateX(20px); }
 
           <div class="cm-slides-divider"></div>
 
-          <!-- Navigation -->
+          <!-- Navigation (images) -->
           <div id="cmSlidesNav" style="display:none;">
             <div class="cm-slides-section-title">التنقل بين الشرائح</div>
             <div style="display:flex;align-items:center;gap:8px;justify-content:center;">
@@ -2539,15 +2644,13 @@ body.dark .dark-toggle::after { content:'🌙'; transform:translateX(20px); }
               <div id="cmSlidesCounter" style="font-size:0.84rem;font-weight:800;color:rgba(255,255,255,0.60);min-width:50px;text-align:center;">0 / 0</div>
               <button class="cm-btn cm-btn-ghost" style="flex:1;justify-content:center;font-size:1.1rem" onclick="cmSlideNext()">←</button>
             </div>
-            <button class="cm-btn cm-btn-ghost" style="width:100%;justify-content:center;margin-top:6px;font-size:0.80rem" onclick="cmSlidesFullscreen()">
-              ⛶ شاشة كاملة
-            </button>
-            <button class="cm-btn cm-btn-ghost" style="width:100%;justify-content:center;margin-top:5px;font-size:0.78rem;opacity:0.6" onclick="cmClearSlides()">
-              🗑️ مسح العرض
-            </button>
           </div>
 
-          <button class="cm-btn cm-btn-ghost" style="width:100%;justify-content:center;margin-top:auto;font-size:0.80rem" onclick="cmSwitchView('board')">← السبورة</button>
+          <div style="margin-top:auto;display:flex;flex-direction:column;gap:5px;">
+            <button class="cm-btn cm-btn-ghost" style="width:100%;justify-content:center;font-size:0.80rem" onclick="cmSlidesFullscreen()">⛶ شاشة كاملة</button>
+            <button class="cm-btn cm-btn-ghost" style="width:100%;justify-content:center;font-size:0.76rem;opacity:0.5" onclick="cmClearSlides()">🗑️ مسح</button>
+            <button class="cm-btn cm-btn-ghost" style="width:100%;justify-content:center;font-size:0.80rem" onclick="cmSwitchView('board')">← السبورة</button>
+          </div>
         </div>
 
         <!-- Main display area -->
@@ -2555,16 +2658,20 @@ body.dark .dark-toggle::after { content:'🌙'; transform:translateX(20px); }
           <div class="cm-slides-empty" id="cmSlidesEmpty">
             <div style="font-size:3rem;margin-bottom:12px">📽️</div>
             <div style="font-size:1.1rem;font-weight:700;color:rgba(255,255,255,0.40)">لا يوجد عرض محمّل</div>
-            <div style="font-size:0.82rem;color:rgba(255,255,255,0.20);margin-top:6px">اختر رابط أو ارفع صور أو PDF من القائمة</div>
+            <div style="font-size:0.82rem;color:rgba(255,255,255,0.20);margin-top:6px">رابط · فيديو · صور · PDF</div>
           </div>
-          <!-- iframe for URL -->
+          <!-- iframe for URL/YouTube -->
           <iframe id="cmSlidesFrame" style="display:none;width:100%;height:100%;border:none;border-radius:12px;" allowfullscreen></iframe>
           <!-- image viewer -->
-          <div id="cmSlidesImgViewer" style="display:none;width:100%;height:100%;position:relative;display:none;">
+          <div id="cmSlidesImgViewer" style="display:none;width:100%;height:100%;align-items:center;justify-content:center;">
             <img id="cmSlidesImg" style="width:100%;height:100%;object-fit:contain;border-radius:12px;" />
           </div>
           <!-- pdf viewer -->
           <iframe id="cmSlidesPdfFrame" style="display:none;width:100%;height:100%;border:none;border-radius:12px;"></iframe>
+          <!-- video player -->
+          <video id="cmVideoPlayer" style="display:none;width:100%;height:100%;border-radius:12px;background:#000;outline:none;"
+            ontimeupdate="cmVideoTimeUpdate()" onloadedmetadata="cmVideoMetaLoaded()">
+          </video>
         </div>
 
       </div>
@@ -8477,6 +8584,7 @@ document.addEventListener('keydown',e=>{
   if(CM.currentView==='slides'){
     if(e.key==='ArrowLeft'||e.key==='ArrowDown') { cmSlideNext(); return; }
     if(e.key==='ArrowRight'||e.key==='ArrowUp')  { cmSlidePrev(); return; }
+    if(e.key===' ' && SLIDES.mode==='video') { e.preventDefault(); cmVideoToggle(); return; }
   }});
 
 // ══════════════════════════════════════════════════════════════
@@ -10068,6 +10176,16 @@ function cmLoadSlideUrl(){
   let url = document.getElementById('cmSlidesUrl')?.value.trim();
   if(!url){ toast('أدخل رابطاً','error'); return; }
 
+  // تحويل رابط YouTube تلقائياً لـ embed
+  if(url.includes('youtube.com') || url.includes('youtu.be')){
+    let videoId = '';
+    const ym1 = url.match(new RegExp('[?&]v=([a-zA-Z0-9_-]{11})'));
+    const ym2 = url.match(new RegExp('youtu\.be\/([a-zA-Z0-9_-]{11})'));
+    if(ym1) videoId = ym1[1];
+    else if(ym2) videoId = ym2[1];
+    if(videoId) url = 'https://www.youtube.com/embed/' + videoId + '?rel=0&autoplay=1';
+  }
+
   // Auto-convert Google Slides share link to embed link
   if(url.includes('docs.google.com/presentation')){
     // Extract presentation ID
@@ -10199,13 +10317,86 @@ function cmClearSlides(){
   const empty = document.getElementById('cmSlidesEmpty');
   const imgV  = document.getElementById('cmSlidesImgViewer');
   const pdfF  = document.getElementById('cmSlidesPdfFrame');
+  const vidP  = document.getElementById('cmVideoPlayer');
   if(frame){ frame.style.display='none'; frame.src=''; }
   if(imgV)  imgV.style.display='none';
   if(pdfF){ pdfF.style.display='none'; pdfF.src=''; }
+  if(vidP){ vidP.style.display='none'; vidP.src=''; }
   if(empty) empty.style.display='block';
   document.getElementById('cmSlidesNav').style.display='none';
+  document.getElementById('cmVideoControls').style.display='none';
   const countEl=document.getElementById('cmImgCount');
   if(countEl) countEl.textContent='';
+  const nameEl=document.getElementById('cmVideoName');
+  if(nameEl) nameEl.textContent='';
+}
+
+// ── Video functions ──────────────────────────────────────────
+function cmLoadVideo(input){
+  const file = input.files[0];
+  if(!file) return;
+  SLIDES.mode = 'video';
+  const url = URL.createObjectURL(file);
+
+  const frame = document.getElementById('cmSlidesFrame');
+  const empty = document.getElementById('cmSlidesEmpty');
+  const imgV  = document.getElementById('cmSlidesImgViewer');
+  const pdfF  = document.getElementById('cmSlidesPdfFrame');
+  const vidP  = document.getElementById('cmVideoPlayer');
+
+  empty.style.display='none';
+  frame.style.display='none';
+  imgV.style.display='none';
+  pdfF.style.display='none';
+  vidP.style.display='block';
+  vidP.src = url;
+
+  document.getElementById('cmSlidesNav').style.display='none';
+  const ctrl = document.getElementById('cmVideoControls');
+  if(ctrl) ctrl.style.display='block';
+  const nameEl = document.getElementById('cmVideoName');
+  if(nameEl) nameEl.textContent = `🎬 ${file.name}`;
+  toast('✅ تم تحميل الفيديو','success');
+}
+
+function cmVideoToggle(){
+  const v = document.getElementById('cmVideoPlayer');
+  const btn = document.getElementById('cmVidPlayBtn');
+  if(!v) return;
+  if(v.paused){ v.play(); if(btn) btn.textContent='⏸ إيقاف'; SFX.play('tick'); }
+  else { v.pause(); if(btn) btn.textContent='▶ تشغيل'; }
+}
+
+function cmVideoMute(){
+  const v = document.getElementById('cmVideoPlayer');
+  const btn = document.getElementById('cmVidMuteBtn');
+  if(!v) return;
+  v.muted = !v.muted;
+  if(btn) btn.textContent = v.muted ? '🔇' : '🔊';
+}
+
+function cmVideoSeek(val){
+  const v = document.getElementById('cmVideoPlayer');
+  if(!v || !v.duration) return;
+  v.currentTime = (val/100) * v.duration;
+}
+
+function cmVideoTimeUpdate(){
+  const v = document.getElementById('cmVideoPlayer');
+  const seek = document.getElementById('cmVideoSeek');
+  const time = document.getElementById('cmVideoTime');
+  if(!v) return;
+  if(v.duration){
+    const pct = (v.currentTime / v.duration) * 100;
+    if(seek) seek.value = pct;
+    const fmt = s => `${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,'0')}`;
+    if(time) time.textContent = `${fmt(v.currentTime)} / ${fmt(v.duration)}`;
+  }
+}
+
+function cmVideoMetaLoaded(){
+  const btn = document.getElementById('cmVidPlayBtn');
+  if(btn) btn.textContent = '▶ تشغيل';
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -10406,13 +10597,24 @@ function renderCompare(){
   </div>`;
 }
 
-// ══════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════
+// 🔑 LICENSE SYSTEM — نظام التفعيل
+// ══════════════════════════════════════════════════════════════
+
+const _PH=(()=>{return ['30303030','30303030','34613731','61343063'].map(x=>{let s='';for(let i=0;i<x.length;i+=2)s+=String.fromCharCode(parseInt(x.substr(i,2),16));return s;}).join('');})();
+const _SALT='albushra_2025_secure';
+function _hashStr(str){let h1=0xdeadbeef,h2=0x41c6ce57;for(let i=0;i<str.length;i++){const ch=str.charCodeAt(i);h1=Math.imul(h1^ch,2654435761);h2=Math.imul(h2^ch,1597334677);}h1=Math.imul(h1^(h1>>>16),2246822507)^Math.imul(h2^(h2>>>13),3266489909);h2=Math.imul(h2^(h2>>>16),2246822507)^Math.imul(h1^(h1>>>13),3266489909);return(4294967296*(2097151&h2)+h1>>>0).toString(16).padStart(16,'0');}
+function _savePass(h){try{localStorage.setItem('bs_pass',h);}catch(e){}try{sessionStorage.setItem('bs_pass',h);}catch(e){}}
+function _loadPass(){try{const v=localStorage.getItem('bs_pass');if(v)return v;}catch(e){}try{const v=sessionStorage.getItem('bs_pass');if(v)return v;}catch(e){}return null;}
+function checkLicense(){const saved=_loadPass();if(saved&&saved===_PH){document.getElementById('licenseScreen').style.display='none';return true;}document.getElementById('licenseScreen').style.display='flex';document.getElementById('loginScreen').style.display='none';const _li=document.getElementById('licLogoImg');if(_li)_li.src=SCHOOL_LOGO;return false;}
+function activateLicense(){const input=document.getElementById('licKeyInput')?.value.trim();const errEl=document.getElementById('licError');errEl.style.display='none';if(!input){errEl.textContent='أدخل كلمة السر';errEl.style.display='block';return;}const hashed=_hashStr(_SALT+input+_SALT);if(hashed!==_PH){errEl.textContent='❌ كلمة السر غير صحيحة';errEl.style.display='block';try{SFX.play('wrong');}catch(e){}return;}_savePass(hashed);const expEl=document.getElementById('licExpiry');expEl.textContent='✅ تم الدخول بنجاح';expEl.style.display='block';try{SFX.play('confetti');}catch(e){}setTimeout(()=>{document.getElementById('licenseScreen').style.display='none';document.getElementById('loginScreen').style.display='flex';},1200);}
 // INIT
 // ══════════════════════════════════════════════
 window.addEventListener('beforeunload',save);
 setInterval(save,5000);
 load();
-if(S.user){
+if(!checkLicense()){}
+else if(S.user){
   document.getElementById('ln1').value=S.teacher.n1||'';
   document.getElementById('ln2').value=S.teacher.n2||'';
   document.getElementById('ln3').value=S.teacher.n3||'';
