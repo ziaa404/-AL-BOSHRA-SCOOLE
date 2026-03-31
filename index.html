@@ -65,6 +65,12 @@ body {
   transition: transform 0.1s ease, background 0.2s;
   mix-blend-mode: multiply;
 }
+#cmRecBtn:hover { background:rgba(239,68,68,0.28) !important; border-color:rgba(239,68,68,0.6) !important; }
+#cmRecBtn.recording { background:rgba(239,68,68,0.30) !important; border-color:#ef4444 !important; color:white !important; animation:recPulse 1.5s ease infinite; }
+@keyframes recPulse { 0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,0.4)} 50%{box-shadow:0 0 0 8px rgba(239,68,68,0)} }
+#cmRecDot.active { animation:dotBlink 1s ease infinite alternate; }
+@keyframes dotBlink { from{opacity:1} to{opacity:0.2} }
+
 #cursor-ring {
   position: fixed; width: 36px; height: 36px;
   border: 2px solid rgba(21,101,192,0.35); border-radius: 50%;
@@ -2381,7 +2387,12 @@ body.dark .dark-toggle::after { content:'🌙'; transform:translateX(20px); }
         <button class="cm-view-tab" id="cmVTab-games" onclick="cmSwitchView('games')">🎮 ألعاب</button>
         <button class="cm-view-tab" id="cmVTab-slides" onclick="cmSwitchView('slides')">📽️ عرض</button>
       </div>
-      <button class="cm-exit" onclick="closeClassroomMode()">✕ إنهاء</button>
+      <div id="cmRecBtn" onclick="cmToggleRecording()" style="display:flex;align-items:center;gap:7px;padding:8px 16px;border-radius:12px;background:rgba(239,68,68,0.15);border:1.5px solid rgba(239,68,68,0.35);color:#fca5a5;font-size:0.85rem;font-weight:800;cursor:none;transition:all 0.2s;user-select:none;" title="تسجيل الحصة">
+  <span id="cmRecDot" style="width:10px;height:10px;border-radius:50%;background:#ef4444;display:inline-block;"></span>
+  <span id="cmRecLabel">تسجيل</span>
+  <span id="cmRecTimer" style="font-variant-numeric:tabular-nums;display:none;">00:00</span>
+</div>
+<button class="cm-exit" onclick="closeClassroomMode()">✕ إنهاء</button>
     </div>
   </div>
 
@@ -8047,7 +8058,126 @@ function openClassroomMode(){
   logChange('edit','فتح وضع الحصة',sub?.name||'');
 }
 
+
+const REC = { mediaRecorder:null, chunks:[], stream:null, camStream:null, interval:null, seconds:0, active:false };
+
+async function cmToggleRecording(){
+  if(!REC.active){ await cmStartRecording(); }
+  else { cmStopRecording(); }
+}
+
+async function cmStartRecording(){
+  try {
+    // Screen capture (records what's on screen)
+    const screenStream = await navigator.mediaDevices.getDisplayMedia({
+      video:{ displaySurface:'browser', frameRate:30 },
+      audio:true
+    });
+
+    // Try to get microphone audio
+    let micStream = null;
+    try {
+      micStream = await navigator.mediaDevices.getUserMedia({ audio:true, video:false });
+    } catch(e) {}
+
+    // Try to get camera (optional)
+    let camStream = null;
+    try {
+      camStream = await navigator.mediaDevices.getUserMedia({ video:true, audio:false });
+    } catch(e) {}
+
+    // Merge audio tracks
+    const tracks = [...screenStream.getVideoTracks()];
+    if(micStream) tracks.push(...micStream.getAudioTracks());
+    else if(screenStream.getAudioTracks().length) tracks.push(...screenStream.getAudioTracks());
+
+    REC.stream = new MediaStream(tracks);
+    REC.camStream = camStream;
+
+    // Show camera preview if available
+    if(camStream){
+      let camPreview = document.getElementById('cmCamPreview');
+      if(!camPreview){
+        camPreview = document.createElement('video');
+        camPreview.id = 'cmCamPreview';
+        camPreview.autoplay = true; camPreview.muted = true; camPreview.playsInline = true;
+        camPreview.style.cssText = 'position:fixed;bottom:80px;left:20px;width:180px;height:120px;border-radius:12px;border:2px solid rgba(239,68,68,0.6);object-fit:cover;z-index:99990;box-shadow:0 8px 24px rgba(0,0,0,0.5);';
+        document.body.appendChild(camPreview);
+      }
+      camPreview.srcObject = camStream;
+    }
+
+    REC.chunks = [];
+    REC.mediaRecorder = new MediaRecorder(REC.stream, { mimeType: MediaRecorder.isTypeSupported('video/webm;codecs=vp9') ? 'video/webm;codecs=vp9' : 'video/webm' });
+    REC.mediaRecorder.ondataavailable = e => { if(e.data.size>0) REC.chunks.push(e.data); };
+    REC.mediaRecorder.onstop = cmSaveRecording;
+    REC.mediaRecorder.start(1000);
+    REC.active = true;
+    REC.seconds = 0;
+
+    // UI update
+    const btn = document.getElementById('cmRecBtn');
+    const dot = document.getElementById('cmRecDot');
+    const lbl = document.getElementById('cmRecLabel');
+    const tmr = document.getElementById('cmRecTimer');
+    btn.classList.add('recording');
+    dot.classList.add('active');
+    lbl.textContent = 'إيقاف';
+    tmr.style.display = 'inline';
+
+    REC.interval = setInterval(()=>{
+      REC.seconds++;
+      const m = String(Math.floor(REC.seconds/60)).padStart(2,'0');
+      const s = String(REC.seconds%60).padStart(2,'0');
+      const el = document.getElementById('cmRecTimer');
+      if(el) el.textContent = m+':'+s;
+    }, 1000);
+
+    // Stop if screen share ends
+    screenStream.getVideoTracks()[0].onended = () => { if(REC.active) cmStopRecording(); };
+    toast('🔴 بدأ التسجيل', 'success');
+
+  } catch(err) {
+    if(err.name !== 'NotAllowedError') toast('تعذّر بدء التسجيل: '+err.message, 'error');
+  }
+}
+
+function cmStopRecording(){
+  if(!REC.active) return;
+  REC.active = false;
+  clearInterval(REC.interval);
+  if(REC.mediaRecorder && REC.mediaRecorder.state !== 'inactive') REC.mediaRecorder.stop();
+  if(REC.stream) REC.stream.getTracks().forEach(t=>t.stop());
+  if(REC.camStream) REC.camStream.getTracks().forEach(t=>t.stop());
+  const cam = document.getElementById('cmCamPreview');
+  if(cam) cam.remove();
+
+  // Reset UI
+  const btn = document.getElementById('cmRecBtn');
+  const dot = document.getElementById('cmRecDot');
+  const lbl = document.getElementById('cmRecLabel');
+  const tmr = document.getElementById('cmRecTimer');
+  if(btn) btn.classList.remove('recording');
+  if(dot) dot.classList.remove('active');
+  if(lbl) lbl.textContent = 'تسجيل';
+  if(tmr) tmr.style.display = 'none';
+}
+
+function cmSaveRecording(){
+  const blob = new Blob(REC.chunks, { type:'video/webm' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  const now  = new Date();
+  const ts   = now.toISOString().slice(0,16).replace('T','_').replace(':','-');
+  a.href = url;
+  a.download = 'حصة_البشرى_' + ts + '.webm';
+  a.click();
+  setTimeout(()=>URL.revokeObjectURL(url), 5000);
+  toast('✅ تم حفظ التسجيل', 'success');
+}
+
 function closeClassroomMode(){
+  if(REC.active) cmStopRecording();
   document.getElementById('classroomOverlay').classList.remove('open');
   document.body.style.overflow='';
   CM.open=false;
