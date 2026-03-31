@@ -71,6 +71,13 @@ body {
 #cmRecDot.active { animation:dotBlink 1s ease infinite alternate; }
 @keyframes dotBlink { from{opacity:1} to{opacity:0.2} }
 
+
+.lp-stage{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.09);border-radius:14px;overflow:hidden;}
+.lp-stage-header{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;cursor:none;user-select:none;}
+.lp-stage-header:hover{background:rgba(255,255,255,0.04);}
+.lp-stage-body{padding:0 14px;max-height:0;overflow:hidden;transition:max-height 0.3s ease,padding 0.3s ease;}
+.lp-stage-body.open{max-height:200px;padding:0 14px 12px;}
+
 #cursor-ring {
   position: fixed; width: 36px; height: 36px;
   border: 2px solid rgba(21,101,192,0.35); border-radius: 50%;
@@ -2386,6 +2393,7 @@ body.dark .dark-toggle::after { content:'🌙'; transform:translateX(20px); }
         <button class="cm-view-tab" id="cmVTab-honor" onclick="cmSwitchView('honor')">🏆 الشرف</button>
         <button class="cm-view-tab" id="cmVTab-games" onclick="cmSwitchView('games')">🎮 ألعاب</button>
         <button class="cm-view-tab" id="cmVTab-slides" onclick="cmSwitchView('slides')">📽️ عرض</button>
+        <button class="cm-view-tab" id="cmVTab-lessonprep" onclick="cmSwitchView('lessonprep')">📋 إعداد الحصة</button>
       </div>
       <div id="cmRecBtn" onclick="cmToggleRecording()" style="display:flex;align-items:center;gap:7px;padding:8px 16px;border-radius:12px;background:rgba(239,68,68,0.15);border:1.5px solid rgba(239,68,68,0.35);color:#fca5a5;font-size:0.85rem;font-weight:800;cursor:none;transition:all 0.2s;user-select:none;" title="تسجيل الحصة">
   <span id="cmRecDot" style="width:10px;height:10px;border-radius:50%;background:#ef4444;display:inline-block;"></span>
@@ -2609,6 +2617,7 @@ body.dark .dark-toggle::after { content:'🌙'; transform:translateX(20px); }
               <input type="file" id="cmSlidesVideo" accept="video/*" onchange="cmLoadVideo(this)" style="display:none" />
             </label>
             <div id="cmVideoName" style="font-size:0.70rem;color:rgba(255,255,255,0.35);margin-top:4px;"></div>
+            <button id="cmClearVideoBtn" class="cm-btn cm-btn-ghost" style="display:none;width:100%;justify-content:center;font-size:0.75rem;margin-top:6px;opacity:0.7" onclick="cmClearVideo()">🗑️ مسح الفيديو</button>
             <!-- Video controls -->
             <div id="cmVideoControls" style="display:none;margin-top:8px;display:none;">
               <div style="display:flex;gap:6px;">
@@ -2632,6 +2641,20 @@ body.dark .dark-toggle::after { content:'🌙'; transform:translateX(20px); }
               <input type="file" id="cmSlidesImages" multiple accept="image/*" onchange="cmLoadImageSlides(this)" style="display:none" />
             </label>
             <div id="cmImgCount" style="font-size:0.72rem;color:rgba(255,255,255,0.35);margin-top:4px;"></div>
+            <button id="cmClearImgBtn" class="cm-btn cm-btn-ghost" style="display:none;width:100%;justify-content:center;font-size:0.75rem;margin-top:6px;opacity:0.7" onclick="cmClearImages()">🗑️ مسح الصور</button>
+          </div>
+
+          <div class="cm-slides-divider"></div>
+
+          <!-- Method 4b: PPTX -->
+          <div class="cm-slides-section">
+            <div class="cm-slides-section-title">📊 رفع PowerPoint</div>
+            <label class="cm-upload-label" for="cmSlidesPptx">
+              📁 اختر ملف PPTX
+              <input type="file" id="cmSlidesPptx" accept=".pptx,.ppt" onchange="cmLoadPptx(this)" style="display:none" />
+            </label>
+            <div id="cmPptxStatus" style="font-size:0.70rem;color:rgba(255,255,255,0.35);margin-top:4px;"></div>
+            <button id="cmClearPptxBtn" class="cm-btn cm-btn-ghost" style="display:none;width:100%;justify-content:center;font-size:0.75rem;margin-top:6px;opacity:0.7" onclick="cmClearPptx()">🗑️ مسح PPTX</button>
           </div>
 
           <div class="cm-slides-divider"></div>
@@ -2643,6 +2666,7 @@ body.dark .dark-toggle::after { content:'🌙'; transform:translateX(20px); }
               📁 اختر ملف PDF
               <input type="file" id="cmSlidesPdf" accept="application/pdf" onchange="cmLoadPdfSlide(this)" style="display:none" />
             </label>
+            <button id="cmClearPdfBtn" class="cm-btn cm-btn-ghost" style="display:none;width:100%;justify-content:center;font-size:0.75rem;margin-top:6px;opacity:0.7" onclick="cmClearPdf()">🗑️ مسح PDF</button>
           </div>
 
           <div class="cm-slides-divider"></div>
@@ -2658,6 +2682,7 @@ body.dark .dark-toggle::after { content:'🌙'; transform:translateX(20px); }
           </div>
 
           <div style="margin-top:auto;display:flex;flex-direction:column;gap:5px;">
+            <button id="cmDrawToggleBtn" class="cm-btn cm-btn-ghost" style="width:100%;justify-content:center;font-size:0.80rem" onclick="cmToggleDraw()">✏️ الكتابة على الشاشة</button>
             <button class="cm-btn cm-btn-ghost" style="width:100%;justify-content:center;font-size:0.80rem" onclick="cmSlidesFullscreen()">⛶ شاشة كاملة</button>
             <button class="cm-btn cm-btn-ghost" style="width:100%;justify-content:center;font-size:0.76rem;opacity:0.5" onclick="cmClearSlides()">🗑️ مسح</button>
             <button class="cm-btn cm-btn-ghost" style="width:100%;justify-content:center;font-size:0.80rem" onclick="cmSwitchView('board')">← السبورة</button>
@@ -2665,7 +2690,19 @@ body.dark .dark-toggle::after { content:'🌙'; transform:translateX(20px); }
         </div>
 
         <!-- Main display area -->
-        <div class="cm-slides-main" id="cmSlidesMain">
+        <div class="cm-slides-main" id="cmSlidesMain" style="position:relative;">
+          <!-- Drawing overlay -->
+          <canvas id="cmDrawCanvas" style="position:absolute;inset:0;width:100%;height:100%;z-index:10;display:none;border-radius:12px;touch-action:none;"></canvas>
+          <!-- Drawing toolbar -->
+          <div id="cmDrawToolbar" style="display:none;position:absolute;top:10px;left:10px;z-index:11;display:none;flex-direction:column;gap:6px;background:rgba(0,0,0,0.65);backdrop-filter:blur(8px);border-radius:12px;padding:8px;border:1px solid rgba(255,255,255,0.12);">
+            <button onclick="cmDrawSetTool('pen')" id="cmDrawPen" style="width:36px;height:36px;border-radius:8px;border:none;background:rgba(66,165,245,0.3);color:white;font-size:16px;cursor:none;" title="قلم">✏️</button>
+            <button onclick="cmDrawSetTool('eraser')" id="cmDrawEraser" style="width:36px;height:36px;border-radius:8px;border:none;background:rgba(255,255,255,0.1);color:white;font-size:16px;cursor:none;" title="ممحاة">🧹</button>
+            <div style="width:36px;height:1px;background:rgba(255,255,255,0.15);"></div>
+            <input type="color" id="cmDrawColor" value="#42a5f5" style="width:36px;height:36px;border-radius:8px;border:none;cursor:none;padding:2px;background:none;" title="اللون" />
+            <input type="range" id="cmDrawSize" min="2" max="30" value="4" style="writing-mode:vertical-lr;direction:rtl;height:80px;width:36px;accent-color:var(--sky3);" title="الحجم" />
+            <div style="width:36px;height:1px;background:rgba(255,255,255,0.15);"></div>
+            <button onclick="cmDrawClear()" style="width:36px;height:36px;border-radius:8px;border:none;background:rgba(239,68,68,0.2);color:white;font-size:14px;cursor:none;" title="مسح الرسم">🗑️</button>
+          </div>
           <div class="cm-slides-empty" id="cmSlidesEmpty">
             <div style="font-size:3rem;margin-bottom:12px">📽️</div>
             <div style="font-size:1.1rem;font-weight:700;color:rgba(255,255,255,0.40)">لا يوجد عرض محمّل</div>
@@ -2685,6 +2722,149 @@ body.dark .dark-toggle::after { content:'🌙'; transform:translateX(20px); }
           </video>
         </div>
 
+      </div>
+    </div>
+
+
+    <!-- ══ VIEW: LESSON PREP — إعداد الحصة ══ -->
+    <div class="cm-view" id="cmView-lessonprep">
+      <div style="display:flex;height:100%;gap:20px;padding:10px 4px;">
+
+        <!-- Lesson info form -->
+        <div style="flex:1;display:flex;flex-direction:column;gap:14px;overflow-y:auto;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:20px;">
+          <div style="font-size:1rem;font-weight:900;color:white;margin-bottom:4px;">📋 بيانات الحصة</div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div>
+              <label style="font-size:0.76rem;color:rgba(255,255,255,0.45);font-weight:700;display:block;margin-bottom:5px;">📅 التاريخ</label>
+              <input type="date" id="lpDate" style="width:100%;padding:9px 12px;border-radius:9px;border:1.5px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.06);color:white;font-family:'Tajawal',sans-serif;font-size:0.85rem;outline:none;" />
+            </div>
+            <div>
+              <label style="font-size:0.76rem;color:rgba(255,255,255,0.45);font-weight:700;display:block;margin-bottom:5px;">⏰ الوقت من / إلى</label>
+              <div style="display:flex;gap:6px;align-items:center;">
+                <input type="time" id="lpTimeFrom" style="flex:1;padding:9px 8px;border-radius:9px;border:1.5px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.06);color:white;font-family:'Tajawal',sans-serif;font-size:0.82rem;outline:none;" />
+                <span style="color:rgba(255,255,255,0.3);font-size:0.8rem;">→</span>
+                <input type="time" id="lpTimeTo" style="flex:1;padding:9px 8px;border-radius:9px;border:1.5px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.06);color:white;font-family:'Tajawal',sans-serif;font-size:0.82rem;outline:none;" />
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <label style="font-size:0.76rem;color:rgba(255,255,255,0.45);font-weight:700;display:block;margin-bottom:5px;">📚 المادة</label>
+            <input type="text" id="lpSubject" placeholder="مثال: اللغة العربية" style="width:100%;padding:9px 12px;border-radius:9px;border:1.5px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.06);color:white;font-family:'Tajawal',sans-serif;font-size:0.88rem;outline:none;" />
+          </div>
+
+          <div>
+            <label style="font-size:0.76rem;color:rgba(255,255,255,0.45);font-weight:700;display:block;margin-bottom:5px;">📖 الموضوع</label>
+            <input type="text" id="lpTopic" placeholder="مثال: الضمائر المتصلة" style="width:100%;padding:9px 12px;border-radius:9px;border:1.5px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.06);color:white;font-family:'Tajawal',sans-serif;font-size:0.88rem;outline:none;" />
+          </div>
+
+          <div>
+            <label style="font-size:0.76rem;color:rgba(255,255,255,0.45);font-weight:700;display:block;margin-bottom:5px;">🎯 المهارة المستهدفة</label>
+            <input type="text" id="lpSkill" placeholder="مثال: التمييز بين الضمائر المنفصلة والمتصلة" style="width:100%;padding:9px 12px;border-radius:9px;border:1.5px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.06);color:white;font-family:'Tajawal',sans-serif;font-size:0.88rem;outline:none;" />
+          </div>
+
+          <div>
+            <label style="font-size:0.76rem;color:rgba(255,255,255,0.45);font-weight:700;display:block;margin-bottom:5px;">✅ الأهداف</label>
+            <textarea id="lpObjectives" rows="3" placeholder="أن يكون الطالب قادراً على..." style="width:100%;padding:9px 12px;border-radius:9px;border:1.5px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.06);color:white;font-family:'Tajawal',sans-serif;font-size:0.85rem;outline:none;resize:vertical;"></textarea>
+          </div>
+
+          <div style="display:flex;gap:8px;margin-top:4px;">
+            <button onclick="lpSave()" style="flex:1;padding:10px;border-radius:10px;border:none;background:linear-gradient(135deg,#1565c0,#7c3aed);color:white;font-family:'Tajawal',sans-serif;font-size:0.88rem;font-weight:800;cursor:none;">💾 حفظ</button>
+            <button onclick="lpClear()" style="padding:10px 16px;border-radius:10px;border:1.5px solid rgba(255,255,255,0.15);background:transparent;color:rgba(255,255,255,0.5);font-family:'Tajawal',sans-serif;font-size:0.88rem;cursor:none;">مسح</button>
+          </div>
+        </div>
+
+        <!-- Lesson stages -->
+        <div style="width:340px;display:flex;flex-direction:column;gap:12px;">
+          <div style="font-size:1rem;font-weight:900;color:white;margin-bottom:4px;">🗂️ مراحل الحصة</div>
+
+          <!-- Stage 1: التمهيد -->
+          <div class="lp-stage" id="lpStage-1">
+            <div class="lp-stage-header" onclick="lpToggleStage(1)">
+              <div style="display:flex;align-items:center;gap:10px;">
+                <div style="width:32px;height:32px;border-radius:10px;background:rgba(245,158,11,0.2);border:1.5px solid rgba(245,158,11,0.4);display:flex;align-items:center;justify-content:center;font-size:16px;">🌅</div>
+                <div>
+                  <div style="font-size:0.88rem;font-weight:800;color:white;">التمهيد</div>
+                  <div style="font-size:0.70rem;color:rgba(255,255,255,0.35);">تهيئة الطلاب وربط المعرفة</div>
+                </div>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <input type="number" min="1" max="45" value="5" id="lpTime1" style="width:40px;padding:4px 6px;border-radius:7px;border:1.5px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.06);color:var(--gold);font-family:'Tajawal',sans-serif;font-size:0.80rem;outline:none;text-align:center;" onclick="event.stopPropagation()" />
+                <span style="font-size:0.70rem;color:rgba(255,255,255,0.3);">د</span>
+                <span style="color:rgba(255,255,255,0.4);font-size:0.80rem;" id="lpArrow1">▾</span>
+              </div>
+            </div>
+            <div class="lp-stage-body" id="lpBody1">
+              <textarea placeholder="اكتب نشاط التمهيد هنا..." style="width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid rgba(255,255,255,0.10);background:rgba(255,255,255,0.05);color:white;font-family:'Tajawal',sans-serif;font-size:0.82rem;outline:none;resize:vertical;min-height:70px;margin-top:8px;"></textarea>
+            </div>
+          </div>
+
+          <!-- Stage 2: التنفيذ -->
+          <div class="lp-stage" id="lpStage-2">
+            <div class="lp-stage-header" onclick="lpToggleStage(2)">
+              <div style="display:flex;align-items:center;gap:10px;">
+                <div style="width:32px;height:32px;border-radius:10px;background:rgba(21,101,192,0.2);border:1.5px solid rgba(21,101,192,0.4);display:flex;align-items:center;justify-content:center;font-size:16px;">⚡</div>
+                <div>
+                  <div style="font-size:0.88rem;font-weight:800;color:white;">التنفيذ</div>
+                  <div style="font-size:0.70rem;color:rgba(255,255,255,0.35);">شرح وتطبيق المحتوى</div>
+                </div>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <input type="number" min="1" max="45" value="25" id="lpTime2" style="width:40px;padding:4px 6px;border-radius:7px;border:1.5px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.06);color:var(--sky3);font-family:'Tajawal',sans-serif;font-size:0.80rem;outline:none;text-align:center;" onclick="event.stopPropagation()" />
+                <span style="font-size:0.70rem;color:rgba(255,255,255,0.3);">د</span>
+                <span style="color:rgba(255,255,255,0.4);font-size:0.80rem;" id="lpArrow2">▾</span>
+              </div>
+            </div>
+            <div class="lp-stage-body" id="lpBody2">
+              <textarea placeholder="اكتب خطوات التنفيذ هنا..." style="width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid rgba(255,255,255,0.10);background:rgba(255,255,255,0.05);color:white;font-family:'Tajawal',sans-serif;font-size:0.82rem;outline:none;resize:vertical;min-height:70px;margin-top:8px;"></textarea>
+            </div>
+          </div>
+
+          <!-- Stage 3: التقويم -->
+          <div class="lp-stage" id="lpStage-3">
+            <div class="lp-stage-header" onclick="lpToggleStage(3)">
+              <div style="display:flex;align-items:center;gap:10px;">
+                <div style="width:32px;height:32px;border-radius:10px;background:rgba(16,185,129,0.2);border:1.5px solid rgba(16,185,129,0.4);display:flex;align-items:center;justify-content:center;font-size:16px;">📊</div>
+                <div>
+                  <div style="font-size:0.88rem;font-weight:800;color:white;">التقويم</div>
+                  <div style="font-size:0.70rem;color:rgba(255,255,255,0.35);">قياس مدى تحقق الأهداف</div>
+                </div>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <input type="number" min="1" max="45" value="10" id="lpTime3" style="width:40px;padding:4px 6px;border-radius:7px;border:1.5px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.06);color:var(--mint);font-family:'Tajawal',sans-serif;font-size:0.80rem;outline:none;text-align:center;" onclick="event.stopPropagation()" />
+                <span style="font-size:0.70rem;color:rgba(255,255,255,0.3);">د</span>
+                <span style="color:rgba(255,255,255,0.4);font-size:0.80rem;" id="lpArrow3">▾</span>
+              </div>
+            </div>
+            <div class="lp-stage-body" id="lpBody3">
+              <textarea placeholder="اكتب أسلوب التقويم هنا..." style="width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid rgba(255,255,255,0.10);background:rgba(255,255,255,0.05);color:white;font-family:'Tajawal',sans-serif;font-size:0.82rem;outline:none;resize:vertical;min-height:70px;margin-top:8px;"></textarea>
+            </div>
+          </div>
+
+          <!-- Stage 4: التغذية العلاجية -->
+          <div class="lp-stage" id="lpStage-4">
+            <div class="lp-stage-header" onclick="lpToggleStage(4)">
+              <div style="display:flex;align-items:center;gap:10px;">
+                <div style="width:32px;height:32px;border-radius:10px;background:rgba(124,58,237,0.2);border:1.5px solid rgba(124,58,237,0.4);display:flex;align-items:center;justify-content:center;font-size:16px;">💊</div>
+                <div>
+                  <div style="font-size:0.88rem;font-weight:800;color:white;">التغذية العلاجية</div>
+                  <div style="font-size:0.70rem;color:rgba(255,255,255,0.35);">معالجة نقاط الضعف</div>
+                </div>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <input type="number" min="1" max="45" value="5" id="lpTime4" style="width:40px;padding:4px 6px;border-radius:7px;border:1.5px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.06);color:var(--plum);font-family:'Tajawal',sans-serif;font-size:0.80rem;outline:none;text-align:center;" onclick="event.stopPropagation()" />
+                <span style="font-size:0.70rem;color:rgba(255,255,255,0.3);">د</span>
+                <span style="color:rgba(255,255,255,0.4);font-size:0.80rem;" id="lpArrow4">▾</span>
+              </div>
+            </div>
+            <div class="lp-stage-body" id="lpBody4">
+              <textarea placeholder="اكتب أنشطة العلاج هنا..." style="width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid rgba(255,255,255,0.10);background:rgba(255,255,255,0.05);color:white;font-family:'Tajawal',sans-serif;font-size:0.82rem;outline:none;resize:vertical;min-height:70px;margin-top:8px;"></textarea>
+            </div>
+          </div>
+
+          <button onclick="cmSwitchView('board')" style="margin-top:auto;padding:10px;border-radius:10px;border:1.5px solid rgba(255,255,255,0.15);background:transparent;color:rgba(255,255,255,0.5);font-family:'Tajawal',sans-serif;font-size:0.85rem;cursor:none;">← السبورة</button>
+        </div>
       </div>
     </div>
 
@@ -8176,6 +8356,223 @@ function cmSaveRecording(){
   toast('✅ تم حفظ التسجيل', 'success');
 }
 
+
+// ═══════════════════════════════════════════
+// DRAWING ON SCREEN
+// ═══════════════════════════════════════════
+const DRAW = { active:false, painting:false, tool:'pen', color:'#42a5f5', size:4, ctx:null };
+
+function cmToggleDraw(){
+  const canvas = document.getElementById('cmDrawCanvas');
+  const toolbar = document.getElementById('cmDrawToolbar');
+  const btn = document.getElementById('cmDrawToggleBtn');
+  DRAW.active = !DRAW.active;
+  if(DRAW.active){
+    canvas.style.display = 'block';
+    toolbar.style.display = 'flex';
+    btn.style.background = 'rgba(66,165,245,0.2)';
+    btn.style.borderColor = 'rgba(66,165,245,0.5)';
+    btn.style.color = 'var(--sky3)';
+    cmDrawInit();
+  } else {
+    canvas.style.display = 'none';
+    toolbar.style.display = 'none';
+    btn.style.background = '';
+    btn.style.borderColor = '';
+    btn.style.color = '';
+  }
+}
+
+function cmDrawInit(){
+  const canvas = document.getElementById('cmDrawCanvas');
+  const main = document.getElementById('cmSlidesMain');
+  canvas.width = main.offsetWidth;
+  canvas.height = main.offsetHeight;
+  DRAW.ctx = canvas.getContext('2d');
+  DRAW.ctx.lineCap = 'round';
+  DRAW.ctx.lineJoin = 'round';
+
+  canvas.onpointerdown = e => {
+    if(!DRAW.active) return;
+    DRAW.painting = true;
+    DRAW.ctx.beginPath();
+    DRAW.ctx.moveTo(e.offsetX, e.offsetY);
+    canvas.setPointerCapture(e.pointerId);
+  };
+  canvas.onpointermove = e => {
+    if(!DRAW.painting || !DRAW.active) return;
+    const ctx = DRAW.ctx;
+    if(DRAW.tool === 'eraser'){
+      ctx.clearRect(e.offsetX - 15, e.offsetY - 15, 30, 30);
+    } else {
+      ctx.strokeStyle = document.getElementById('cmDrawColor').value;
+      ctx.lineWidth = parseInt(document.getElementById('cmDrawSize').value);
+      ctx.lineTo(e.offsetX, e.offsetY);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(e.offsetX, e.offsetY);
+    }
+  };
+  canvas.onpointerup = canvas.onpointerleave = () => { DRAW.painting = false; };
+}
+
+function cmDrawSetTool(t){
+  DRAW.tool = t;
+  document.getElementById('cmDrawPen').style.background = t==='pen' ? 'rgba(66,165,245,0.4)' : 'rgba(255,255,255,0.1)';
+  document.getElementById('cmDrawEraser').style.background = t==='eraser' ? 'rgba(239,68,68,0.3)' : 'rgba(255,255,255,0.1)';
+}
+
+function cmDrawClear(){
+  if(DRAW.ctx){
+    const c = document.getElementById('cmDrawCanvas');
+    DRAW.ctx.clearRect(0, 0, c.width, c.height);
+  }
+}
+
+// ═══════════════════════════════════════════
+// CLEAR FUNCTIONS
+// ═══════════════════════════════════════════
+function cmClearVideo(){
+  const v = document.getElementById('cmVideoPlayer');
+  const n = document.getElementById('cmVideoName');
+  const c = document.getElementById('cmVideoControls');
+  const b = document.getElementById('cmClearVideoBtn');
+  const e = document.getElementById('cmSlidesEmpty');
+  if(v){ v.pause(); v.src=''; v.style.display='none'; }
+  if(n) n.textContent='';
+  if(c) c.style.display='none';
+  if(b) b.style.display='none';
+  if(e) e.style.display='flex';
+  document.getElementById('cmSlidesFrame').style.display='none';
+  document.getElementById('cmSlidesImgViewer').style.display='none';
+  document.getElementById('cmSlidesPdfFrame').style.display='none';
+  toast('تم مسح الفيديو','success');
+}
+
+function cmClearImages(){
+  SLIDES.images = []; SLIDES.currentIdx = 0;
+  const b = document.getElementById('cmClearImgBtn');
+  const n = document.getElementById('cmImgCount');
+  const nav = document.getElementById('cmSlidesNav');
+  const e = document.getElementById('cmSlidesEmpty');
+  const imgV = document.getElementById('cmSlidesImgViewer');
+  if(b) b.style.display='none';
+  if(n) n.textContent='';
+  if(nav) nav.style.display='none';
+  if(imgV) imgV.style.display='none';
+  if(e) e.style.display='flex';
+  document.getElementById('cmSlidesImages').value='';
+  toast('تم مسح الصور','success');
+}
+
+function cmClearPdf(){
+  const f = document.getElementById('cmSlidesPdfFrame');
+  const b = document.getElementById('cmClearPdfBtn');
+  const e = document.getElementById('cmSlidesEmpty');
+  if(f){ f.src=''; f.style.display='none'; }
+  if(b) b.style.display='none';
+  if(e) e.style.display='flex';
+  document.getElementById('cmSlidesPdf').value='';
+  toast('تم مسح PDF','success');
+}
+
+function cmClearPptx(){
+  SLIDES.images = []; SLIDES.currentIdx = 0;
+  const b = document.getElementById('cmClearPptxBtn');
+  const s = document.getElementById('cmPptxStatus');
+  const nav = document.getElementById('cmSlidesNav');
+  const e = document.getElementById('cmSlidesEmpty');
+  const imgV = document.getElementById('cmSlidesImgViewer');
+  if(b) b.style.display='none';
+  if(s) s.textContent='';
+  if(nav) nav.style.display='none';
+  if(imgV) imgV.style.display='none';
+  if(e) e.style.display='flex';
+  document.getElementById('cmSlidesPptx').value='';
+  toast('تم مسح PPTX','success');
+}
+
+// ═══════════════════════════════════════════
+// PPTX LOADER (convert slides to images via canvas)
+// ═══════════════════════════════════════════
+async function cmLoadPptx(input){
+  const file = input.files[0];
+  if(!file) return;
+  const status = document.getElementById('cmPptxStatus');
+  status.textContent = '⏳ جارٍ تحميل الملف...';
+  try {
+    // Use PptxGenJS or fallback: show message to use Google Slides
+    // For now: load using iframe with object URL trick
+    const url = URL.createObjectURL(file);
+    const frame = document.getElementById('cmSlidesFrame');
+    const empty = document.getElementById('cmSlidesEmpty');
+    const imgV = document.getElementById('cmSlidesImgViewer');
+    const pdfF = document.getElementById('cmSlidesPdfFrame');
+    empty.style.display='none';
+    imgV.style.display='none';
+    pdfF.style.display='none';
+    document.getElementById('cmVideoPlayer').style.display='none';
+    frame.style.display='block';
+    frame.src = url;
+    status.textContent = '✅ ' + file.name;
+    document.getElementById('cmClearPptxBtn').style.display='block';
+    document.getElementById('cmSlidesNav').style.display='none';
+    toast('✅ تم تحميل PPTX','success');
+  } catch(e) {
+    status.textContent = '❌ تعذّر التحميل — حوّله لـ PDF أولاً';
+    toast('تعذّر تحميل PPTX — حوّله لـ PDF','error');
+  }
+}
+
+// ═══════════════════════════════════════════
+// LESSON PREP JS
+// ═══════════════════════════════════════════
+function lpToggleStage(n){
+  const body = document.getElementById('lpBody'+n);
+  const arrow = document.getElementById('lpArrow'+n);
+  if(!body) return;
+  body.classList.toggle('open');
+  arrow.textContent = body.classList.contains('open') ? '▴' : '▾';
+}
+
+function lpSave(){
+  const data = {
+    date: document.getElementById('lpDate')?.value,
+    timeFrom: document.getElementById('lpTimeFrom')?.value,
+    timeTo: document.getElementById('lpTimeTo')?.value,
+    subject: document.getElementById('lpSubject')?.value,
+    topic: document.getElementById('lpTopic')?.value,
+    skill: document.getElementById('lpSkill')?.value,
+    objectives: document.getElementById('lpObjectives')?.value,
+  };
+  try { localStorage.setItem('bs_lesson_prep', JSON.stringify(data)); } catch(e){}
+  toast('✅ تم حفظ بيانات الحصة','success');
+  // Update skill display in header
+  const sl = document.getElementById('cmSkillLive');
+  if(sl && data.topic) sl.textContent = (data.subject?data.subject+' — ':'') + data.topic;
+}
+
+function lpClear(){
+  ['lpDate','lpTimeFrom','lpTimeTo','lpSubject','lpTopic','lpSkill','lpObjectives'].forEach(id=>{
+    const el = document.getElementById(id); if(el) el.value='';
+  });
+  try { localStorage.removeItem('bs_lesson_prep'); } catch(e){}
+  toast('تم المسح','success');
+}
+
+function lpLoad(){
+  try {
+    const d = JSON.parse(localStorage.getItem('bs_lesson_prep')||'{}');
+    if(d.date) document.getElementById('lpDate').value = d.date;
+    if(d.timeFrom) document.getElementById('lpTimeFrom').value = d.timeFrom;
+    if(d.timeTo) document.getElementById('lpTimeTo').value = d.timeTo;
+    if(d.subject) document.getElementById('lpSubject').value = d.subject;
+    if(d.topic) document.getElementById('lpTopic').value = d.topic;
+    if(d.skill) document.getElementById('lpSkill').value = d.skill;
+    if(d.objectives) document.getElementById('lpObjectives').value = d.objectives;
+  } catch(e){}
+}
+
 function closeClassroomMode(){
   if(REC.active) cmStopRecording();
   document.getElementById('classroomOverlay').classList.remove('open');
@@ -8204,6 +8601,7 @@ function cmSwitchView(view){
   if(view==='honor')  { cmBuildHonorView(); }
   if(view==='games')  { if(!CM.games) cmGamesInit(); cmRenderGame(CM.games.activeGame||'quiz'); }
   if(view==='slides') { cmSlidesInit(); }
+  if(view==='lessonprep') { lpLoad(); }
 }
 
 // ── CLOCK ───────────────────────────────────────────────────
@@ -10411,7 +10809,7 @@ function cmLoadPdfSlide(input){
   pdfF.style.display='block';
   pdfF.src = url;
 
-  document.getElementById('cmSlidesNav').style.display='none';
+  document.getElementById('cmSlidesNav').style.display='none'; const cpb=document.getElementById('cmClearPdfBtn'); if(cpb) cpb.style.display='block';
   toast('✅ تم تحميل PDF','success');
 }
 
