@@ -2404,7 +2404,7 @@ body.theme-rose .dark-toggle::before {
 
     <div class="lic-title">مدارس البشرى الأهلية</div>
     <div style="font-size:0.78rem;color:rgba(255,255,255,0.35);margin-bottom:6px;font-weight:700;letter-spacing:1px;text-transform:uppercase;">منصة المعلم الذكية</div>
-    <div class="lic-sub">أدخل كلمة السر للدخول إلى النظام</div>
+    <div class="lic-sub">أدخل <strong>مفتاح الترخيص</strong> الذي استلمته من الموزّع — أو كلمة السر القديمة إن وُجدت</div>
 
     <!-- Error -->
     <div class="lic-error" id="licError"></div>
@@ -2412,10 +2412,11 @@ body.theme-rose .dark-toggle::before {
     <!-- Input -->
     <div style="position:relative;margin-bottom:12px;">
       <div style="position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:1rem;pointer-events:none;">🔑</div>
-      <input type="password" class="lic-input" id="licKeyInput"
-        placeholder="أدخل كلمة السر..."
-        autocomplete="off" onkeydown="if(event.key==='Enter')activateLicense()"
-        style="padding-right:42px;" />
+      <input type="text" class="lic-input" id="licKeyInput"
+        placeholder="مثال: ALB26-0001-XXXXXXXX"
+        autocomplete="off" dir="ltr" spellcheck="false"
+        onkeydown="if(event.key==='Enter')activateLicense()"
+        style="padding-right:42px;font-family:ui-monospace,Consolas,monospace;font-size:0.82rem;letter-spacing:0.02em;" />
     </div>
 
     <!-- Button -->
@@ -12536,11 +12537,62 @@ function renderCompare(){
 
 const _PH=(()=>{return ['30303030','30303030','34613731','61343063'].map(x=>{let s='';for(let i=0;i<x.length;i+=2)s+=String.fromCharCode(parseInt(x.substr(i,2),16));return s;}).join('');})();
 const _SALT='albushra_2025_secure';
+const _LIC_SECRET=(()=>{return ['616c6275736872615f76656e646f725f','6c6963656e73655f7632'].map(x=>{let s='';for(let i=0;i<x.length;i+=2)s+=String.fromCharCode(parseInt(x.substr(i,2),16));return s;}).join('');})();
 function _hashStr(str){let h1=0xdeadbeef,h2=0x41c6ce57;for(let i=0;i<str.length;i++){const ch=str.charCodeAt(i);h1=Math.imul(h1^ch,2654435761);h2=Math.imul(h2^ch,1597334677);}h1=Math.imul(h1^(h1>>>16),2246822507)^Math.imul(h2^(h2>>>13),3266489909);h2=Math.imul(h2^(h2>>>16),2246822507)^Math.imul(h1^(h1>>>13),3266489909);return(4294967296*(2097151&h2)+h1>>>0).toString(16).padStart(16,'0');}
+function _normalizeLicenseKey(s){return String(s||'').replace(/\s+/g,'').toUpperCase();}
+function _licChecksum(serial4){return _hashStr(_LIC_SECRET+serial4+_LIC_SECRET).slice(-8).toUpperCase();}
+function _validateLicenseKey(raw){const k=_normalizeLicenseKey(raw);const m=/^ALB26-([A-Z0-9]{4})-([A-F0-9]{8})$/.exec(k);if(!m)return false;return _licChecksum(m[1])===m[2];}
 function _savePass(h){try{localStorage.setItem('bs_pass',h);}catch(e){}try{sessionStorage.setItem('bs_pass',h);}catch(e){}}
 function _loadPass(){try{const v=localStorage.getItem('bs_pass');if(v)return v;}catch(e){}try{const v=sessionStorage.getItem('bs_pass');if(v)return v;}catch(e){}return null;}
-function checkLicense(){const saved=_loadPass();if(saved&&saved===_PH){document.getElementById('licenseScreen').style.display='none';return true;}document.getElementById('licenseScreen').style.display='flex';document.getElementById('loginScreen').style.display='none';const _li=document.getElementById('licLogoImg');if(_li)_li.src=SCHOOL_LOGO;return false;}
-function activateLicense(){const input=document.getElementById('licKeyInput')?.value.trim();const errEl=document.getElementById('licError');errEl.style.display='none';if(!input){errEl.textContent='أدخل كلمة السر';errEl.style.display='block';return;}const hashed=_hashStr(_SALT+input+_SALT);if(hashed!==_PH){errEl.textContent='❌ كلمة السر غير صحيحة';errEl.style.display='block';try{SFX.play('wrong');}catch(e){}return;}_savePass(hashed);const expEl=document.getElementById('licExpiry');expEl.textContent='✅ تم الدخول بنجاح';expEl.style.display='block';try{SFX.play('confetti');}catch(e){}setTimeout(()=>{document.getElementById('licenseScreen').style.display='none';document.getElementById('loginScreen').style.display='flex';},1200);}
+function _saveLicenseKey(k){try{localStorage.setItem('bs_license',k);}catch(e){}try{sessionStorage.setItem('bs_license',k);}catch(e){}}
+function _loadLicenseKey(){try{const v=localStorage.getItem('bs_license');if(v)return v;}catch(e){}try{const v=sessionStorage.getItem('bs_license');if(v)return v;}catch(e){}return null;}
+function checkLicense(){
+  const lic=_loadLicenseKey();
+  if(lic&&_validateLicenseKey(lic)){
+    document.getElementById('licenseScreen').style.display='none';
+    return true;
+  }
+  const saved=_loadPass();
+  if(saved&&saved===_PH){
+    document.getElementById('licenseScreen').style.display='none';
+    return true;
+  }
+  document.getElementById('licenseScreen').style.display='flex';
+  document.getElementById('loginScreen').style.display='none';
+  const _li=document.getElementById('licLogoImg');if(_li)_li.src=SCHOOL_LOGO;
+  return false;
+}
+function activateLicense(){
+  const input=document.getElementById('licKeyInput')?.value.trim();
+  const errEl=document.getElementById('licError');
+  errEl.style.display='none';
+  if(!input){ errEl.textContent='أدخل مفتاح الترخيص'; errEl.style.display='block'; return; }
+  const norm=_normalizeLicenseKey(input);
+  if(_validateLicenseKey(norm)){
+    _saveLicenseKey(norm);
+    try{ localStorage.removeItem('bs_pass'); sessionStorage.removeItem('bs_pass'); }catch(e){}
+    const expEl=document.getElementById('licExpiry');
+    expEl.textContent='✅ تم تفعيل الترخيص بنجاح';
+    expEl.style.display='block';
+    try{SFX.play('confetti');}catch(e){}
+    setTimeout(()=>{document.getElementById('licenseScreen').style.display='none';document.getElementById('loginScreen').style.display='flex';},1200);
+    return;
+  }
+  const hashed=_hashStr(_SALT+input+_SALT);
+  if(hashed!==_PH){
+    errEl.textContent='❌ المفتاح غير صحيح';
+    errEl.style.display='block';
+    try{SFX.play('wrong');}catch(e){}
+    return;
+  }
+  _savePass(hashed);
+  try{ localStorage.removeItem('bs_license'); sessionStorage.removeItem('bs_license'); }catch(e){}
+  const expEl=document.getElementById('licExpiry');
+  expEl.textContent='✅ تم الدخول بنجاح';
+  expEl.style.display='block';
+  try{SFX.play('confetti');}catch(e){}
+  setTimeout(()=>{document.getElementById('licenseScreen').style.display='none';document.getElementById('loginScreen').style.display='flex';},1200);
+}
 // INIT
 // ══════════════════════════════════════════════
 window.addEventListener('beforeunload',save);
