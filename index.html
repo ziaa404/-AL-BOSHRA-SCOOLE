@@ -796,25 +796,141 @@ body.dark {
   --muted:#8ba3c0; --muted2:#6080a0; --ink:#e2eaf5; --ink2:#c8daf0;
   --shadow-sm:0 2px 8px rgba(0,0,0,0.4); --shadow:0 8px 32px rgba(0,0,0,0.5);
 }
+
+/* ═══ DARK MODE — تغطية شاملة ═══ */
+
+/* هيكل التطبيق */
 body.dark .topbar { background: #0d1b2a; }
 body.dark .sidebar { background:#1e293b; border-left-color:#2d3f5a; }
+
+/* كروت وخلفيات */
 body.dark .kpi { background:#253347; }
-body.dark .card { background:#1e293b; }
-body.dark .chart-box { background:#1e293b; }
-body.dark table.tbl th { background:#253347; color:#8ba3c0; }
-body.dark .modal { background:#1e293b; }
-body.dark .modal-hdr { background:#1e293b; }
-body.dark .eval-item { background:#253347; }
-body.dark input,body.dark select,body.dark textarea { background:#253347; color:#e2eaf5; border-color:#3a5070; }
-body.dark .fg input:focus,body.dark .fg select:focus { border-color:var(--sky3); }
-body.dark .sb-section { color:#6080a0; }
-body.dark .login-form-side { /* keep as-is, has dark bg */ }
-body.dark .search-box { background:#253347; border-color:#3a5070; }
-body.dark .search-box input { color:#e2eaf5; }
-body.dark .note-card { background:#253347 !important; border-color:#3a5070 !important; color:#c8daf0 !important; }
+body.dark .card { background:#1e293b; border-color:#2d3f5a; }
+body.dark .chart-box { background:#1e293b; border-color:#2d3f5a; }
+body.dark .rep-card { background:#1e293b; border-color:#2d3f5a; }
 body.dark .stu-card { background:#253347; border-color:#3a5070; }
+body.dark .stu-card-top .stu-card-name { color:#e2eaf5; }
+
+/* جداول */
+body.dark table.tbl th { background:#253347; color:#8ba3c0; border-color:#2d3f5a; }
+body.dark table.tbl td { border-color:#2d3f5a; color:#c8daf0; }
 body.dark .tbl-wrap table td { border-color:#2d3f5a; }
-body.dark table.tbl tbody tr:hover td { background:#253347; }
+body.dark table.tbl tbody tr:hover td { background:#2d3f5a; }
+body.dark .tbl-wrap { border-color:#2d3f5a; }
+
+/* مودالز */
+body.dark .modal { background:#1e293b; border-color:#2d3f5a; }
+body.dark .modal-hdr { background:#1e293b; border-color:#2d3f5a; }
+body.dark .modal-footer { border-color:#2d3f5a; }
+body.dark .modal-bg { background:rgba(0,0,0,0.75); }
+body.dark .modal-x { background:#253347; color:#8ba3c0; }
+body.dark .modal-x:hover { background:#2d3f5a; }
+body.dark .m-tabs { background:#253347; }
+body.dark .m-tab { color:#8ba3c0; }
+body.dark .m-tab.active { background:#1e293b; color:var(--sky3); }
+
+/* حقول الإدخال */
+body.dark input, body.dark select, body.dark textarea { background:#253347; color:#e2eaf5; border-color:#3a5070; }
+body.dark .fg input:focus, body.dark .fg select:focus, body.dark .fg textarea:focus { border-color:var(--sky3); }
+body.dark .search-box { background:#253347; border-color:#3a5070; }
+body.dark .search-box input { color:#e2eaf5; background:transparent; }
+
+/* أزرار */
+body.dark .btn-ghost { background:#253347; border-color:#3a5070; color:#c8daf0; }
+body.dark .btn-ghost:hover { background:#2d3f5a; }
+body.dark .google-btn { background:#253347; color:#c8daf0; }
+body.dark .local-btn { background:rgba(255,255,255,0.06); }
+
+/* ملاحظات وتنبيهات */
+body.dark .note-card { background:#253347 !important; border-color:#3a5070 !important; color:#c8daf0 !important; }
+body.dark .eval-item { background:#253347; border-color:#3a5070; }
+body.dark .eval-item:hover { border-color:#4a6080; }
+
+/* شريط التنقل السفلي */
+body.dark #bottomNav { background:#1e293b; border-color:#2d3f5a; }
+body.dark .bn-item { color:#6080a0; }
+body.dark .bn-item.active { color:var(--sky3); }
+
+/* القائمة الجانبية */
+body.dark .sb-section { color:#6080a0; }
+body.dark .sb-teacher-card { background:rgba(255,255,255,0.04); border-color:#2d3f5a; }
+body.dark .nav-btn { color:#8ba3c0; }
+body.dark .nav-btn:hover { background:#253347; color:#c8daf0; }
+body.dark .nav-btn.active { background:linear-gradient(135deg,#1e3a5f,#1565c0); color:white; }
+
+/* كلاس موال */
+body.dark .class-modal-box { background:#1e293b; border-color:#2d3f5a; }
+body.dark .class-item { background:#253347; border-color:#3a5070; }
+body.dark .class-item:hover, body.dark .class-item.active { border-color:var(--sky); background:rgba(21,101,192,0.15); }
+
+/* Command Palette */
+body.dark #cmdPalette { background:#1e293b; border-color:#3a5070; }
+body.dark .cmd-input { color:#e2eaf5; background:transparent; }
+body.dark .cmd-input-wrap { border-color:#2d3f5a; }
+body.dark .cmd-item { border-color:#2d3f5a; }
+body.dark .cmd-item:hover, body.dark .cmd-item.focused { background:#253347; }
+body.dark .cmd-item-title { color:#c8daf0; }
+body.dark .cmd-shortcut { background:#253347; color:#6080a0; }
+
+/* Quick eval bar */
+body.dark .qe-bar { background:linear-gradient(135deg,#0d1b2a,#1e293b); border-color:#3a5070; }
+
+/* صفحة الطلاب (بطاقات) */
+body.dark .stu-card { background:#253347; border-color:#3a5070; }
+body.dark .stu-card:hover { border-color:#4a6080; }
+
+/* خريطة المقاعد */
+body.dark .seat-cell { background:#253347; border-color:#3a5070; }
+body.dark .seat-cell.empty { background:#1e293b; border-color:#2d3f5a; }
+
+/* اللوحة الرئيسية */
+body.dark .breadcrumb { color:#6080a0; }
+body.dark .breadcrumb .active { color:var(--sky3); }
+body.dark .breadcrumb .sep { color:#3a5070; }
+body.dark .prog-wrap { background:#253347; }
+
+/* Report card */
+body.dark .rep-card-header { /* keep gradient — looks fine dark */ }
+
+/* More sheet */
+body.dark #moreSheetContent { background:#1e293b; }
+body.dark .sheet-item { background:#253347; color:#c8daf0; }
+body.dark .sheet-item:hover { background:#2d3f5a; }
+body.dark .sheet-handle { background:#3a5070; }
+
+/* Notification panel */
+body.dark .notif-panel { background:#1e293b; border-color:#2d3f5a; }
+body.dark .np-header { border-color:#2d3f5a; }
+body.dark .notif-item { border-color:#2d3f5a; }
+body.dark .notif-item:hover { background:#253347; }
+
+/* KPI trend */
+body.dark .kpi-label { color:#8ba3c0; }
+
+/* Inline hardcoded white backgrounds in dynamic content */
+body.dark [style*="background:white"],
+body.dark [style*="background: white"],
+body.dark [style*="background:#ffffff"],
+body.dark [style*="background: #ffffff"] {
+  background:#253347 !important;
+  color:#c8daf0;
+}
+body.dark [style*="background:#f8faff"],
+body.dark [style*="background: #f8faff"],
+body.dark [style*="background:#f1f5fd"],
+body.dark [style*="background: #f1f5fd"],
+body.dark [style*="background:#f8fbff"],
+body.dark [style*="background: #f8fbff"] {
+  background:#253347 !important;
+}
+
+/* transition سلس على كل شيء */
+body, .card, .kpi, .modal, .modal-hdr, .sidebar, .topbar,
+.btn-ghost, .eval-item, .stu-card, .seat-cell, .search-box,
+.nav-btn, .note-card, table.tbl th, table.tbl td,
+input, select, textarea, #bottomNav, .bn-item {
+  transition: background 0.25s ease, color 0.25s ease, border-color 0.25s ease;
+}
 
 /* ── SEAT MAP ─────────────────────────────── */
 .seat-grid { display:grid; gap:10px; padding:20px; }
@@ -1001,16 +1117,50 @@ body.dark table.tbl tbody tr:hover td { background:#253347; }
 
 /* ── DARK TOGGLE ─────────────────────────── */
 .dark-toggle {
-  width:44px; height:24px; background:rgba(255,255,255,0.15); border-radius:99px;
-  position:relative; cursor:none; transition:background 0.2s; border:none;
-  display:flex; align-items:center; padding:3px;
+  width:48px; height:26px;
+  background:rgba(255,255,255,0.18);
+  border:1.5px solid rgba(255,255,255,0.25);
+  border-radius:99px;
+  position:relative; cursor:none;
+  transition:background 0.3s, border-color 0.3s;
+  flex-shrink:0; padding:0;
+  /* إزالة display:flex لأنها تُخرب موضع الـ ::after */
 }
 .dark-toggle::after {
-  content:'☀️'; width:18px; height:18px; border-radius:50%;
-  background:white; transition:transform 0.2s; display:flex;
-  align-items:center; justify-content:center; font-size:10px;
+  content:''; /* فارغ — الأيقونة نعرضها في ::before */
+  position:absolute;
+  top:3px; right:3px;
+  width:18px; height:18px;
+  border-radius:50%;
+  background:white;
+  transition:transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+  box-shadow:0 1px 4px rgba(0,0,0,0.25);
 }
-body.dark .dark-toggle::after { content:'🌙'; transform:translateX(20px); }
+/* أيقونة الشمس/القمر داخل الكرة */
+.dark-toggle::before {
+  content:'☀️';
+  position:absolute;
+  top:3px; right:3px;
+  width:18px; height:18px;
+  border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-size:11px; line-height:18px; text-align:center;
+  z-index:1;
+  pointer-events:none;
+  transition:transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+}
+body.dark .dark-toggle {
+  background:rgba(66,165,245,0.28);
+  border-color:rgba(66,165,245,0.45);
+}
+body.dark .dark-toggle::after {
+  transform:translateX(-22px);
+  background:#1e3a5f;
+}
+body.dark .dark-toggle::before {
+  content:'🌙';
+  transform:translateX(-22px);
+}
 
 /* ── CONFETTI ────────────────────────────── */
 .confetti-piece {
@@ -1350,12 +1500,12 @@ body.dark .dark-toggle::after { content:'🌙'; transform:translateX(20px); }
 #classroomOverlay.open{display:flex;}
 
 /* Header */
-.cm-header{display:flex;align-items:center;justify-content:space-between;padding:10px 20px;background:rgba(255,255,255,0.04);border-bottom:1px solid rgba(255,255,255,0.07);flex-shrink:0;height:58px;}
+.cm-header{display:flex;align-items:center;justify-content:space-between;padding:0 20px;background:rgba(255,255,255,0.04);border-bottom:1px solid rgba(255,255,255,0.07);flex-shrink:0;height:58px;min-height:58px;max-height:58px;overflow:hidden;}
 .cm-logo-badge{width:36px;height:36px;border-radius:9px;background:rgba(66,165,245,0.18);border:1px solid rgba(66,165,245,0.30);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
 .cm-school{color:rgba(255,255,255,0.55);font-size:0.76rem;font-weight:700;}
 .cm-skill-live{color:var(--sky3);font-size:0.84rem;font-weight:800;margin-top:1px;}
 .cm-clock-wrap{text-align:center;}
-.cm-clock-time{font-size:1.5rem;font-weight:900;color:white;letter-spacing:2px;font-variant-numeric:tabular-nums;line-height:1;}
+.cm-clock-time{font-size:1.1rem;font-weight:900;color:white;letter-spacing:2px;font-variant-numeric:tabular-nums;line-height:1;}
 .cm-clock-date{font-size:0.70rem;color:rgba(255,255,255,0.35);font-weight:600;margin-top:1px;}
 .cm-view-tabs{display:flex;background:rgba(255,255,255,0.06);border-radius:10px;padding:3px;gap:3px;border:1px solid rgba(255,255,255,0.08);}
 .cm-view-tab{padding:6px 16px;border-radius:8px;border:none;background:none;font-family:'Tajawal',sans-serif;font-size:0.82rem;font-weight:800;color:rgba(255,255,255,0.40);cursor:none;transition:all 0.14s;}
@@ -4104,6 +4254,49 @@ function renderSubjectPage(subId){
     }).join('')}
     </tbody>
   </table></div></div>`}
+
+  <div class="card" style="margin-top:16px;">
+    <div class="card-header" style="display:flex;align-items:center;justify-content:space-between;">
+      <h3>🎒 حقيبة المعلم — ${sub.icon} ${sub.name}</h3>
+    </div>
+    <div class="card-body">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+
+        <!-- كتاب المدرسة -->
+        <div>
+          <div style="font-size:0.82rem;font-weight:800;color:var(--ink2);margin-bottom:10px;">📖 كتاب المدرسة</div>
+          <label for="bagBook_${sub.id}" style="display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:10px;border:2px dashed var(--border2);background:var(--surface);color:var(--muted);font-size:0.82rem;cursor:pointer;transition:all 0.2s;">
+            📁 رفع كتاب المدرسة (PDF)
+            <input type="file" id="bagBook_${sub.id}" accept="application/pdf" onchange="bagLoadBook('${sub.id}',this)" style="display:none;" />
+          </label>
+          <div id="bagBookBar_${sub.id}" style="display:none;margin-top:10px;padding:10px 14px;border-radius:10px;background:linear-gradient(135deg,#fffbeb,#fef3c7);border:1px solid #fde68a;align-items:center;justify-content:space-between;gap:8px;">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <span style="font-size:1.5rem;">📕</span>
+              <div>
+                <div id="bagBookName_${sub.id}" style="font-size:0.82rem;font-weight:800;color:#92400e;"></div>
+                <div id="bagBookSize_${sub.id}" style="font-size:0.70rem;color:#b45309;"></div>
+              </div>
+            </div>
+            <div style="display:flex;gap:6px;">
+              <button onclick="bagOpenBook('${sub.id}')" class="btn btn-gold btn-sm">📖 فتح في وضع الحصة</button>
+              <button onclick="bagClearBook('${sub.id}')" class="btn btn-ghost btn-sm">🗑️</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- أنشطة المادة -->
+        <div>
+          <div style="font-size:0.82rem;font-weight:800;color:var(--ink2);margin-bottom:10px;">🎨 أنشطة المادة</div>
+          <div id="bagActList_${sub.id}" style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px;max-height:180px;overflow-y:auto;"></div>
+          <div style="display:flex;gap:6px;">
+            <input type="text" id="bagActInput_${sub.id}" placeholder="أضف نشاطاً للمادة..." style="flex:1;padding:8px 12px;border-radius:9px;border:1.5px solid var(--border2);background:white;color:var(--ink);font-family:'Tajawal',sans-serif;font-size:0.85rem;outline:none;" onkeydown="if(event.key==='Enter')bagAddActivity('${sub.id}')" />
+            <button onclick="bagAddActivity('${sub.id}')" class="btn btn-gold btn-sm" style="padding:8px 14px;">+</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
   `;
 }
 
@@ -4626,40 +4819,58 @@ function genStudentPDF(sid){
     <button class="print-btn secondary" onclick="window.close()">✕ إغلاق</button>
   </div>
 
-  <!-- Header -->
-  <div class="report-header">
-    <!-- صف العلوي: شعار المدرسة + اسمها -->
-    <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;">
-      <img src="${SCHOOL_LOGO}" style="width:64px;height:64px;object-fit:contain;background:white;border-radius:10px;padding:4px;flex-shrink:0;" />
-      <div>
-        <div class="rh-badge">📋 تقرير رسمي</div>
-        <div class="rh-school">مدارس البشرى الأهلية</div>
-        <div class="rh-sub">كشف متابعة طالب — الصف الأول الابتدائي</div>
-      </div>
-    </div>
-    <!-- صف المعلم: صورة كبيرة + اسم كبير -->
-    <div style="display:flex;align-items:center;gap:14px;background:rgba(255,255,255,0.10);border-radius:12px;padding:12px 16px;">
-      ${S.teacher.photo
-        ? `<img src="${S.teacher.photo}" style="width:54px;height:54px;border-radius:50%;object-fit:cover;border:3px solid rgba(255,255,255,0.60);flex-shrink:0;box-shadow:0 3px 10px rgba(0,0,0,0.25);" />`
-        : `<div style="width:54px;height:54px;border-radius:50%;background:linear-gradient(135deg,#f59e0b,#ef4444);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:900;color:white;flex-shrink:0;border:3px solid rgba(255,255,255,0.40);">${fullName().charAt(0)||'م'}</div>`
-      }
-      <div>
-        <div style="font-size:1.15em;font-weight:900;color:#fff;letter-spacing:0.2px;">${fullName()}</div>
-        <div style="font-size:0.82em;opacity:0.70;margin-top:2px;">المعلم المسؤول · ${fmtDate(today())}</div>
-      </div>
-      <div style="margin-right:auto;font-size:0.82em;opacity:0.70;">🆔 رقم الجلوس: ${s.num||'—'}</div>
-    </div>
-  </div>
+  <!-- ═══ HEADER BANNER ═══ -->
+  <div style="background:linear-gradient(135deg,#0d1b2a 0%,#1e3a5f 50%,#1565c0 100%);border-radius:16px;overflow:hidden;margin-bottom:18px;box-shadow:0 8px 32px rgba(21,101,192,0.25);">
 
-  <!-- Student card -->
-  <div class="stu-card">
-    ${s.photo
-      ?`<img src="${s.photo}" style="width:70px;height:70px;border-radius:50%;object-fit:cover;border:3px solid #1565c0;flex-shrink:0;" />`
-      :`<div class="stu-avatar">${s.name.charAt(0)}</div>`
-    }
-    <div>
-      <div class="stu-name">${s.name}</div>
-      <div class="stu-meta">📱 ولي الأمر: ${s.parent||'—'} &nbsp;|&nbsp; الجنس: ${s.gender==='f'?'أنثى':'ذكر'} &nbsp;|&nbsp; 🆔 رقم الجلوس: ${s.num||'—'}</div>
+    <!-- Top stripe: school logo + name + student photo -->
+    <div style="display:flex;align-items:center;gap:16px;padding:18px 24px;border-bottom:1px solid rgba(255,255,255,0.12);">
+      <img src="${SCHOOL_LOGO}" style="width:90px;height:90px;object-fit:contain;background:white;border-radius:16px;padding:8px;flex-shrink:0;box-shadow:0 4px 18px rgba(0,0,0,0.35);" />
+      <div style="flex:1;">
+        <div style="display:inline-block;background:rgba(245,158,11,0.22);border:1px solid rgba(245,158,11,0.45);color:#fbbf24;padding:3px 14px;border-radius:99px;font-size:0.72em;font-weight:800;margin-bottom:6px;">📋 تقرير رسمي</div>
+        <div style="font-size:1.6em;font-weight:900;color:white;line-height:1.2;">مدارس البشرى الأهلية</div>
+        <div style="font-size:0.85em;color:rgba(255,255,255,0.60);margin-top:4px;">كشف متابعة طالب — الصف الأول الابتدائي &nbsp;·&nbsp; ${fmtDate(today())}</div>
+      </div>
+      <!-- Student photo -->
+      ${s.photo
+        ? `<div style="display:flex;flex-direction:column;align-items:center;gap:6px;flex-shrink:0;">
+            <img src="${s.photo}" style="width:100px;height:100px;border-radius:50%;object-fit:cover;border:4px solid rgba(255,255,255,0.75);box-shadow:0 6px 22px rgba(0,0,0,0.40);" />
+            <div style="font-size:0.68em;color:rgba(255,255,255,0.50);font-weight:700;letter-spacing:0.5px;">صورة الطالب</div>
+          </div>`
+        : `<div style="display:flex;flex-direction:column;align-items:center;gap:6px;flex-shrink:0;">
+            <div style="width:100px;height:100px;border-radius:50%;background:linear-gradient(135deg,#42a5f5,#1565c0);display:flex;align-items:center;justify-content:center;font-size:2.5em;font-weight:900;color:white;border:4px solid rgba(255,255,255,0.35);box-shadow:0 6px 22px rgba(0,0,0,0.30);">${s.name.charAt(0)}</div>
+            <div style="font-size:0.68em;color:rgba(255,255,255,0.35);font-weight:700;">الطالب</div>
+          </div>`
+      }
+    </div>
+
+    <!-- Bottom stripe: teacher info + student data -->
+    <div style="display:flex;align-items:center;gap:14px;padding:14px 24px;background:rgba(0,0,0,0.25);flex-wrap:wrap;">
+      ${S.teacher.photo
+        ? `<img src="${S.teacher.photo}" style="width:76px;height:76px;border-radius:50%;object-fit:cover;border:3px solid rgba(255,255,255,0.70);flex-shrink:0;box-shadow:0 4px 16px rgba(0,0,0,0.35);" />`
+        : `<div style="width:76px;height:76px;border-radius:50%;background:linear-gradient(135deg,#f59e0b,#ef4444);display:flex;align-items:center;justify-content:center;font-size:2em;font-weight:900;color:white;flex-shrink:0;border:3px solid rgba(255,255,255,0.40);">${fullName().charAt(0)||'م'}</div>`
+      }
+      <div style="flex:1;">
+        <div style="font-size:0.70em;color:rgba(255,255,255,0.45);font-weight:700;margin-bottom:2px;">المعلم المسؤول</div>
+        <div style="font-size:1.20em;font-weight:900;color:white;">${fullName()}</div>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <div style="text-align:center;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:10px;padding:8px 16px;">
+          <div style="font-size:0.68em;color:rgba(255,255,255,0.45);font-weight:700;">اسم الطالب</div>
+          <div style="font-size:0.92em;font-weight:900;color:white;margin-top:2px;">${s.name}</div>
+        </div>
+        ${s.num ? `<div style="text-align:center;background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.30);border-radius:10px;padding:8px 16px;">
+          <div style="font-size:0.68em;color:rgba(255,255,255,0.45);font-weight:700;">رقم الجلوس</div>
+          <div style="font-size:0.92em;font-weight:900;color:#fbbf24;margin-top:2px;">${s.num}</div>
+        </div>` : ''}
+        ${s.parent ? `<div style="text-align:center;background:rgba(16,185,129,0.10);border:1px solid rgba(16,185,129,0.25);border-radius:10px;padding:8px 16px;">
+          <div style="font-size:0.68em;color:rgba(255,255,255,0.45);font-weight:700;">ولي الأمر</div>
+          <div style="font-size:0.82em;font-weight:800;color:#6ee7b7;margin-top:2px;">${s.parent}</div>
+        </div>` : ''}
+        <div style="text-align:center;background:rgba(124,58,237,0.12);border:1px solid rgba(124,58,237,0.25);border-radius:10px;padding:8px 16px;">
+          <div style="font-size:0.68em;color:rgba(255,255,255,0.45);font-weight:700;">الجنس</div>
+          <div style="font-size:0.92em;font-weight:900;color:#c4b5fd;margin-top:2px;">${s.gender==='f'?'أنثى':'ذكر'}</div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -8573,6 +8784,119 @@ function lpLoad(){
   } catch(e){}
 }
 
+
+// TEACHER BAG — per subject
+const BAG_BOOKS = {}; // subId -> {url, name, size}
+const BAG_ACTIVITIES = {}; // subId -> [{id,text,done}]
+
+function bagLoadBook(subId, input){
+  const file = input.files[0];
+  if(!file) return;
+  if(BAG_BOOKS[subId]&&BAG_BOOKS[subId].url) URL.revokeObjectURL(BAG_BOOKS[subId].url);
+  BAG_BOOKS[subId] = { url: URL.createObjectURL(file), name: file.name, size: (file.size/1024/1024).toFixed(1)+' MB' };
+  const bar=document.getElementById('bagBookBar_'+subId);
+  const nm=document.getElementById('bagBookName_'+subId);
+  const sz=document.getElementById('bagBookSize_'+subId);
+  if(bar){ bar.style.display='flex'; }
+  if(nm) nm.textContent=file.name.replace('.pdf','');
+  if(sz) sz.textContent=BAG_BOOKS[subId].size;
+  toast('✅ تم تحميل كتاب المدرسة','success');
+}
+
+function bagOpenBook(subId){
+  const b = BAG_BOOKS[subId];
+  if(!b||!b.url){ toast('لم يتم رفع الكتاب بعد','error'); return; }
+  // Open in classroom mode slides view
+  showPage('classroom_mode');
+  setTimeout(()=>{
+    cmSwitchView('slides');
+    const frame=document.getElementById('cmSlidesFrame');
+    const empty=document.getElementById('cmSlidesEmpty');
+    const imgV=document.getElementById('cmSlidesImgViewer');
+    const pdfF=document.getElementById('cmSlidesPdfFrame');
+    const vidP=document.getElementById('cmVideoPlayer');
+    if(empty) empty.style.display='none';
+    if(imgV) imgV.style.display='none';
+    if(frame) frame.style.display='none';
+    if(vidP) vidP.style.display='none';
+    if(pdfF){ pdfF.style.display='block'; pdfF.src=b.url; }
+    document.getElementById('cmSlidesNav').style.display='none';
+    toast('📖 '+b.name.replace('.pdf',''),'success');
+  }, 400);
+}
+
+function bagClearBook(subId){
+  if(BAG_BOOKS[subId]&&BAG_BOOKS[subId].url) URL.revokeObjectURL(BAG_BOOKS[subId].url);
+  delete BAG_BOOKS[subId];
+  const bar=document.getElementById('bagBookBar_'+subId);
+  if(bar) bar.style.display='none';
+  const inp=document.getElementById('bagBook_'+subId);
+  if(inp) inp.value='';
+  toast('تم مسح الكتاب','success');
+}
+
+function bagAddActivity(subId){
+  const input=document.getElementById('bagActInput_'+subId);
+  const val=input&&input.value.trim();
+  if(!val) return;
+  if(!BAG_ACTIVITIES[subId]) BAG_ACTIVITIES[subId]=[];
+  BAG_ACTIVITIES[subId].push({ id:Date.now(), text:val, done:false });
+  input.value='';
+  bagRenderActivities(subId);
+  bagSaveActivities(subId);
+}
+
+function bagToggleActivity(btn){
+  const subId=btn.dataset.sub; const id=parseInt(btn.dataset.id);
+  const arr=BAG_ACTIVITIES[subId]||[];
+  const a=arr.find(x=>x.id===id);
+  if(a) a.done=!a.done;
+  bagRenderActivities(subId);
+  bagSaveActivities(subId);
+}
+
+function bagDeleteActivity(btn){
+  const subId=btn.dataset.sub; const id=parseInt(btn.dataset.id);
+  if(!BAG_ACTIVITIES[subId]) return;
+  BAG_ACTIVITIES[subId]=BAG_ACTIVITIES[subId].filter(x=>x.id!==id);
+  bagRenderActivities(subId);
+  bagSaveActivities(subId);
+}
+
+function bagRenderActivities(subId){
+  const list=document.getElementById('bagActList_'+subId);
+  if(!list) return;
+  const arr=BAG_ACTIVITIES[subId]||[];
+  if(!arr.length){
+    list.innerHTML='<div style="font-size:0.78rem;color:var(--muted2);padding:6px 0;">لا توجد أنشطة بعد</div>';
+    return;
+  }
+  list.innerHTML=arr.map(a=>{
+    const bg=a.done?'var(--gold)':'transparent';
+    const clr=a.done?'var(--muted2)':'var(--ink2)';
+    const td=a.done?'line-through':'none';
+    const sid=subId;
+    return '<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:9px;border:1.5px solid var(--border);background:var(--surface);">'
+      +'<button onclick="bagToggleActivity(this)" data-sub="'+sid+'" data-id="'+a.id+'" style="width:22px;height:22px;border-radius:6px;border:1.5px solid var(--gold);background:'+bg+';color:white;font-size:12px;cursor:none;flex-shrink:0;">'+(a.done?'✓':'')+'</button>'
+      +'<span style="flex:1;font-size:0.82rem;color:'+clr+';text-decoration:'+td+'">'+a.text+'</span>'
+      +'<button onclick="bagDeleteActivity(this)" data-sub="'+sid+'" data-id="'+a.id+'" style="width:22px;height:22px;border-radius:6px;border:none;background:#fee2e2;color:#ef4444;font-size:11px;cursor:none;">✕</button>'
+      +'</div>';
+  }).join('');
+}
+
+function bagSaveActivities(subId){
+  try{ localStorage.setItem('bs_bag_act_'+subId, JSON.stringify(BAG_ACTIVITIES[subId]||[])); }catch(e){}
+}
+
+function bagLoadAllActivities(){
+  S.subjects.forEach(sub=>{
+    try{
+      const d=JSON.parse(localStorage.getItem('bs_bag_act_'+sub.id)||'[]');
+      BAG_ACTIVITIES[sub.id]=d;
+    }catch(e){}
+  });
+}
+
 function closeClassroomMode(){
   if(REC.active) cmStopRecording();
   document.getElementById('classroomOverlay').classList.remove('open');
@@ -10598,7 +10922,8 @@ function switchToClass(cid){
   S.meetings=[]; S.seatLayout=null; S.changelog=[];
   S.gamesBank=null; S._snapshots={};
 
-  load(); // تحميل بيانات الفصل الجديد
+  load();
+bagLoadAllActivities(); // تحميل بيانات الفصل الجديد
   ensureWeeklySnapshot();
 
   // تحديث اسم الفصل في الـ topbar
