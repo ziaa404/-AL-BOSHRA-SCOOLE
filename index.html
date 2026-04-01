@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -14,6 +15,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@200;300;400;500;700;800;900&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
 <style>
@@ -46,10 +48,6 @@
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-/* Mobile touch improvements */
-button, a { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
-input, select, textarea { -webkit-tap-highlight-color: transparent; touch-action: manipulation; font-size: 16px; /* prevents iOS zoom on focus */ }
-
 html { scroll-behavior: smooth; }
 
 body {
@@ -69,6 +67,21 @@ body {
   transition: transform 0.1s ease, background 0.2s;
   mix-blend-mode: multiply;
 }
+/* رسم وضع الحصة — مؤشر القلم والأشكال (يتجاوز cursor:none العام) */
+#cmDrawCanvas.cm-cursor-pen {
+  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 24 24'%3E%3Cpath fill='%2342a5f5' d='M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z'/%3E%3Cpath fill='%231565c0' d='M20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z'/%3E%3C/svg%3E") 4 22, crosshair !important;
+}
+#cmDrawCanvas.cm-cursor-eraser {
+  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 24 24'%3E%3Crect x='4' y='8' width='16' height='10' rx='2' fill='%23fca5a5' stroke='%23ef4444' stroke-width='1.5'/%3E%3Cpath fill='%23fecaca' d='M8 8V6a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2'/%3E%3C/svg%3E") 14 14, cell !important;
+}
+#cmDrawCanvas.cm-cursor-shape {
+  cursor: crosshair !important;
+}
+#classroomOverlay:has(#cmDrawCanvas.cm-draw-open:hover) #cursor,
+#classroomOverlay:has(#cmDrawCanvas.cm-draw-open:hover) #cursor-ring {
+  opacity: 0 !important;
+}
+
 #cmRecBtn:hover { background:rgba(239,68,68,0.28) !important; border-color:rgba(239,68,68,0.6) !important; }
 #cmRecBtn.recording { background:rgba(239,68,68,0.30) !important; border-color:#ef4444 !important; color:white !important; animation:recPulse 1.5s ease infinite; }
 @keyframes recPulse { 0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,0.4)} 50%{box-shadow:0 0 0 8px rgba(239,68,68,0)} }
@@ -111,7 +124,7 @@ body:has(button:hover) #cursor { background: var(--gold); }
 .lic-box{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.09);border-radius:24px;padding:40px 36px;width:440px;max-width:94vw;text-align:center;box-shadow:0 32px 80px rgba(0,0,0,0.60),inset 0 1px 0 rgba(255,255,255,0.08);backdrop-filter:blur(16px);position:relative;z-index:1;}
 .lic-title{font-size:1.40rem;font-weight:900;color:white;margin-bottom:3px;letter-spacing:-0.3px;}
 .lic-sub{font-size:0.84rem;color:rgba(255,255,255,0.40);margin-bottom:24px;}
-.lic-input{width:100%;padding:14px 42px 14px 16px;border-radius:13px;border:1.5px solid rgba(255,255,255,0.14);background:rgba(255,255,255,0.06);color:white;font-family:'Tajawal',sans-serif;font-size:1rem;outline:none;text-align:center;direction:ltr;transition:border-color 0.2s;margin-bottom:12px;}
+.lic-input{width:100%;padding:14px 42px 14px 16px;border-radius:13px;border:1.5px solid rgba(255,255,255,0.14);background:rgba(255,255,255,0.06);color:white;font-family:'Tajawal',sans-serif;font-size:0.88rem;outline:none;text-align:center;direction:ltr;transition:border-color 0.2s;margin-bottom:12px;}
 .lic-input:focus{border-color:rgba(66,165,245,0.60);background:rgba(66,165,245,0.06);}
 .lic-input::placeholder{color:rgba(255,255,255,0.20);direction:rtl;}
 .lic-btn{width:100%;padding:14px;border-radius:13px;border:none;background:linear-gradient(135deg,#1565c0,#7c3aed);color:white;font-family:'Tajawal',sans-serif;font-size:1rem;font-weight:900;cursor:pointer;transition:all 0.18s;margin-bottom:12px;box-shadow:0 6px 20px rgba(21,101,192,0.35);}
@@ -142,7 +155,7 @@ body:has(button:hover) #cursor { background: var(--gold); }
 
 .login-grid {
   display: grid; grid-template-columns: 1fr 1fr;
-  width: 920px; max-width: 100vw;
+  width: 920px; max-width: 96vw;
   background: rgba(255,255,255,0.04);
   backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
   border: 1px solid rgba(255,255,255,0.12);
@@ -187,17 +200,13 @@ body:has(button:hover) #cursor { background: var(--gold); }
 .login-form-side h2 { color: white; font-size: 1.5rem; font-weight: 800; margin-bottom: 6px; }
 .login-form-side p { color: rgba(255,255,255,0.55); font-size: 0.88rem; margin-bottom: 30px; }
 
-@media(max-width:700px) {
-  .login-form-side { padding: 32px 24px 40px; }
-}
-
 .fl-group { margin-bottom: 18px; }
 .fl-label { color: rgba(255,255,255,0.75); font-size: 0.85rem; font-weight: 700; display: block; margin-bottom: 8px; }
 .fl-input {
   width: 100%; padding: 13px 16px;
   background: rgba(255,255,255,0.08); border: 1.5px solid rgba(255,255,255,0.15);
   border-radius: 12px; color: white; font-family: 'Tajawal', sans-serif;
-  font-size: 1rem; outline: none; transition: all 0.2s; text-align: right;
+  font-size: 0.98rem; outline: none; transition: all 0.2s; text-align: right;
 }
 .fl-input::placeholder { color: rgba(255,255,255,0.35); }
 .fl-input:focus { border-color: var(--gold); background: rgba(255,255,255,0.12); box-shadow: 0 0 0 3px rgba(245,158,11,0.20); }
@@ -1349,7 +1358,6 @@ body.dark .dark-toggle::before {
 .tm-print-cert { display:none; }
 
 /* ── PWA INSTALL BANNER ──────────────────────── */
-#pwaInstallBanner {
   position:fixed; bottom:20px; right:20px; z-index:800;
   background:linear-gradient(135deg,var(--ink2),var(--sky));
   color:white; border-radius:16px; padding:14px 18px;
@@ -1820,13 +1828,6 @@ body.dark .dark-toggle::before {
 @media (hover: none) and (pointer: coarse) {
   * { cursor: auto !important; }
   #cursor, #cursor-ring, #bg-canvas { display: none !important; }
-  /* Restore pointer cursor on all interactive elements for touch */
-  button, a, [onclick], .btn, .nav-btn, .bn-item, .sheet-item,
-  .att-chip, .ev-btn, .beh-star, .beh-tag, .goal-check,
-  .tm-student-pill, .tm-sub-tab, .cm-view-tab, .cm-spin-btn,
-  .cg-choice, .cg-chair-btn, .m-tab, .google-btn, .local-btn,
-  .lic-btn, .tb-class-btn, .seat-cell, .class-item, .stu-card,
-  .insight-action, .modal-x, .sb-qbtn, .qe-btn, .photo-upload-zone { cursor: pointer !important; }
 }
 
 /* Bottom Navigation Bar — mobile only */
@@ -1975,20 +1976,8 @@ body.dark .dark-toggle::before {
 /* Safe area for iPhone notch/home indicator */
 @supports (padding: env(safe-area-inset-bottom)) {
   .topbar {
-    padding-left: max(14px, env(safe-area-inset-left));
-    padding-right: max(14px, env(safe-area-inset-right));
+    padding-top: env(safe-area-inset-top);
   }
-  #bottomNav {
-    padding-left: env(safe-area-inset-left);
-    padding-right: env(safe-area-inset-right);
-  }
-}
-
-/* Landscape mobile */
-@media (max-width: 960px) and (orientation: landscape) {
-  .content { padding-bottom: calc(64px + env(safe-area-inset-bottom)) !important; }
-  #bottomNav { padding-bottom: calc(4px + env(safe-area-inset-bottom)); }
-  .chart-h-280 { height: 160px; }
 }
 
 /* Landscape mobile */
@@ -2005,18 +1994,6 @@ body.dark .dark-toggle::before {
   .btn { font-size: 0.80rem; padding: 9px 12px; }
   .sheet-grid { grid-template-columns: repeat(3, 1fr); }
 }
-
-/* Fix app layout on mobile — ensure content fills screen correctly */
-@media (max-width: 960px) {
-  #app { display: none; flex-direction: column; min-height: 100dvh; }
-  #app.active { display: flex; }
-  .content { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
-}
-
-/* Prevent horizontal scroll on mobile */
-body { max-width: 100vw; overflow-x: hidden; }
-.topbar, #bottomNav { max-width: 100vw; }
-
 </style>
 </head>
 <body>
@@ -2255,6 +2232,7 @@ body { max-width: 100vw; overflow-x: hidden; }
       <button class="nav-btn" id="nav-profile" onclick="showPage('profile')"><span class="nav-icon">⚙️</span> الملف الشخصي</button>
       <button class="nav-btn" id="nav-compare" onclick="showPage('compare')"><span class="nav-icon">📊</span> مقارنة الفصول</button>
       <button class="nav-btn" id="nav-about" onclick="showPage('about')"><span class="nav-icon">💙</span> حول التطبيق</button>
+      <button class="nav-btn" id="nav-userguide" onclick="openM('mbCmGuide')"><span class="nav-icon">📖</span> دليل الاستخدام</button>
 
       <div class="sb-teacher-card" id="sbTeacherCard">
         <div class="sb-teacher-avatar" id="sbAvatar" style="overflow:hidden;padding:0;"></div>
@@ -2423,6 +2401,29 @@ body { max-width: 100vw; overflow-x: hidden; }
   </div>
 </div></div>
 
+<!-- USER GUIDE MODAL -->
+<div class="modal-bg" id="mbCmGuide"><div class="modal" style="width:96vw;max-width:720px;max-height:88vh;display:flex;flex-direction:column;">
+  <div class="modal-hdr"><div><h3>📖 دليل استخدام المنصة</h3><div class="modal-sub">نظرة سريعة على أهم الميزات</div></div><button class="modal-x" onclick="closeM('mbCmGuide')">✕</button></div>
+  <div class="modal-body" style="overflow-y:auto;line-height:1.65;font-size:0.88rem;">
+    <div style="font-weight:800;color:var(--ink2);margin-bottom:8px;">🏠 لوحة التحكم والطلاب</div>
+    <p style="color:var(--muted);margin-bottom:14px;">أضف الطلاب، سجّل الحضور والتقييمات، وتابع التقارير من القائمة اليمنى. التبديل بين الفصول من اسم الفصل في الأعلى.</p>
+    <div style="font-weight:800;color:var(--ink2);margin-bottom:8px;">🖥️ وضع الحصة (البروجكتور)</div>
+    <p style="color:var(--muted);margin-bottom:10px;">من «وضع الحصة» تفتح شاشة كاملة: <strong>مؤقت</strong>، <strong>حضور سريع</strong>، <strong>تقييم</strong>، <strong>عجلة عشوائية</strong>، <strong>لوحة الشرف</strong>، <strong>ألعاب</strong>، و<strong>عرض الشرائح</strong>.</p>
+    <ul style="color:var(--muted);margin:0 0 14px 18px;padding:0;list-style:disc;">
+      <li><strong>العرض:</strong> رابط (يوتيوب/شرائح جوجل) أو فيديو أو صور أو PDF أو PowerPoint (يُستخرج منه الصور داخل الملف).</li>
+      <li><strong>الكتابة على الشاشة:</strong> من «عرض الشرائح» فعّل «الكتابة على الشاشة» — قلم، ممحاة، خط، مستطيل، دائرة، لون وحجم.</li>
+      <li><strong>مساعد الذكاء الاصطناعي:</strong> من السبورة بعد إضافة مفتاح Google AI في الإعدادات.</li>
+    </ul>
+    <div style="font-weight:800;color:var(--ink2);margin-bottom:8px;">💾 النسخ الاحتياطي</div>
+    <p style="color:var(--muted);margin-bottom:14px;">الملف الشخصي ← تصدير JSON يشمل <strong>كل الفصول</strong>. الاستيراد يستعيدها بعد التأكيد.</p>
+    <div style="font-weight:800;color:var(--ink2);margin-bottom:8px;">⌨️ اختصارات مفيدة</div>
+    <p style="color:var(--muted);margin:0;">استخدم زر «إنهاء» للخروج من وضع الحصة. يُنصح بتثبيت التطبيق (PWA) للعمل دون إنترنت بعد أول تحميل.</p>
+  </div>
+  <div class="modal-footer">
+    <button class="btn btn-primary" onclick="closeM('mbCmGuide')">حسناً</button>
+  </div>
+</div></div>
+
 <!-- PLANNER PERIOD MODAL -->
 <div class="modal-bg" id="mbPeriod"><div class="modal sm">
   <div class="modal-hdr"><div><h3>📅 تعديل الحصة</h3><div class="modal-sub" id="periodSub"></div></div><button class="modal-x" onclick="closeM('mbPeriod')">✕</button></div>
@@ -2549,6 +2550,7 @@ body { max-width: 100vw; overflow-x: hidden; }
       <button class="sheet-item" onclick="showPage('curriculum');closeMoreSheet()"><span class="si-icon">📚</span>المواد</button>
       <button class="sheet-item" onclick="showPage('changelog');closeMoreSheet()"><span class="si-icon">📜</span>السجل</button>
       <button class="sheet-item" onclick="showPage('profile');closeMoreSheet()"><span class="si-icon">⚙️</span>الإعدادات</button>
+      <button class="sheet-item" onclick="openM('mbCmGuide');closeMoreSheet()"><span class="si-icon">📖</span>دليل الاستخدام</button>
       <button class="sheet-item" onclick="toggleDark();closeMoreSheet()"><span class="si-icon">🌙</span>الوضع الليلي</button>
     </div>
     <div style="margin-top:14px;display:flex;gap:10px;">
@@ -2590,6 +2592,7 @@ body { max-width: 100vw; overflow-x: hidden; }
   <span id="cmRecLabel">تسجيل</span>
   <span id="cmRecTimer" style="font-variant-numeric:tabular-nums;display:none;">00:00</span>
 </div>
+<button type="button" class="cm-btn cm-btn-ghost" style="padding:8px 14px;font-size:0.82rem;border-radius:12px;" onclick="openM('mbCmGuide')" title="دليل وضع الحصة">📖 دليل</button>
 <button class="cm-exit" onclick="closeClassroomMode()">✕ إنهاء</button>
     </div>
   </div>
@@ -2657,6 +2660,13 @@ body { max-width: 100vw; overflow-x: hidden; }
 
         <!-- RIGHT: Mastery + actions -->
         <div class="cm-board-right">
+          <div class="cm-ai-lesson-card" style="margin-bottom:12px;padding:12px;border-radius:14px;background:rgba(124,58,237,0.12);border:1px solid rgba(124,58,237,0.28);">
+            <div class="cm-card-title" style="margin-bottom:6px;font-size:0.88rem">🤖 مساعد ذكاء اصطناعي</div>
+            <textarea id="cmAiInput" rows="3" placeholder="اسأل أثناء الحصة: شرح، أمثلة، نشاط سريع..." style="width:100%;padding:8px 10px;border-radius:10px;border:1px solid rgba(255,255,255,0.12);background:rgba(0,0,0,0.25);color:#fff;font-family:'Tajawal',sans-serif;font-size:0.78rem;resize:vertical;outline:none;margin-bottom:8px;"></textarea>
+            <button type="button" class="cm-btn cm-btn-primary" style="width:100%;justify-content:center;font-size:0.82rem;padding:8px" onclick="cmAiAsk()" id="cmAiSendBtn">✨ إرسال</button>
+            <div id="cmAiOut" style="margin-top:10px;max-height:140px;overflow-y:auto;font-size:0.76rem;line-height:1.55;color:rgba(255,255,255,0.82);white-space:pre-wrap;border-top:1px solid rgba(255,255,255,0.08);padding-top:8px;display:none;"></div>
+            <div style="font-size:0.65rem;color:rgba(255,255,255,0.35);margin-top:8px;line-height:1.4;">الإعدادات ← مساعد الحصة: Gemini أو OpenRouter. لا يُصدَّر المفتاح مع النسخ الاحتياطي.</div>
+          </div>
           <div class="cm-card-title" style="margin-bottom:8px">📊 إتقان الطلاب</div>
           <div id="cmTopList" style="display:flex;flex-direction:column;gap:5px;flex:1;overflow-y:auto;"></div>
           <div style="display:flex;flex-direction:column;gap:7px;margin-top:10px;">
@@ -2839,9 +2849,10 @@ body { max-width: 100vw; overflow-x: hidden; }
           <!-- Method 4b: PPTX -->
           <div class="cm-slides-section">
             <div class="cm-slides-section-title">📊 رفع PowerPoint</div>
+            <div style="font-size:0.65rem;color:rgba(255,255,255,0.32);line-height:1.35;margin-bottom:6px;">يُستخرج من الملف الصور المضمّنة (ppt/media). للعرض الكامل استخدم PDF أو صور الشرائح.</div>
             <label class="cm-upload-label" for="cmSlidesPptx">
               📁 اختر ملف PPTX
-              <input type="file" id="cmSlidesPptx" accept=".pptx,.ppt" onchange="cmLoadPptx(this)" style="display:none" />
+              <input type="file" id="cmSlidesPptx" accept=".pptx,application/vnd.openxmlformats-officedocument.presentationml.presentation" onchange="cmLoadPptx(this)" style="display:none" />
             </label>
             <div id="cmPptxStatus" style="font-size:0.70rem;color:rgba(255,255,255,0.35);margin-top:4px;"></div>
             <button id="cmClearPptxBtn" class="cm-btn cm-btn-ghost" style="display:none;width:100%;justify-content:center;font-size:0.75rem;margin-top:6px;opacity:0.7" onclick="cmClearPptx()">🗑️ مسح PPTX</button>
@@ -2885,8 +2896,12 @@ body { max-width: 100vw; overflow-x: hidden; }
           <canvas id="cmDrawCanvas" style="position:absolute;inset:0;width:100%;height:100%;z-index:10;display:none;border-radius:12px;touch-action:none;"></canvas>
           <!-- Drawing toolbar -->
           <div id="cmDrawToolbar" style="display:none;position:absolute;top:10px;left:10px;z-index:11;display:none;flex-direction:column;gap:6px;background:rgba(0,0,0,0.65);backdrop-filter:blur(8px);border-radius:12px;padding:8px;border:1px solid rgba(255,255,255,0.12);">
-            <button onclick="cmDrawSetTool('pen')" id="cmDrawPen" style="width:36px;height:36px;border-radius:8px;border:none;background:rgba(66,165,245,0.3);color:white;font-size:16px;cursor:none;" title="قلم">✏️</button>
+            <button onclick="cmDrawSetTool('pen')" id="cmDrawPen" style="width:36px;height:36px;border-radius:8px;border:none;background:rgba(66,165,245,0.3);color:white;font-size:16px;cursor:none;" title="قلم حر">✏️</button>
             <button onclick="cmDrawSetTool('eraser')" id="cmDrawEraser" style="width:36px;height:36px;border-radius:8px;border:none;background:rgba(255,255,255,0.1);color:white;font-size:16px;cursor:none;" title="ممحاة">🧹</button>
+            <div style="width:36px;height:1px;background:rgba(255,255,255,0.15);"></div>
+            <button onclick="cmDrawSetTool('line')" id="cmDrawLine" style="width:36px;height:36px;border-radius:8px;border:none;background:rgba(255,255,255,0.1);color:white;font-size:15px;cursor:none;font-weight:900;" title="خط مستقيم">╱</button>
+            <button onclick="cmDrawSetTool('rect')" id="cmDrawRect" style="width:36px;height:36px;border-radius:8px;border:none;background:rgba(255,255,255,0.1);color:white;font-size:18px;cursor:none;line-height:1;" title="مستطيل">▭</button>
+            <button onclick="cmDrawSetTool('circle')" id="cmDrawCircle" style="width:36px;height:36px;border-radius:8px;border:none;background:rgba(255,255,255,0.1);color:white;font-size:17px;cursor:none;" title="بيضاوي / دائرة">○</button>
             <div style="width:36px;height:1px;background:rgba(255,255,255,0.15);"></div>
             <input type="color" id="cmDrawColor" value="#42a5f5" style="width:36px;height:36px;border-radius:8px;border:none;cursor:none;padding:2px;background:none;" title="اللون" />
             <input type="range" id="cmDrawSize" min="2" max="30" value="4" style="writing-mode:vertical-lr;direction:rtl;height:80px;width:36px;accent-color:var(--sky3);" title="الحجم" />
@@ -3430,7 +3445,10 @@ function initPage(p){
   if(p==='analytics') initAnalyticsCharts();
   if(p==='insights') setTimeout(animateInsights,100);
   if(p==='treasuremap') setTimeout(initTreasureMap,80);
-  if(p==='profile') setTimeout(updatePWAStatus,50);
+  if(p==='profile'){
+    setTimeout(updatePWAStatus,50);
+    bsLoadAiSettingsIntoForm();
+  }
 }
 
 function updatePWAStatus(){
@@ -5827,8 +5845,20 @@ function renderProfile(){
       <!-- Data tools -->
       <div class="card" style="padding:22px;margin-bottom:14px;">
         <div style="font-weight:800;color:var(--ink2);margin-bottom:14px;">🛠️ أدوات البيانات</div>
+        <div class="fg" style="margin-bottom:14px;">
+          <label>مساعد الحصة — نوع الاتصال</label>
+          <select id="bsAiProvider" style="width:100%;padding:10px 12px;border-radius:10px;border:1.5px solid var(--border2);font-family:'Tajawal',sans-serif;font-size:0.9rem;" onchange="localStorage.setItem('bs_ai_provider', this.value==='openrouter'?'openrouter':'gemini'); bsUpdateAiHints();">
+            <option value="gemini">Google Gemini (مباشر من Google AI Studio)</option>
+            <option value="openrouter">OpenRouter (موصى به إذا فشل Gemini أو فتحت الملف من القرص)</option>
+          </select>
+        </div>
+        <div class="fg" style="margin-bottom:14px;">
+          <label id="bsAiKeyLabel">مفتاح API</label>
+          <input type="password" id="bsAiKey" placeholder="" autocomplete="off" style="width:100%;" onchange="bsSaveAiSettings()" />
+          <div id="bsAiKeyHint" style="font-size:0.76rem;color:var(--muted);margin-top:8px;line-height:1.5;"></div>
+        </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
-          <button class="btn btn-ghost" onclick="exportData()">📤 تصدير JSON</button>
+          <button class="btn btn-ghost" onclick="exportData()">📤 تصدير JSON (كل الفصول)</button>
           <button class="btn btn-ghost" onclick="importDataClick()">📥 استيراد JSON</button>
           <input type="file" id="importFile" style="display:none;" accept=".json" onchange="importData(this)" />
           <button class="btn btn-ghost" onclick="saveOfflineSnapshot();toast('تم حفظ نسخة offline ✅','success')">📦 Offline</button>
@@ -5855,7 +5885,7 @@ function renderProfile(){
           { icon:'🎮', title:'الألعاب التعليمية', desc:'7 ألعاب مدمجة: المليون · الكرسي الساخن · سباق الإجابات · أكمل الكلمة · ما هذا؟ · فصلي ضد فصلي · كلمة وعكسها.' },
           { icon:'📊', title:'مؤشر التقدم', desc:'↗ يعني تحسّن عن البداية · → ثابت · ↘ تراجع. يُحسب بمقارنة المهارات الحالية بأول تسجيل.' },
           { icon:'🏫', title:'الفصول المتعددة', desc:'اضغط على اسم الفصل في الأعلى للتبديل. كل فصل له بياناته المستقلة تماماً.' },
-          { icon:'💾', title:'حفظ البيانات', desc:'تحفظ تلقائياً كل 5 ثواني في المتصفح. للنسخ الاحتياطي: ⚙️ الإعدادات ← تصدير JSON.' },
+          { icon:'💾', title:'حفظ البيانات', desc:'تحفظ تلقائياً كل 5 ثواني في المتصفح. للنسخ الاحتياطي: ⚙️ الإعدادات ← تصدير JSON (يشمل كل الفصول والحقائب).' },
         ].map(h=>`
           <div style="display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);">
             <div style="width:36px;height:36px;border-radius:10px;background:var(--surface);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;">${h.icon}</div>
@@ -5873,6 +5903,7 @@ function saveProfile(){
   S.teacher.n1=document.getElementById('pn1')?.value.trim()||S.teacher.n1;
   S.teacher.n2=document.getElementById('pn2')?.value.trim()||S.teacher.n2;
   S.teacher.n3=document.getElementById('pn3')?.value.trim()||S.teacher.n3;
+  bsSaveAiSettings(true);
   // Photo handled by saveTeacherPhoto()
   save();
   document.getElementById('tbName').textContent=S.teacher.n1;
@@ -5936,12 +5967,42 @@ function removeTeacherPhoto(){
   toast('تم حذف الصورة','success');
 }
 
+function collectExtraLocalKeys(){
+  const extras={};
+  const lp=localStorage.getItem('bs_lesson_prep');
+  if(lp) extras.bs_lesson_prep=lp;
+  try{
+    for(let i=0;i<localStorage.length;i++){
+      const k=localStorage.key(i);
+      if(k&&k.startsWith('bs_bag_act_')) extras[k]=localStorage.getItem(k);
+    }
+  }catch(e){}
+  return extras;
+}
+
 function exportData(){
-  const data=JSON.stringify({teacher:S.teacher,students:S.students,attendance:S.attendance,evals:S.evals,notes:S.notes,exportedAt:new Date().toISOString()},null,2);
+  save();
+  const classes=getAllClasses();
+  const classData={};
+  for(const c of classes){
+    const raw=localStorage.getItem(getClassStorageKey(c.id));
+    if(raw) try{ classData[c.id]=JSON.parse(raw); }catch(e){}
+  }
+  const payload={
+    format:'albushra_full',
+    version:2,
+    exportedAt:new Date().toISOString(),
+    activeClassId:ACTIVE_CLASS_ID,
+    classes,
+    classData,
+    extras:collectExtraLocalKeys()
+  };
+  const data=JSON.stringify(payload,null,2);
   const a=document.createElement('a');
   a.href='data:application/json;charset=utf-8,'+encodeURIComponent(data);
-  a.download='albushra_backup_'+today()+'.json'; a.click();
-  toast('تم تصدير البيانات ✅','success');
+  a.download='albushra_backup_all_classes_'+today()+'.json';
+  a.click();
+  toast('تم تصدير كل الفصول والبيانات ✅','success');
 }
 
 function importDataClick(){ document.getElementById('importFile').click(); }
@@ -5952,16 +6013,97 @@ function importData(el){
   r.onload=e=>{
     try{
       const d=JSON.parse(e.target.result);
+      if(d.format==='albushra_full' && d.version>=2 && Array.isArray(d.classes) && d.classData){
+        if(!confirm('سيتم استبدال بيانات كل الفصول من الملف. هل تريد المتابعة؟')){ el.value=''; return; }
+        localStorage.setItem('bs_classes', JSON.stringify(d.classes));
+        Object.keys(d.classData).forEach(cid=>{
+          localStorage.setItem(getClassStorageKey(cid), JSON.stringify(d.classData[cid]));
+        });
+        if(d.activeClassId && d.classes.some(c=>c.id===d.activeClassId)){
+          ACTIVE_CLASS_ID=d.activeClassId;
+          localStorage.setItem('bs_active_class', d.activeClassId);
+        }
+        if(d.extras && typeof d.extras==='object'){
+          if(d.extras.bs_lesson_prep) localStorage.setItem('bs_lesson_prep', d.extras.bs_lesson_prep);
+          Object.keys(d.extras).forEach(k=>{
+            if(k.startsWith('bs_bag_act_')) localStorage.setItem(k, d.extras[k]);
+          });
+        }
+        load();
+        bagLoadAllActivities();
+        renderClassList();
+        const nameEl=document.getElementById('tbClassName');
+        const cur=getAllClasses().find(c=>c.id===ACTIVE_CLASS_ID);
+        if(nameEl&&cur) nameEl.textContent=cur.name;
+        const nb=document.getElementById('nb-students');
+        if(nb) nb.textContent=S.students.length;
+        const nbg=document.getElementById('nb-goals');
+        if(nbg) nbg.textContent=S.goals.filter(g=>!g.done).length;
+        rebuildSubjectNav();
+        if(typeof CM!=='undefined') CM.games=null;
+        showPage('dash');
+        toast('تم استيراد كل الفصول بنجاح ✅','success');
+        el.value='';
+        return;
+      }
       if(d.students) S.students=d.students;
       if(d.attendance) S.attendance=d.attendance;
       if(d.evals) S.evals=d.evals;
       if(d.notes) S.notes=d.notes;
       if(d.teacher) S.teacher=d.teacher;
       save(); showPage('dash');
-      toast('تم استيراد البيانات بنجاح ✅','success');
-    }catch(err){ toast('خطأ في الملف','error'); }
+      toast('تم استيراد بيانات الفصل الحالي ✅','success');
+      el.value='';
+    }catch(err){ toast('خطأ في الملف','error'); el.value=''; }
   };
   r.readAsText(f);
+}
+
+function bsGetAiKey(){
+  const k=(localStorage.getItem('bs_ai_key')||'').trim();
+  if(k) return k;
+  return (localStorage.getItem('bs_gemini_key')||'').trim();
+}
+function bsGetAiProvider(){
+  return localStorage.getItem('bs_ai_provider')||'gemini';
+}
+function bsLoadAiSettingsIntoForm(){
+  const prov=document.getElementById('bsAiProvider');
+  const key=document.getElementById('bsAiKey');
+  if(prov){
+    prov.value=bsGetAiProvider();
+    if(prov.value!=='openrouter'&&prov.value!=='gemini') prov.value='gemini';
+  }
+  if(key){
+    const k=bsGetAiKey();
+    key.value=k;
+  }
+  bsUpdateAiHints();
+}
+function bsUpdateAiHints(){
+  const prov=(document.getElementById('bsAiProvider')?.value)||bsGetAiProvider();
+  const hint=document.getElementById('bsAiKeyHint');
+  const lab=document.getElementById('bsAiKeyLabel');
+  if(prov==='openrouter'){
+    if(lab) lab.textContent='مفتاح OpenRouter';
+    if(hint) hint.innerHTML='احصل على مفتاح من <a href="https://openrouter.ai/keys" target="_blank" rel="noopener">openrouter.ai/keys</a> — يعمل عادة من المتصفح حتى مع فتح الملف محلياً. يُحفظ على جهازك فقط.';
+  } else {
+    if(lab) lab.textContent='مفتاح Google AI (Gemini)';
+    if(hint) hint.innerHTML='من <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Google AI Studio</a>. إن فتحت الصفحة كملف مباشر (file://) قد يمنع المتصفح الاتصال — استخدم «OpenRouter» أو شغّل الموقع عبر خادم محلي (مثل Live Server).';
+  }
+}
+function bsSaveAiSettings(silent){
+  const provEl=document.getElementById('bsAiProvider');
+  const keyEl=document.getElementById('bsAiKey');
+  const prov=provEl?provEl.value:bsGetAiProvider();
+  const v=keyEl?keyEl.value.trim():'';
+  localStorage.setItem('bs_ai_provider', prov==='openrouter'?'openrouter':'gemini');
+  if(v) localStorage.setItem('bs_ai_key', v);
+  else localStorage.removeItem('bs_ai_key');
+  if(v) localStorage.setItem('bs_gemini_key', v);
+  else localStorage.removeItem('bs_gemini_key');
+  bsUpdateAiHints();
+  if(!silent) toast('تم حفظ إعدادات المساعد','success');
 }
 
 function clearAllData(){
@@ -6038,6 +6180,7 @@ function toast(msg,type=''){
 // KEYBOARD SHORTCUTS
 // ══════════════════════════════════════════════
 document.addEventListener('keydown',e=>{
+  if(typeof CM !== 'undefined' && CM.open) return;
   if((e.ctrlKey||e.metaKey)&&e.key==='k'){ e.preventDefault(); openCmd(); return; }
   if(e.altKey){
     if(e.key==='1') showPage('dash');
@@ -6155,6 +6298,7 @@ function cmdKey(e){
   }
 }
 document.addEventListener('keydown',e=>{
+  if(typeof CM !== 'undefined' && CM.open) return;
   if((e.ctrlKey||e.metaKey)&&e.key==='k'){ e.preventDefault(); openCmd(); }
 });
 
@@ -8609,9 +8753,58 @@ function cmSaveRecording(){
 
 
 // ═══════════════════════════════════════════
-// DRAWING ON SCREEN
+// DRAWING ON SCREEN — قلم، ممحاة، أشكال هندسية
 // ═══════════════════════════════════════════
-const DRAW = { active:false, painting:false, tool:'pen', color:'#42a5f5', size:4, ctx:null };
+const DRAW = {
+  active:false, painting:false, tool:'pen',
+  ctx:null, shapeSnap:null, sx:0, sy:0
+};
+
+function cmDrawIsShapeTool(t){
+  return t==='line' || t==='rect' || t==='circle';
+}
+
+function cmDrawCoords(e, canvas){
+  const r = canvas.getBoundingClientRect();
+  const sx = (e.clientX - r.left) * (canvas.width / Math.max(r.width, 1));
+  const sy = (e.clientY - r.top) * (canvas.height / Math.max(r.height, 1));
+  return { x:sx, y:sy };
+}
+
+function cmDrawStrokeShape(ctx, x0, y0, x1, y1, tool, color, lw){
+  ctx.strokeStyle = color;
+  ctx.lineWidth = lw;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.setLineDash([]);
+  if(tool==='line'){
+    ctx.beginPath();
+    ctx.moveTo(x0, y0);
+    ctx.lineTo(x1, y1);
+    ctx.stroke();
+  } else if(tool==='rect'){
+    const x = Math.min(x0, x1), y = Math.min(y0, y1);
+    const w = Math.abs(x1 - x0), h = Math.abs(y1 - y0);
+    ctx.strokeRect(x, y, w || 0.5, h || 0.5);
+  } else if(tool==='circle'){
+    const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2;
+    const rx = Math.max(Math.abs(x1 - x0) / 2, 0.5);
+    const ry = Math.max(Math.abs(y1 - y0) / 2, 0.5);
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+}
+
+function cmDrawUpdateCursorClass(){
+  const canvas = document.getElementById('cmDrawCanvas');
+  if(!canvas) return;
+  canvas.classList.remove('cm-cursor-pen','cm-cursor-eraser','cm-cursor-shape');
+  if(!DRAW.active) return;
+  if(DRAW.tool==='pen') canvas.classList.add('cm-cursor-pen');
+  else if(DRAW.tool==='eraser') canvas.classList.add('cm-cursor-eraser');
+  else if(cmDrawIsShapeTool(DRAW.tool)) canvas.classList.add('cm-cursor-shape');
+}
 
 function cmToggleDraw(){
   const canvas = document.getElementById('cmDrawCanvas');
@@ -8620,17 +8813,22 @@ function cmToggleDraw(){
   DRAW.active = !DRAW.active;
   if(DRAW.active){
     canvas.style.display = 'block';
+    canvas.classList.add('cm-draw-open');
     toolbar.style.display = 'flex';
     btn.style.background = 'rgba(66,165,245,0.2)';
     btn.style.borderColor = 'rgba(66,165,245,0.5)';
     btn.style.color = 'var(--sky3)';
     cmDrawInit();
+    cmDrawSetTool(DRAW.tool);
   } else {
     canvas.style.display = 'none';
+    canvas.classList.remove('cm-draw-open','cm-cursor-pen','cm-cursor-eraser','cm-cursor-shape');
     toolbar.style.display = 'none';
     btn.style.background = '';
     btn.style.borderColor = '';
     btn.style.color = '';
+    DRAW.shapeSnap = null;
+    DRAW.painting = false;
   }
 }
 
@@ -8642,41 +8840,105 @@ function cmDrawInit(){
   DRAW.ctx = canvas.getContext('2d');
   DRAW.ctx.lineCap = 'round';
   DRAW.ctx.lineJoin = 'round';
+  DRAW.shapeSnap = null;
+
+  const eraserRadius = 18;
 
   canvas.onpointerdown = e => {
-    if(!DRAW.active) return;
+    if(!DRAW.active || !DRAW.ctx) return;
+    e.preventDefault();
+    const { x, y } = cmDrawCoords(e, canvas);
+
+    if(cmDrawIsShapeTool(DRAW.tool)){
+      DRAW.painting = true;
+      DRAW.sx = x;
+      DRAW.sy = y;
+      DRAW.shapeSnap = DRAW.ctx.getImageData(0, 0, canvas.width, canvas.height);
+      canvas.setPointerCapture(e.pointerId);
+      return;
+    }
+    if(DRAW.tool === 'eraser'){
+      DRAW.painting = true;
+      DRAW.ctx.clearRect(x - eraserRadius, y - eraserRadius, eraserRadius * 2, eraserRadius * 2);
+      canvas.setPointerCapture(e.pointerId);
+      return;
+    }
     DRAW.painting = true;
     DRAW.ctx.beginPath();
-    DRAW.ctx.moveTo(e.offsetX, e.offsetY);
+    DRAW.ctx.moveTo(x, y);
     canvas.setPointerCapture(e.pointerId);
   };
+
   canvas.onpointermove = e => {
-    if(!DRAW.painting || !DRAW.active) return;
-    const ctx = DRAW.ctx;
+    if(!DRAW.active || !DRAW.ctx) return;
+    const { x, y } = cmDrawCoords(e, canvas);
+
+    if(cmDrawIsShapeTool(DRAW.tool) && DRAW.painting && DRAW.shapeSnap){
+      DRAW.ctx.putImageData(DRAW.shapeSnap, 0, 0);
+      const color = document.getElementById('cmDrawColor').value;
+      const lw = parseInt(document.getElementById('cmDrawSize').value, 10) || 4;
+      cmDrawStrokeShape(DRAW.ctx, DRAW.sx, DRAW.sy, x, y, DRAW.tool, color, lw);
+      return;
+    }
+    if(!DRAW.painting) return;
+
     if(DRAW.tool === 'eraser'){
-      ctx.clearRect(e.offsetX - 15, e.offsetY - 15, 30, 30);
-    } else {
+      DRAW.ctx.clearRect(x - eraserRadius, y - eraserRadius, eraserRadius * 2, eraserRadius * 2);
+      return;
+    }
+    if(DRAW.tool === 'pen'){
+      const ctx = DRAW.ctx;
       ctx.strokeStyle = document.getElementById('cmDrawColor').value;
-      ctx.lineWidth = parseInt(document.getElementById('cmDrawSize').value);
-      ctx.lineTo(e.offsetX, e.offsetY);
+      ctx.lineWidth = parseInt(document.getElementById('cmDrawSize').value, 10) || 4;
+      ctx.lineTo(x, y);
       ctx.stroke();
       ctx.beginPath();
-      ctx.moveTo(e.offsetX, e.offsetY);
+      ctx.moveTo(x, y);
     }
   };
-  canvas.onpointerup = canvas.onpointerleave = () => { DRAW.painting = false; };
+
+  const endPointer = e => {
+    if(!DRAW.active || !DRAW.ctx) return;
+    if(cmDrawIsShapeTool(DRAW.tool) && DRAW.painting && DRAW.shapeSnap){
+      const { x, y } = cmDrawCoords(e, canvas);
+      DRAW.ctx.putImageData(DRAW.shapeSnap, 0, 0);
+      const color = document.getElementById('cmDrawColor').value;
+      const lw = parseInt(document.getElementById('cmDrawSize').value, 10) || 4;
+      cmDrawStrokeShape(DRAW.ctx, DRAW.sx, DRAW.sy, x, y, DRAW.tool, color, lw);
+      DRAW.shapeSnap = null;
+    }
+    DRAW.painting = false;
+    try { if(e.pointerId != null) canvas.releasePointerCapture(e.pointerId); } catch(_){}
+  };
+
+  canvas.onpointerup = endPointer;
+  canvas.onpointercancel = endPointer;
+  canvas.onpointerleave = e => {
+    if(cmDrawIsShapeTool(DRAW.tool) && DRAW.painting) endPointer(e);
+    else if(!cmDrawIsShapeTool(DRAW.tool)) DRAW.painting = false;
+  };
 }
 
 function cmDrawSetTool(t){
   DRAW.tool = t;
-  document.getElementById('cmDrawPen').style.background = t==='pen' ? 'rgba(66,165,245,0.4)' : 'rgba(255,255,255,0.1)';
-  document.getElementById('cmDrawEraser').style.background = t==='eraser' ? 'rgba(239,68,68,0.3)' : 'rgba(255,255,255,0.1)';
+  const idle = 'rgba(255,255,255,0.1)';
+  const setBg = (id, active, activeBg) => {
+    const el = document.getElementById(id);
+    if(el) el.style.background = active ? activeBg : idle;
+  };
+  setBg('cmDrawPen', t==='pen', 'rgba(66,165,245,0.45)');
+  setBg('cmDrawEraser', t==='eraser', 'rgba(239,68,68,0.35)');
+  setBg('cmDrawLine', t==='line', 'rgba(66,165,245,0.45)');
+  setBg('cmDrawRect', t==='rect', 'rgba(66,165,245,0.45)');
+  setBg('cmDrawCircle', t==='circle', 'rgba(66,165,245,0.45)');
+  cmDrawUpdateCursorClass();
 }
 
 function cmDrawClear(){
   if(DRAW.ctx){
     const c = document.getElementById('cmDrawCanvas');
     DRAW.ctx.clearRect(0, 0, c.width, c.height);
+    DRAW.shapeSnap = null;
   }
 }
 
@@ -8744,34 +9006,220 @@ function cmClearPptx(){
 }
 
 // ═══════════════════════════════════════════
-// PPTX LOADER (convert slides to images via canvas)
+// PPTX — استخراج الصور من ppt/media (المتصفح لا يعرض pptx في iframe)
 // ═══════════════════════════════════════════
 async function cmLoadPptx(input){
   const file = input.files[0];
   if(!file) return;
   const status = document.getElementById('cmPptxStatus');
-  status.textContent = '⏳ جارٍ تحميل الملف...';
-  try {
-    // Use PptxGenJS or fallback: show message to use Google Slides
-    // For now: load using iframe with object URL trick
-    const url = URL.createObjectURL(file);
+  if(!/\.pptx$/i.test(file.name)){
+    status.textContent = '❌ يدعم التطبيق PPTX فقط (ليس .ppt القديم)';
+    toast('احفظ العرض كـ PPTX أو صدّره PDF','error');
+    input.value='';
+    return;
+  }
+  status.textContent = '⏳ جارٍ تحليل الملف...';
+  if(typeof JSZip === 'undefined'){
+    status.textContent = '❌ مكتبة الملف غير جاهزة — أعد تحميل الصفحة';
+    toast('أعد تحميل الصفحة ثم جرّب مجدداً','error');
+    return;
+  }
+  try{
+    const buf = await file.arrayBuffer();
+    const zip = await JSZip.loadAsync(buf);
+    const mediaExts = /\.(png|jpg|jpeg|gif|bmp|webp|tif|tiff)$/i;
+    const entries = [];
+    zip.forEach((relPath, zf)=>{
+      if(relPath.startsWith('ppt/media/') && !zf.dir && mediaExts.test(relPath)) entries.push(relPath);
+    });
+    entries.sort((a,b)=>a.localeCompare(b, undefined, {numeric:true, sensitivity:'base'}));
+    if(!entries.length){
+      status.textContent = '❌ لا توجد صور قابلة للعرض داخل الملف';
+      toast('صدّر العرض كـ PDF أو كصور، أو استخدم شرائح Google','error');
+      input.value='';
+      return;
+    }
+    SLIDES.images = [];
+    SLIDES.currentIdx = 0;
+    for(const rel of entries){
+      const node = zip.file(rel);
+      if(!node) continue;
+      const blob = await node.async('blob');
+      const b64 = await new Promise((resolve, reject)=>{
+        const fr = new FileReader();
+        fr.onload = ()=>resolve(fr.result);
+        fr.onerror = reject;
+        fr.readAsDataURL(blob);
+      });
+      SLIDES.images.push(b64);
+    }
+    SLIDES.mode = 'images';
     const frame = document.getElementById('cmSlidesFrame');
     const empty = document.getElementById('cmSlidesEmpty');
     const imgV = document.getElementById('cmSlidesImgViewer');
     const pdfF = document.getElementById('cmSlidesPdfFrame');
-    empty.style.display='none';
-    imgV.style.display='none';
-    pdfF.style.display='none';
-    document.getElementById('cmVideoPlayer').style.display='none';
-    frame.style.display='block';
-    frame.src = url;
-    status.textContent = '✅ ' + file.name;
-    document.getElementById('cmClearPptxBtn').style.display='block';
-    document.getElementById('cmSlidesNav').style.display='none';
-    toast('✅ تم تحميل PPTX','success');
-  } catch(e) {
-    status.textContent = '❌ تعذّر التحميل — حوّله لـ PDF أولاً';
-    toast('تعذّر تحميل PPTX — حوّله لـ PDF','error');
+    const vidP = document.getElementById('cmVideoPlayer');
+    if(empty) empty.style.display='none';
+    if(frame){ frame.style.display='none'; try{frame.src='';}catch(_){} }
+    if(pdfF){ pdfF.style.display='none'; try{pdfF.src='';}catch(_){} }
+    if(vidP) vidP.style.display='none';
+    if(imgV){ imgV.style.display='flex'; imgV.style.alignItems='center'; imgV.style.justifyContent='center'; }
+    cmShowImgSlide(0);
+    cmUpdateSlidesNav();
+    status.textContent = '✅ ' + file.name + ' — ' + SLIDES.images.length + ' شريحة';
+    const cpb = document.getElementById('cmClearPptxBtn');
+    if(cpb) cpb.style.display='block';
+    const cib = document.getElementById('cmClearImgBtn');
+    if(cib) cib.style.display='block';
+    const ic = document.getElementById('cmImgCount');
+    if(ic) ic.textContent = SLIDES.images.length + ' شريحة (من PPTX)';
+    toast('✅ تم تحميل العرض','success');
+  }catch(err){
+    console.warn(err);
+    status.textContent = '❌ تعذّر القراءة — جرّب PDF أو صور';
+    toast('تعذّر تحميل PPTX — استخدم PDF','error');
+    input.value='';
+  }
+}
+
+function cmAiGeminiExtract(data){
+  const c = data?.candidates?.[0];
+  if(!c){
+    const br = data?.promptFeedback?.blockReason;
+    if(br) return { err:'الطلب مرفوض: '+br };
+    return { err:data?.error?.message || 'لا توجد إجابة من الخادم' };
+  }
+  if(c.finishReason==='SAFETY') return { err:'الإجابة محظورة (فلتر الأمان)' };
+  const parts = c.content?.parts;
+  const text = Array.isArray(parts) ? parts.map(p=>(p&&p.text)||'').join('').trim() : '';
+  if(text) return { text };
+  return { err:'استجابة فارغة — جرّب صياغة أخرى' };
+}
+
+async function cmAiAskGemini(key, userPrompt){
+  const system = 'أنت مساعد معلم في حصة مدرسية بالعربية. أجب باختصار ووضوح مناسب للشرح أمام الطلاب.';
+  const combined = system + '\n\n' + userPrompt;
+  const bodyBase = {
+    contents:[{ parts:[{ text: combined }] }],
+    generationConfig:{ maxOutputTokens:2048, temperature:0.7 },
+    safetySettings:[
+      { category:'HARM_CATEGORY_HARASSMENT', threshold:'BLOCK_ONLY_HIGH' },
+      { category:'HARM_CATEGORY_HATE_SPEECH', threshold:'BLOCK_ONLY_HIGH' },
+      { category:'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold:'BLOCK_ONLY_HIGH' },
+      { category:'HARM_CATEGORY_DANGEROUS_CONTENT', threshold:'BLOCK_ONLY_HIGH' },
+    ],
+  };
+  const models = ['gemini-2.0-flash','gemini-2.0-flash-001','gemini-1.5-flash','gemini-1.5-flash-8b'];
+  const versions = ['v1beta','v1'];
+  let lastErr = 'تعذّر الاتصال';
+  for(const ver of versions){
+    for(const model of models){
+      const url = 'https://generativelanguage.googleapis.com/'+ver+'/models/'+encodeURIComponent(model)+':generateContent?key='+encodeURIComponent(key);
+      try{
+        const res = await fetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(bodyBase) });
+        const data = await res.json().catch(()=>({}));
+        if(!res.ok){
+          lastErr = data?.error?.message || ('HTTP '+res.status);
+          continue;
+        }
+        const ex = cmAiGeminiExtract(data);
+        if(ex.text) return { text: ex.text };
+        lastErr = ex.err || lastErr;
+      }catch(e){
+        lastErr = e.message || String(e);
+      }
+    }
+  }
+  if(/Failed to fetch|NetworkError|Load failed/i.test(lastErr))
+    lastErr += ' — إن فتحت الملف بالنقر المزدوج من القرص، جرّب «OpenRouter» من الإعدادات أو شغّل الصفحة عبر خادم (http).';
+  return { err: lastErr };
+}
+
+async function cmAiAskOpenRouter(key, userPrompt){
+  const origin = (typeof location !== 'undefined' && location.origin && location.origin !== 'null') ? location.origin : 'http://localhost';
+  const messages = [
+    { role: 'system', content: 'أنت مساعد معلم في حصة مدرسية بالعربية. أجب باختصار ووضوح مناسب للشرح أمام الطلاب.' },
+    { role: 'user', content: userPrompt },
+  ];
+  const models = [
+    'google/gemini-2.0-flash-001:free',
+    'google/gemini-flash-1.5:free',
+    'meta-llama/llama-3.2-3b-instruct:free',
+    'mistralai/mistral-7b-instruct:free',
+  ];
+  let lastErr = '';
+  for(const model of models){
+    try{
+      const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method:'POST',
+        headers:{
+          'Authorization':'Bearer '+key,
+          'Content-Type':'application/json',
+          'HTTP-Referer': origin,
+          'X-Title': 'Albushra',
+        },
+        body: JSON.stringify({ model, messages }),
+      });
+      const data = await res.json().catch(()=>({}));
+      if(!res.ok){
+        lastErr = data?.error?.message || data?.message || ('HTTP '+res.status);
+        continue;
+      }
+      const text = (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) || '';
+      if(text && String(text).trim()) return { text: String(text).trim() };
+      lastErr = 'لا نص في الرد';
+    }catch(e){
+      lastErr = e.message || String(e);
+    }
+  }
+  return { err: lastErr || 'تعذّر الاتصال بـ OpenRouter' };
+}
+
+async function cmAiAsk(){
+  const key = bsGetAiKey();
+  const provider = bsGetAiProvider();
+  const q = (document.getElementById('cmAiInput')?.value||'').trim();
+  const out = document.getElementById('cmAiOut');
+  const btn = document.getElementById('cmAiSendBtn');
+  if(!key){
+    toast('أضف مفتاح API من ⚙️ الإعدادات (Gemini أو OpenRouter)','error');
+    return;
+  }
+  if(!q){
+    toast('اكتب سؤالاً أو طلباً','error');
+    return;
+  }
+  if(typeof location !== 'undefined' && location.protocol === 'file:' && provider === 'gemini'){
+    if(out){
+      out.style.display='block';
+      out.textContent = '⚠️ المتصفح غالباً يمنع الاتصال بـ Google عند فتح الملف مباشرة من القرص.\n\nاختر من الإعدادات: «OpenRouter» واحصل على مفتاح من openrouter.ai/keys\nأو شغّل الصفحة عبر خادم محلي (Live Server / أي http).';
+    }
+    toast('جرّب OpenRouter أو افتح الموقع عبر http','error');
+    return;
+  }
+  if(out){
+    out.style.display='block';
+    out.textContent='⏳ جارٍ التفكير...';
+  }
+  if(btn){ btn.disabled=true; btn.style.opacity='0.6'; }
+  try{
+    let result;
+    if(provider === 'openrouter') result = await cmAiAskOpenRouter(key, q);
+    else result = await cmAiAskGemini(key, q);
+    if(result.text){
+      if(out) out.textContent = result.text;
+      toast('تمت الإجابة','success');
+    } else {
+      const msg = result.err || 'خطأ غير معروف';
+      if(out) out.textContent = '❌ '+msg;
+      toast('تعذّر إكمال الطلب','error');
+    }
+  }catch(err){
+    const m = err.message || String(err);
+    if(out) out.textContent = '❌ '+m;
+    toast('تعذّر الاتصال بالمساعد','error');
+  }finally{
+    if(btn){ btn.disabled=false; btn.style.opacity=''; }
   }
 }
 
@@ -9463,21 +9911,7 @@ function cmStopNoise(){
   CM.noiseStream=null; CM.noiseAnalyser=null;
 }
 
-// ── KEYBOARD ────────────────────────────────────────────────
-document.addEventListener('keydown',e=>{
-  if(!CM.open) return;
-  if(e.key==='Escape'){ closeClassroomMode(); return; }
-  if(e.key===' '){e.preventDefault();cmToggleTimer();return;}
-  if(e.key==='r'||e.key==='ر'){cmResetTimer();return;}
-  if(e.key==='w'||e.key==='و'){cmSwitchView('wheel');setTimeout(cmSpinWheel,200);return;}
-  if(e.key==='h'||e.key==='ه'){cmSwitchView('honor');return;}
-  if(e.key==='b'||e.key==='ب'){cmSwitchView('board');return;}
-  // Slides navigation
-  if(CM.currentView==='slides'){
-    if(e.key==='ArrowLeft'||e.key==='ArrowDown') { cmSlideNext(); return; }
-    if(e.key==='ArrowRight'||e.key==='ArrowUp')  { cmSlidePrev(); return; }
-    if(e.key===' ' && SLIDES.mode==='video') { e.preventDefault(); cmVideoToggle(); return; }
-  }});
+// ── KEYBOARD وضع الحصة: لا اختصارات — لتفادي التقاط المسافة والحروف أثناء الكتابة في الحقول
 
 // ══════════════════════════════════════════════════════════════
 // 🎮 CLASSROOM GAMES ENGINE
@@ -11222,6 +11656,12 @@ function cmClearSlides(){
   if(countEl) countEl.textContent='';
   const nameEl=document.getElementById('cmVideoName');
   if(nameEl) nameEl.textContent='';
+  const pptxSt=document.getElementById('cmPptxStatus');
+  if(pptxSt) pptxSt.textContent='';
+  const pptxIn=document.getElementById('cmSlidesPptx');
+  if(pptxIn) pptxIn.value='';
+  const cPptx=document.getElementById('cmClearPptxBtn');
+  if(cPptx) cPptx.style.display='none';
 }
 
 // ── Video functions ──────────────────────────────────────────
