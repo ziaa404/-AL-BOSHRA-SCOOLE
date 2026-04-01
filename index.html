@@ -3,7 +3,7 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#1e3a5f">
 <meta name="description" content="منصة المعلم الذكية — مدارس البشرى الأهلية">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -56,6 +56,8 @@ body {
   color: var(--ink);
   direction: rtl;
   overflow-x: hidden;
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: rgba(21,101,192,0.12);
 }
 
 /* ─── CUSTOM CURSOR ─────────────────────────────── */
@@ -1912,11 +1914,12 @@ body.dark .dark-toggle::before {
 /* Add bottom padding to content on mobile so bottom nav doesn't cover */
 @media (max-width: 960px) {
   #app { padding-bottom: 0; }
+  #bg-canvas { opacity: 0.25 !important; pointer-events: none; }
   .content {
     padding-bottom: calc(80px + env(safe-area-inset-bottom)) !important;
   }
   #bottomNav { display: grid; }
-  #fab { display: flex; }
+  /* زر FAB يظهر فقط عند إضافة class show — لا نفرض display:flex هنا */
 
   /* Topbar mobile adjustments */
   .tb-save { display: none; }
@@ -1925,6 +1928,14 @@ body.dark .dark-toggle::before {
   .tb-username { display: none; }
   .tb-logout { display: none; }
   .dark-toggle { display: none; }
+
+  .tb-notif, #sfxToggle, .tb-user {
+    min-width: 44px;
+    min-height: 44px;
+    align-items: center;
+    justify-content: center;
+    touch-action: manipulation;
+  }
 
   /* Page header stack on mobile */
   .ph { flex-direction: column; gap: 10px; }
@@ -1993,6 +2004,167 @@ body.dark .dark-toggle::before {
   .ph-title { font-size: 1.2rem; }
   .btn { font-size: 0.80rem; padding: 9px 12px; }
   .sheet-grid { grid-template-columns: repeat(3, 1fr); }
+}
+
+/* ═══ وضع الحصة والشرائح — محمول (كان يُعرض كسطح مكتب مضغوط) ═══ */
+@media (max-width: 960px) {
+  #classroomOverlay .cm-header {
+    flex-direction: column;
+    align-items: stretch;
+    height: auto;
+    min-height: auto;
+    max-height: none;
+    padding: 10px 12px;
+    gap: 10px;
+  }
+  #classroomOverlay .cm-header > div:first-child { min-width: 0; }
+  #classroomOverlay .cm-header > div:nth-child(2) {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    justify-content: space-between;
+  }
+  #classroomOverlay .cm-header .cm-view-tabs {
+    order: 5;
+    flex: 1 1 100%;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    padding: 4px 2px;
+  }
+  .cm-view-tabs {
+    display: inline-flex;
+    flex-wrap: nowrap;
+    gap: 4px;
+  }
+  .cm-view-tab {
+    flex: 0 0 auto;
+    padding: 8px 12px;
+    font-size: 0.72rem;
+    white-space: nowrap;
+    min-height: 40px;
+  }
+  #classroomOverlay .cm-header .cm-clock-wrap { flex-shrink: 0; }
+  #classroomOverlay .cm-exit,
+  #classroomOverlay .cm-header button.cm-btn-ghost {
+    min-height: 40px;
+    min-width: 40px;
+    touch-action: manipulation;
+  }
+  .cm-views { overflow: auto; -webkit-overflow-scrolling: touch; }
+  .cm-view { padding: 10px 12px; overflow: auto; }
+
+  /* السبورة: عمود واحد بدل ثلاثة */
+  .cm-board-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    height: auto;
+    min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .cm-board-left,
+  .cm-board-center,
+  .cm-board-right {
+    width: 100%;
+    max-width: 100%;
+    overflow: visible;
+  }
+  .cm-timer-ring { width: 150px; height: 150px; margin: 0 auto; }
+  .cm-timer-ring svg { width: 150px; height: 150px; }
+  .cm-timer-time { font-size: 1.75rem; }
+  .cm-att-grid { grid-template-columns: repeat(auto-fill, minmax(48px, 1fr)); }
+  .cm-att-card { min-height: 44px; padding: 8px 4px; }
+  .cm-ai-lesson-card {
+    max-height: min(55vh, 420px);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  #cmAiOut { max-height: min(35vh, 260px); }
+
+  /* العجلة */
+  .cm-wheel-fullscreen {
+    flex-direction: column;
+    gap: 16px;
+    justify-content: flex-start;
+    overflow-y: auto;
+    padding-bottom: 16px;
+  }
+  .cm-wheel-canvas-wrap {
+    width: min(88vw, 320px);
+    height: min(88vw, 320px);
+    margin: 0 auto;
+  }
+  #cmWheelCanvas { width: 100% !important; height: 100% !important; max-width: 100%; }
+  .cm-wheel-right { min-width: 0; max-width: 100%; width: 100%; }
+  .cm-spin-btn { width: 100%; max-width: 320px; padding: 14px 24px; touch-action: manipulation; }
+
+  /* الشرائح: الشريط الجانبي فوق، المنطقة الرئيسية تحت */
+  .cm-slides-layout {
+    flex-direction: column;
+    height: auto;
+    min-height: 0;
+    flex: 1;
+    overflow: hidden;
+  }
+  .cm-slides-sidebar {
+    width: 100%;
+    max-height: 42vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    border-left: none;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    flex-shrink: 0;
+  }
+  .cm-slides-main {
+    flex: 1;
+    min-height: 220px;
+    height: min(48vh, 420px);
+    padding: 8px;
+  }
+
+  /* الألعاب */
+  .cm-games-fullscreen { flex-direction: column; height: auto; min-height: 0; overflow: hidden; }
+  .cm-games-sidebar {
+    width: 100%;
+    max-height: none;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border-left: none;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    padding: 8px;
+    gap: 8px;
+    align-items: stretch;
+  }
+  .cm-game-btn { min-width: 120px; flex-shrink: 0; touch-action: manipulation; }
+  .cm-games-main { padding: 12px !important; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+  .cg-question-text { font-size: 1.25rem !important; line-height: 1.35; }
+  .cg-choices { grid-template-columns: 1fr !important; gap: 8px; }
+  .cg-choice { min-height: 48px; padding: 14px 16px; touch-action: manipulation; }
+  .cg-word-display { font-size: 2.2rem !important; letter-spacing: 4px; padding: 20px 12px; }
+
+  /* إعداد الحصة */
+  #cmView-lessonprep > div { flex-direction: column !important; height: auto !important; }
+  #cmView-lessonprep > div > div { width: 100% !important; max-width: 100% !important; }
+
+  /* لوحة الشرف */
+  .cm-honor-fullscreen { overflow-y: auto; -webkit-overflow-scrolling: touch; padding-bottom: 70px; }
+  .cm-honor-title { font-size: 1.35rem; }
+
+  .cm-btn, .cm-mini-btn { min-height: 44px; touch-action: manipulation; }
+}
+
+/* أجهزة لمس: تعطيل المؤشر المخصص حتى لو أبلغت بدقة عالية */
+@media (max-width: 960px), (hover: none) {
+  * { cursor: auto !important; }
+  #cursor, #cursor-ring { display: none !important; pointer-events: none !important; }
 }
 </style>
 </head>
@@ -3364,6 +3536,8 @@ function enterApp(){
   addDemoStudents();
   initClassMeta();
   if(S.darkMode) document.body.classList.add('dark');
+  bagLoadAllActivities();
+  bagLoadAllBooks().catch(function(){});
   rebuildSubjectNav();
   buildNotifs();
   // Changelog badge
@@ -3448,6 +3622,11 @@ function initPage(p){
   if(p==='profile'){
     setTimeout(updatePWAStatus,50);
     bsLoadAiSettingsIntoForm();
+  }
+  const subMatch=S.subjects.find(s=>s.id===p);
+  if(subMatch){
+    bagRenderActivities(subMatch.id);
+    bagRenderBooks(subMatch.id);
   }
 }
 
@@ -4318,28 +4497,17 @@ function renderSubjectPage(subId){
       <h3>🎒 حقيبة المعلم — ${sub.icon} ${sub.name}</h3>
     </div>
     <div class="card-body">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px;">
 
-        <!-- كتاب المدرسة -->
+        <!-- كتب وملفات PDF للمادة -->
         <div>
-          <div style="font-size:0.82rem;font-weight:800;color:var(--ink2);margin-bottom:10px;">📖 كتاب المدرسة</div>
-          <label for="bagBook_${sub.id}" style="display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:10px;border:2px dashed var(--border2);background:var(--surface);color:var(--muted);font-size:0.82rem;cursor:pointer;transition:all 0.2s;">
-            📁 رفع كتاب المدرسة (PDF)
-            <input type="file" id="bagBook_${sub.id}" accept="application/pdf" onchange="bagLoadBook('${sub.id}',this)" style="display:none;" />
+          <div style="font-size:0.82rem;font-weight:800;color:var(--ink2);margin-bottom:10px;">📖 كتب وملفات PDF</div>
+          <p style="font-size:0.76rem;color:var(--muted);margin-bottom:8px;line-height:1.45;">يمكنك إضافة أكثر من ملف PDF (دفعة واحدة أو عدة مرات). تُحفظ على هذا الجهاز.</p>
+          <label for="bagBook_${sub.id}" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:10px 14px;border-radius:10px;border:2px dashed var(--border2);background:var(--surface);color:var(--muted);font-size:0.82rem;cursor:pointer;transition:all 0.2s;">
+            📁 إضافة PDF (واحد أو أكثر)
+            <input type="file" id="bagBook_${sub.id}" accept="application/pdf,.pdf" multiple onchange="bagLoadBook('${sub.id}',this)" style="display:none;" />
           </label>
-          <div id="bagBookBar_${sub.id}" style="display:none;margin-top:10px;padding:10px 14px;border-radius:10px;background:linear-gradient(135deg,#fffbeb,#fef3c7);border:1px solid #fde68a;align-items:center;justify-content:space-between;gap:8px;">
-            <div style="display:flex;align-items:center;gap:10px;">
-              <span style="font-size:1.5rem;">📕</span>
-              <div>
-                <div id="bagBookName_${sub.id}" style="font-size:0.82rem;font-weight:800;color:#92400e;"></div>
-                <div id="bagBookSize_${sub.id}" style="font-size:0.70rem;color:#b45309;"></div>
-              </div>
-            </div>
-            <div style="display:flex;gap:6px;">
-              <button onclick="bagOpenBook('${sub.id}')" class="btn btn-gold btn-sm">📖 فتح في وضع الحصة</button>
-              <button onclick="bagClearBook('${sub.id}')" class="btn btn-ghost btn-sm">🗑️</button>
-            </div>
-          </div>
+          <div id="bagBooksList_${sub.id}" style="margin-top:10px;display:flex;flex-direction:column;gap:8px;"></div>
         </div>
 
         <!-- أنشطة المادة -->
@@ -5974,7 +6142,9 @@ function collectExtraLocalKeys(){
   try{
     for(let i=0;i<localStorage.length;i++){
       const k=localStorage.key(i);
-      if(k&&k.startsWith('bs_bag_act_')) extras[k]=localStorage.getItem(k);
+      if(!k) continue;
+      if(k.startsWith('bs_bag_act_')) extras[k]=localStorage.getItem(k);
+      if(k.startsWith('bs_bag_books_manifest_')) extras[k]=localStorage.getItem(k);
     }
   }catch(e){}
   return extras;
@@ -6027,10 +6197,12 @@ function importData(el){
           if(d.extras.bs_lesson_prep) localStorage.setItem('bs_lesson_prep', d.extras.bs_lesson_prep);
           Object.keys(d.extras).forEach(k=>{
             if(k.startsWith('bs_bag_act_')) localStorage.setItem(k, d.extras[k]);
+            if(k.startsWith('bs_bag_books_manifest_')) localStorage.setItem(k, d.extras[k]);
           });
         }
         load();
         bagLoadAllActivities();
+        bagLoadAllBooks().catch(function(){});
         renderClassList();
         const nameEl=document.getElementById('tbClassName');
         const cur=getAllClasses().find(c=>c.id===ACTIVE_CLASS_ID);
@@ -9274,27 +9446,159 @@ function lpLoad(){
 
 
 // TEACHER BAG — per subject
-const BAG_BOOKS = {}; // subId -> {url, name, size}
+const BAG_BOOKS = {}; // subId -> Array<{id, url, name, size}>
 const BAG_ACTIVITIES = {}; // subId -> [{id,text,done}]
 
-function bagLoadBook(subId, input){
-  const file = input.files[0];
-  if(!file) return;
-  if(BAG_BOOKS[subId]&&BAG_BOOKS[subId].url) URL.revokeObjectURL(BAG_BOOKS[subId].url);
-  BAG_BOOKS[subId] = { url: URL.createObjectURL(file), name: file.name, size: (file.size/1024/1024).toFixed(1)+' MB' };
-  const bar=document.getElementById('bagBookBar_'+subId);
-  const nm=document.getElementById('bagBookName_'+subId);
-  const sz=document.getElementById('bagBookSize_'+subId);
-  if(bar){ bar.style.display='flex'; }
-  if(nm) nm.textContent=file.name.replace('.pdf','');
-  if(sz) sz.textContent=BAG_BOOKS[subId].size;
-  toast('✅ تم تحميل كتاب المدرسة','success');
+function bagEscapeHtml(s){
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
 }
 
-function bagOpenBook(subId){
-  const b = BAG_BOOKS[subId];
-  if(!b||!b.url){ toast('لم يتم رفع الكتاب بعد','error'); return; }
-  // Open in classroom mode slides view
+function bagIdbStorageKey(subId, bookId){ return subId+'::'+String(bookId); }
+
+function bagIdbOpen(){
+  return new Promise((res,rej)=>{
+    const req=indexedDB.open('albushra_teacher_bag',1);
+    req.onupgradeneeded=function(e){
+      const db=e.target.result;
+      if(!db.objectStoreNames.contains('pdfs')) db.createObjectStore('pdfs');
+    };
+    req.onsuccess=function(){ res(req.result); };
+    req.onerror=function(){ rej(req.error); };
+  });
+}
+function bagIdbPut(key, blob){
+  return bagIdbOpen().then(db=>new Promise((res,rej)=>{
+    try{
+      const tx=db.transaction('pdfs','readwrite');
+      tx.objectStore('pdfs').put(blob,key);
+      tx.oncomplete=function(){ res(); };
+      tx.onerror=function(){ rej(tx.error); };
+    }catch(err){ rej(err); }
+  }));
+}
+function bagIdbGet(key){
+  return bagIdbOpen().then(db=>new Promise((res,rej)=>{
+    const tx=db.transaction('pdfs','readonly');
+    const r=tx.objectStore('pdfs').get(key);
+    r.onsuccess=function(){ res(r.result); };
+    r.onerror=function(){ rej(r.error); };
+  }));
+}
+function bagIdbDelete(key){
+  return bagIdbOpen().then(db=>new Promise((res,rej)=>{
+    try{
+      const tx=db.transaction('pdfs','readwrite');
+      tx.objectStore('pdfs').delete(key);
+      tx.oncomplete=function(){ res(); };
+      tx.onerror=function(){ rej(tx.error); };
+    }catch(err){ rej(err); }
+  }));
+}
+
+function bagSaveBooksManifest(subId){
+  const arr=BAG_BOOKS[subId]||[];
+  const manifest=arr.map(({id,name,size})=>({id,name,size}));
+  try{ localStorage.setItem('bs_bag_books_manifest_'+subId, JSON.stringify(manifest)); }catch(e){}
+}
+
+function bagRevokeSubjectBooks(subId){
+  (BAG_BOOKS[subId]||[]).forEach(b=>{ try{ if(b.url) URL.revokeObjectURL(b.url); }catch(e){} });
+  delete BAG_BOOKS[subId];
+}
+
+function bagRevokeAllBooks(){
+  Object.keys(BAG_BOOKS).forEach(bagRevokeSubjectBooks);
+}
+
+async function bagRestoreBooksForSubject(subId){
+  bagRevokeSubjectBooks(subId);
+  let manifest=[];
+  try{
+    const raw=localStorage.getItem('bs_bag_books_manifest_'+subId);
+    if(raw) manifest=JSON.parse(raw);
+  }catch(e){ manifest=[]; }
+  if(!manifest.length){ BAG_BOOKS[subId]=[]; return; }
+  BAG_BOOKS[subId]=[];
+  for(const m of manifest){
+    if(!m||m.id==null) continue;
+    try{
+      const blob=await bagIdbGet(bagIdbStorageKey(subId,m.id));
+      if(blob){
+        BAG_BOOKS[subId].push({
+          id:m.id,
+          name:m.name||'ملف.pdf',
+          size:m.size||'',
+          url:URL.createObjectURL(blob)
+        });
+      }
+    }catch(e){}
+  }
+}
+
+async function bagLoadAllBooks(){
+  bagRevokeAllBooks();
+  for(const sub of S.subjects){
+    await bagRestoreBooksForSubject(sub.id);
+  }
+}
+
+function bagRenderBooks(subId){
+  const list=document.getElementById('bagBooksList_'+subId);
+  if(!list) return;
+  const arr=BAG_BOOKS[subId]||[];
+  if(!arr.length){
+    list.innerHTML='<div style="font-size:0.78rem;color:var(--muted2);padding:4px 0;">لا توجد ملفات بعد — اضغط أعلاه لإضافة PDF</div>';
+    return;
+  }
+  list.innerHTML=arr.map(b=>{
+    const nm=bagEscapeHtml(b.name);
+    return '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 12px;border-radius:10px;background:linear-gradient(135deg,#fffbeb,#fef3c7);border:1px solid #fde68a;flex-wrap:wrap;">'
+      +'<div style="display:flex;align-items:center;gap:10px;min-width:0;flex:1;">'
+      +'<span style="font-size:1.35rem;flex-shrink:0;">📕</span>'
+      +'<div style="min-width:0;"><div style="font-size:0.82rem;font-weight:800;color:#92400e;word-break:break-word;">'+nm+'</div>'
+      +'<div style="font-size:0.70rem;color:#b45309;">'+bagEscapeHtml(b.size)+'</div></div></div>'
+      +'<div style="display:flex;gap:6px;flex-shrink:0;">'
+      +'<button type="button" onclick="bagOpenBook('+JSON.stringify(subId)+','+JSON.stringify(b.id)+')" class="btn btn-gold btn-sm">📖 فتح</button>'
+      +'<button type="button" onclick="bagRemoveBook('+JSON.stringify(subId)+','+JSON.stringify(b.id)+')" class="btn btn-ghost btn-sm">🗑️</button>'
+      +'</div></div>';
+  }).join('');
+}
+
+async function bagLoadBook(subId, input){
+  const files=Array.from(input.files||[]);
+  input.value='';
+  if(!files.length) return;
+  if(!BAG_BOOKS[subId]) BAG_BOOKS[subId]=[];
+  let added=0;
+  for(let fi=0;fi<files.length;fi++){
+    const file=files[fi];
+    const ok=file.type==='application/pdf' || /\.pdf$/i.test(file.name);
+    if(!ok){ toast('تخطّي (ليس PDF): '+file.name,'error'); continue; }
+    const id='b'+Date.now()+'_'+fi+'_'+Math.random().toString(36).replace(/[^a-z0-9]/gi,'').slice(0,10);
+    const key=bagIdbStorageKey(subId,id);
+    try{
+      await bagIdbPut(key,file);
+    }catch(e){
+      toast('تعذّر حفظ الملف على الجهاز: '+file.name,'error');
+      continue;
+    }
+    BAG_BOOKS[subId].push({
+      id,
+      url:URL.createObjectURL(file),
+      name:file.name,
+      size:(file.size/1024/1024).toFixed(2)+' MB'
+    });
+    added++;
+  }
+  if(added) bagSaveBooksManifest(subId);
+  if(added) toast(added===1?'✅ تمت إضافة ملف PDF':'✅ تمت إضافة '+added+' ملفات','success');
+  bagRenderBooks(subId);
+}
+
+function bagOpenBook(subId, bookId){
+  const arr=BAG_BOOKS[subId]||[];
+  const b=arr.find(x=>String(x.id)===String(bookId));
+  if(!b||!b.url){ toast('الملف غير متوفر — أعد رفعه','error'); return; }
   showPage('classroom_mode');
   setTimeout(()=>{
     cmSwitchView('slides');
@@ -9308,19 +9612,22 @@ function bagOpenBook(subId){
     if(frame) frame.style.display='none';
     if(vidP) vidP.style.display='none';
     if(pdfF){ pdfF.style.display='block'; pdfF.src=b.url; }
-    document.getElementById('cmSlidesNav').style.display='none';
-    toast('📖 '+b.name.replace('.pdf',''),'success');
-  }, 400);
+    const nav=document.getElementById('cmSlidesNav');
+    if(nav) nav.style.display='none';
+    toast('📖 '+String(b.name).replace(/\.pdf$/i,''),'success');
+  },400);
 }
 
-function bagClearBook(subId){
-  if(BAG_BOOKS[subId]&&BAG_BOOKS[subId].url) URL.revokeObjectURL(BAG_BOOKS[subId].url);
-  delete BAG_BOOKS[subId];
-  const bar=document.getElementById('bagBookBar_'+subId);
-  if(bar) bar.style.display='none';
-  const inp=document.getElementById('bagBook_'+subId);
-  if(inp) inp.value='';
-  toast('تم مسح الكتاب','success');
+async function bagRemoveBook(subId, bookId){
+  const arr=BAG_BOOKS[subId]||[];
+  const b=arr.find(x=>String(x.id)===String(bookId));
+  if(!b) return;
+  try{ await bagIdbDelete(bagIdbStorageKey(subId,b.id)); }catch(e){}
+  try{ if(b.url) URL.revokeObjectURL(b.url); }catch(e){}
+  BAG_BOOKS[subId]=arr.filter(x=>String(x.id)!==String(bookId));
+  bagSaveBooksManifest(subId);
+  bagRenderBooks(subId);
+  toast('تم حذف الملف','success');
 }
 
 function bagAddActivity(subId){
@@ -11397,7 +11704,8 @@ function switchToClass(cid){
   S.gamesBank=null; S._snapshots={};
 
   load();
-bagLoadAllActivities(); // تحميل بيانات الفصل الجديد
+  bagLoadAllActivities();
+  bagLoadAllBooks().catch(function(){});
   ensureWeeklySnapshot();
 
   // تحديث اسم الفصل في الـ topbar
