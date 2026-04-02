@@ -16,6 +16,8 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@200;300;400;500;700;800;900&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
 <style>
@@ -78,6 +80,12 @@ body {
 }
 #cmDrawCanvas.cm-cursor-shape {
   cursor: crosshair !important;
+}
+#cmWbDrawCanvas.cm-cursor-pen {
+  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 24 24'%3E%3Cpath fill='%2342a5f5' d='M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z'/%3E%3Cpath fill='%231565c0' d='M20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z'/%3E%3C/svg%3E") 4 22, crosshair !important;
+}
+#cmWbDrawCanvas.cm-cursor-eraser {
+  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 24 24'%3E%3Crect x='4' y='8' width='16' height='10' rx='2' fill='%23fca5a5' stroke='%23ef4444' stroke-width='1.5'/%3E%3Cpath fill='%23fecaca' d='M8 8V6a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2'/%3E%3C/svg%3E") 14 14, cell !important;
 }
 #classroomOverlay:has(#cmDrawCanvas.cm-draw-open:hover) #cursor,
 #classroomOverlay:has(#cmDrawCanvas.cm-draw-open:hover) #cursor-ring {
@@ -2404,7 +2412,7 @@ body.theme-rose .dark-toggle::before {
 
     <div class="lic-title">مدارس البشرى الأهلية</div>
     <div style="font-size:0.78rem;color:rgba(255,255,255,0.35);margin-bottom:6px;font-weight:700;letter-spacing:1px;text-transform:uppercase;">منصة المعلم الذكية</div>
-    <div class="lic-sub">أدخل <strong>مفتاح الترخيص</strong> الذي استلمته من الموزّع — أو كلمة السر القديمة إن وُجدت</div>
+    <div class="lic-sub">أدخل <strong>مفتاح الترخيص</strong> الذي استلمته من الموزّع — أو كلمة السر القديمة إن وُجدت. كل مفتاح صالح يُفعَّل مرة واحدة فقط عند تفعيل التحقق السحابي (Firebase) في النسخة التي وزّعتها.</div>
 
     <!-- Error -->
     <div class="lic-error" id="licError"></div>
@@ -2960,6 +2968,7 @@ body.theme-rose .dark-toggle::before {
       <!-- View switcher -->
       <div class="cm-view-tabs">
         <button class="cm-view-tab active" id="cmVTab-board" onclick="cmSwitchView('board')">🖥️ السبورة</button>
+        <button class="cm-view-tab" id="cmVTab-whiteboard" onclick="cmSwitchView('whiteboard')">✍️ سبورة كتابة</button>
         <button class="cm-view-tab" id="cmVTab-wheel" onclick="cmSwitchView('wheel')">🎡 العجلة</button>
         <button class="cm-view-tab" id="cmVTab-honor" onclick="cmSwitchView('honor')">🏆 الشرف</button>
         <button class="cm-view-tab" id="cmVTab-games" onclick="cmSwitchView('games')">🎮 ألعاب</button>
@@ -3059,6 +3068,52 @@ body.theme-rose .dark-toggle::before {
               ⭐ نجمة اليوم
             </button>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ VIEW: WHITEBOARD — سبورة كتابة ══ -->
+    <div class="cm-view" id="cmView-whiteboard">
+      <div style="display:grid;grid-template-columns:300px 1fr;gap:14px;height:100%;">
+        <div style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.10);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:10px;">
+          <div class="cm-card-title" style="margin-bottom:0;">📝 محرر نصوص مدمج</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            <button class="cm-btn cm-btn-ghost" style="font-size:0.72rem;padding:5px 9px;" onclick="cmWbEditorCmd('bold')"><b>عريض</b></button>
+            <button class="cm-btn cm-btn-ghost" style="font-size:0.72rem;padding:5px 9px;" onclick="cmWbEditorCmd('underline')"><u>تحته خط</u></button>
+            <button class="cm-btn cm-btn-ghost" style="font-size:0.72rem;padding:5px 9px;" onclick="cmWbEditorCmd('insertUnorderedList')">• قائمة</button>
+            <button class="cm-btn cm-btn-ghost" style="font-size:0.72rem;padding:5px 9px;" onclick="cmWbEditorCmd('justifyRight')">يمين</button>
+            <button class="cm-btn cm-btn-ghost" style="font-size:0.72rem;padding:5px 9px;" onclick="cmWbEditorCmd('justifyCenter')">وسط</button>
+            <button class="cm-btn cm-btn-ghost" style="font-size:0.72rem;padding:5px 9px;" onclick="cmWbEditorCmd('removeFormat')">مسح تنسيق</button>
+          </div>
+          <div id="cmWbEditor" contenteditable="true" spellcheck="true" dir="rtl" style="width:100%;min-height:200px;flex:1;padding:10px 12px;border-radius:10px;border:1.5px solid rgba(255,255,255,0.15);background:rgba(0,0,0,0.25);color:#fff;font-family:'Tajawal',sans-serif;font-size:0.92rem;line-height:1.7;overflow:auto;outline:none;">
+            اكتب الدرس هنا ثم اضغط «عرض النص»
+          </div>
+          <div style="display:flex;gap:8px;">
+            <button class="cm-btn cm-btn-primary" style="flex:1;justify-content:center;" onclick="cmWbApplyText()">عرض النص</button>
+            <button class="cm-btn cm-btn-ghost" style="flex:1;justify-content:center;" onclick="cmWbClearText()">مسح النص</button>
+          </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            <button class="cm-btn cm-btn-ghost" style="font-size:0.75rem;padding:6px 10px;" onclick="cmWbSetTextPos('top')">⬆️ أعلى</button>
+            <button class="cm-btn cm-btn-ghost" style="font-size:0.75rem;padding:6px 10px;" onclick="cmWbSetTextPos('center')">⏺️ وسط</button>
+            <button class="cm-btn cm-btn-ghost" style="font-size:0.75rem;padding:6px 10px;" onclick="cmWbSetTextPos('bottom')">⬇️ أسفل</button>
+          </div>
+          <div style="height:1px;background:rgba(255,255,255,0.10);margin:4px 0;"></div>
+          <div class="cm-card-title" style="margin-bottom:0;">✏️ الرسم بالقلم</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button class="cm-btn cm-btn-ghost" id="cmWbDrawToggleBtn" style="flex:1;justify-content:center;font-size:0.80rem;min-width:120px;" onclick="cmWbToggleDraw()">✏️ تشغيل القلم</button>
+            <button class="cm-btn cm-btn-ghost" style="justify-content:center;font-size:0.80rem;" onclick="cmWbDrawSetTool('pen')">قلم</button>
+            <button class="cm-btn cm-btn-ghost" style="justify-content:center;font-size:0.80rem;" onclick="cmWbDrawSetTool('eraser')">ممحاة</button>
+            <button class="cm-btn cm-btn-ghost" style="justify-content:center;font-size:0.80rem;" onclick="cmWbDrawClear()">🗑️ مسح الرسم</button>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <input type="color" id="cmWbDrawColor" value="#42a5f5" style="width:42px;height:34px;border-radius:8px;border:none;background:none;cursor:none;" />
+            <input type="range" id="cmWbDrawSize" min="2" max="30" value="4" style="flex:1;accent-color:var(--sky3);" />
+          </div>
+        </div>
+        <div id="cmWbMain" style="position:relative;background:#f3f4f6;border:1px solid #e5e7eb;border-radius:14px;overflow:hidden;">
+          <div id="cmWbTextDisplay" style="position:absolute;top:24px;right:24px;max-width:calc(100% - 48px);min-width:180px;padding:14px 16px;white-space:pre-wrap;word-wrap:break-word;line-height:1.9;color:#1f2937;font-size:1.45rem;font-weight:700;font-family:'Tajawal',sans-serif;background:rgba(255,255,255,0.55);border:1px dashed rgba(31,41,55,0.18);border-radius:12px;cursor:grab;user-select:none;touch-action:none;z-index:3;"></div>
+          <canvas id="cmWbDrawCanvas" style="position:absolute;inset:0;width:100%;height:100%;display:none;touch-action:none;"></canvas>
+          <div style="position:absolute;left:12px;bottom:10px;font-size:0.70rem;color:#6b7280;">يمكنك الكتابة بالنص ثم التوضيح بالقلم فوقه</div>
         </div>
       </div>
     </div>
@@ -8075,6 +8130,8 @@ let _tmSubId   = null;   // active subject id
 let _tmSecId   = null;   // active section id
 let _tmStuId   = null;   // selected student (null = class view)
 let _tmView    = 'class'; // 'class' | 'student'
+let _tmQuery   = '';     // search text
+let _tmSort    = 'name'; // name | progress_desc | progress_asc
 
 // Station icons per skill index (cycles)
 const TM_ICONS = ['🌱','📝','🔤','🌊','⚡','🌙','🌟','🏔️','🦁','🐉','💎','🏆'];
@@ -8135,6 +8192,26 @@ function _tmBadges(sid, subId, secId){
   return earned;
 }
 
+function _tmStudentsFor(subId, secId){
+  const q = String(_tmQuery||'').trim().toLowerCase();
+  let list = [...S.students];
+  if(q){
+    list = list.filter(s=>{
+      const n = String(s.name||'').toLowerCase();
+      const num = String(s.num||'');
+      return n.includes(q) || num.includes(q);
+    });
+  }
+  if(_tmSort==='progress_desc'){
+    list.sort((a,b)=>_tmSecMastery(b.id,subId,secId).pct - _tmSecMastery(a.id,subId,secId).pct);
+  }else if(_tmSort==='progress_asc'){
+    list.sort((a,b)=>_tmSecMastery(a.id,subId,secId).pct - _tmSecMastery(b.id,subId,secId).pct);
+  }else{
+    list.sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''), 'ar'));
+  }
+  return list;
+}
+
 function renderTreasureMap(){
   const sub = _tmGetSub();
   if(!sub){ _tmSubId=S.subjects[0]?.id; }
@@ -8154,6 +8231,21 @@ function renderTreasureMap(){
       <button class="btn ${_tmView==='class'?'btn-primary':'btn-ghost'} btn-sm" onclick="_tmView='class';showPage('treasuremap')">🏫 عرض الفصل</button>
       <button class="btn ${_tmView==='student'?'btn-primary':'btn-ghost'} btn-sm" onclick="_tmView='student';showPage('treasuremap')">👤 عرض فردي</button>
       <button class="btn btn-gold btn-sm" onclick="_tmPrintCerts()">🏅 طباعة الشهادات</button>
+    </div>
+  </div>
+
+  <div class="card tm-no-print" style="margin-bottom:14px;">
+    <div class="card-body" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+      <input type="text" value="${String(_tmQuery||'').replace(/"/g,'&quot;')}" placeholder="🔎 ابحث عن طالب (اسم/رقم)..."
+        oninput="_tmQuery=this.value;showPage('treasuremap')"
+        style="flex:1;min-width:240px;padding:9px 12px;border-radius:10px;border:1.5px solid var(--border2);font-family:'Tajawal',sans-serif;font-size:0.88rem;outline:none;" />
+      <select onchange="_tmSort=this.value;showPage('treasuremap')"
+        style="padding:9px 12px;border-radius:10px;border:1.5px solid var(--border2);font-family:'Tajawal',sans-serif;font-size:0.84rem;">
+        <option value="name" ${_tmSort==='name'?'selected':''}>الفرز: الاسم</option>
+        <option value="progress_desc" ${_tmSort==='progress_desc'?'selected':''}>الفرز: الأعلى تقدماً</option>
+        <option value="progress_asc" ${_tmSort==='progress_asc'?'selected':''}>الفرز: الأقل تقدماً</option>
+      </select>
+      <button class="btn btn-ghost btn-sm" onclick="_tmQuery='';_tmSort='name';showPage('treasuremap')">إعادة ضبط</button>
     </div>
   </div>
 
@@ -8186,6 +8278,8 @@ function renderTreasureMap(){
 function _renderClassMap(sub,sec){
   if(!sec||!S.students.length) return `<div class="empty"><div class="empty-emoji">🗺️</div><h3>لا يوجد طلاب بعد</h3></div>`;
   const subId=sub.id, secId=sec.id;
+  const shownStudents = _tmStudentsFor(subId, secId);
+  if(!shownStudents.length) return `<div class="empty"><div class="empty-emoji">🔎</div><h3>لا توجد نتائج مطابقة</h3><p>جرّب اسمًا آخر أو امسح البحث</p></div>`;
 
   // Stats
   const masteries = S.students.map(s=>_tmSecMastery(s.id,subId,secId));
@@ -8274,7 +8368,7 @@ function _renderClassMap(sub,sec){
         <div style="font-size:0.70rem;font-weight:800;color:var(--muted2);">الطالب</div>
         ${sec.skills.map((sk,i)=>`<div style="font-size:0.62rem;font-weight:800;color:var(--muted);text-align:center;transform:rotate(-35deg);transform-origin:center;white-space:nowrap;height:40px;display:flex;align-items:flex-end;justify-content:center;">${i+1}</div>`).join('')}
       </div>
-      ${S.students.map(s=>{
+      ${shownStudents.map(s=>{
         const ev=((S.evals[s.id]||{})[subId]||{})[secId]||{};
         return `<div class="tm-class-row" style="grid-template-columns:130px repeat(${sec.skills.length},1fr);margin-bottom:3px;">
           <div style="font-size:0.78rem;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:none;"
@@ -8299,7 +8393,7 @@ function _renderClassMap(sub,sec){
   <div class="card">
     <div class="card-header"><h3>👤 عرض رحلة طالب محدد</h3></div>
     <div style="padding:14px 16px;display:flex;flex-wrap:wrap;gap:8px;">
-      ${S.students.map(s=>{
+      ${shownStudents.map(s=>{
         const m=_tmSecMastery(s.id,subId,secId);
         return `<div class="tm-student-pill ${_tmStuId===s.id?'active':''}"
           onclick="_tmView='student';_tmStuId='${s.id}';showPage('treasuremap')">
@@ -8316,9 +8410,11 @@ function _renderClassMap(sub,sec){
 
 function _renderStudentMap(sub,sec){
   if(!S.students.length) return `<div class="empty"><div class="empty-emoji">👤</div><h3>لا يوجد طلاب</h3></div>`;
-  if(!_tmStuId) _tmStuId=S.students[0].id;
-  const s=S.students.find(x=>x.id===_tmStuId)||S.students[0];
   const subId=sub.id, secId=sec.id;
+  const shownStudents = _tmStudentsFor(subId, secId);
+  if(!shownStudents.length) return `<div class="empty"><div class="empty-emoji">🔎</div><h3>لا توجد نتائج مطابقة</h3><p>جرّب اسمًا آخر أو امسح البحث</p></div>`;
+  if(!_tmStuId || !shownStudents.some(x=>x.id===_tmStuId)) _tmStuId=shownStudents[0].id;
+  const s=shownStudents.find(x=>x.id===_tmStuId)||shownStudents[0];
   const m=_tmSecMastery(s.id,subId,secId);
   const ev=((S.evals[s.id]||{})[subId]||{})[secId]||{};
   const earnedBadges=_tmBadges(s.id,subId,secId);
@@ -8331,7 +8427,7 @@ function _renderStudentMap(sub,sec){
   <!-- Student selector -->
   <div style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:18px;padding:12px 16px;background:var(--card);border-radius:var(--r);border:1px solid var(--border);">
     <div style="font-size:0.78rem;font-weight:900;color:var(--muted2);width:100%;margin-bottom:4px;">اختر الطالب:</div>
-    ${S.students.map(st=>{
+    ${shownStudents.map(st=>{
       const mm=_tmSecMastery(st.id,subId,secId);
       return `<div class="tm-student-pill ${st.id===s.id?'active':''}"
         onclick="_tmStuId='${st.id}';showPage('treasuremap')">
@@ -9181,6 +9277,14 @@ const DRAW = {
   ctx:null, shapeSnap:null, sx:0, sy:0
 };
 
+const WBDRAW = {
+  active:false, painting:false, tool:'pen',
+  ctx:null
+};
+const WBTEXT = {
+  x:24, y:24, dragging:false, dx:0, dy:0, bound:false
+};
+
 function cmDrawIsShapeTool(t){
   return t==='line' || t==='rect' || t==='circle';
 }
@@ -9363,6 +9467,184 @@ function cmDrawClear(){
   }
 }
 
+function cmWbInit(){
+  const main = document.getElementById('cmWbMain');
+  const canvas = document.getElementById('cmWbDrawCanvas');
+  const textOut = document.getElementById('cmWbTextDisplay');
+  if(!main || !canvas || !textOut) return;
+  const r = main.getBoundingClientRect();
+  canvas.width = Math.max(1, Math.floor(r.width));
+  canvas.height = Math.max(1, Math.floor(r.height));
+  WBDRAW.ctx = canvas.getContext('2d');
+  const editor = document.getElementById('cmWbEditor');
+  if(editor && textOut && !textOut.textContent.trim()){
+    textOut.innerHTML = editor.innerHTML || '';
+  }
+  cmWbClampTextPos();
+  if(!WBTEXT.bound){
+    const onMove = e => {
+      if(!WBTEXT.dragging) return;
+      const rr = main.getBoundingClientRect();
+      const px = (e.clientX || 0) - rr.left;
+      const py = (e.clientY || 0) - rr.top;
+      WBTEXT.x = px - WBTEXT.dx;
+      WBTEXT.y = py - WBTEXT.dy;
+      cmWbClampTextPos();
+    };
+    const onUp = () => {
+      if(!WBTEXT.dragging) return;
+      WBTEXT.dragging = false;
+      textOut.style.cursor = 'grab';
+      textOut.style.opacity = '1';
+    };
+    textOut.onpointerdown = e => {
+      if(!textOut.textContent.trim()) return;
+      e.preventDefault();
+      const tr = textOut.getBoundingClientRect();
+      WBTEXT.dragging = true;
+      WBTEXT.dx = (e.clientX || 0) - tr.left;
+      WBTEXT.dy = (e.clientY || 0) - tr.top;
+      textOut.style.cursor = 'grabbing';
+      textOut.style.opacity = '0.92';
+      try{textOut.setPointerCapture(e.pointerId);}catch(_){}
+    };
+    textOut.onpointermove = onMove;
+    textOut.onpointerup = onUp;
+    textOut.onpointercancel = onUp;
+    main.addEventListener('pointermove', onMove);
+    main.addEventListener('pointerup', onUp);
+    WBTEXT.bound = true;
+  }
+}
+
+function cmWbApplyText(){
+  const input = document.getElementById('cmWbEditor');
+  const out = document.getElementById('cmWbTextDisplay');
+  if(!input || !out) return;
+  out.innerHTML = input.innerHTML || '';
+  out.style.display = (out.textContent.trim() ? 'block' : 'none');
+  cmWbClampTextPos();
+}
+
+function cmWbClearText(){
+  const input = document.getElementById('cmWbEditor');
+  const out = document.getElementById('cmWbTextDisplay');
+  if(input) input.innerHTML = '';
+  if(out){ out.textContent = ''; out.style.display='none'; }
+}
+
+function cmWbEditorCmd(cmd){
+  const editor = document.getElementById('cmWbEditor');
+  if(!editor) return;
+  editor.focus();
+  try{ document.execCommand(cmd, false, null); }catch(_){}
+}
+
+function cmWbClampTextPos(){
+  const main = document.getElementById('cmWbMain');
+  const out = document.getElementById('cmWbTextDisplay');
+  if(!main || !out) return;
+  out.style.display = (out.textContent.trim() ? 'block' : 'none');
+  if(out.style.display==='none') return;
+  const maxX = Math.max(6, main.clientWidth - out.offsetWidth - 6);
+  const maxY = Math.max(6, main.clientHeight - out.offsetHeight - 6);
+  WBTEXT.x = Math.max(6, Math.min(WBTEXT.x, maxX));
+  WBTEXT.y = Math.max(6, Math.min(WBTEXT.y, maxY));
+  out.style.right = 'auto';
+  out.style.left = WBTEXT.x + 'px';
+  out.style.top = WBTEXT.y + 'px';
+}
+
+function cmWbSetTextPos(where){
+  const main = document.getElementById('cmWbMain');
+  const out = document.getElementById('cmWbTextDisplay');
+  if(!main || !out) return;
+  const maxX = Math.max(6, main.clientWidth - out.offsetWidth - 6);
+  const maxY = Math.max(6, main.clientHeight - out.offsetHeight - 6);
+  if(where==='top'){ WBTEXT.y = 12; WBTEXT.x = Math.min(WBTEXT.x, maxX); }
+  else if(where==='center'){ WBTEXT.y = Math.max(6, Math.floor((main.clientHeight - out.offsetHeight)/2)); WBTEXT.x = Math.max(6, Math.floor((main.clientWidth - out.offsetWidth)/2)); }
+  else if(where==='bottom'){ WBTEXT.y = maxY; WBTEXT.x = Math.min(WBTEXT.x, maxX); }
+  cmWbClampTextPos();
+}
+
+function cmWbDrawSetTool(tool){
+  WBDRAW.tool = (tool==='eraser' ? 'eraser' : 'pen');
+  const c = document.getElementById('cmWbDrawCanvas');
+  if(c){
+    c.classList.remove('cm-cursor-pen','cm-cursor-eraser');
+    c.classList.add(WBDRAW.tool === 'eraser' ? 'cm-cursor-eraser' : 'cm-cursor-pen');
+  }
+}
+
+function cmWbDrawClear(){
+  const c = document.getElementById('cmWbDrawCanvas');
+  if(WBDRAW.ctx && c) WBDRAW.ctx.clearRect(0, 0, c.width, c.height);
+}
+
+function cmWbToggleDraw(){
+  const canvas = document.getElementById('cmWbDrawCanvas');
+  const btn = document.getElementById('cmWbDrawToggleBtn');
+  if(!canvas || !btn) return;
+  WBDRAW.active = !WBDRAW.active;
+  if(WBDRAW.active){
+    cmWbInit();
+    canvas.style.display = 'block';
+    canvas.classList.add('cm-draw-open');
+    btn.textContent = '🛑 إيقاف القلم';
+    cmWbDrawSetTool(WBDRAW.tool);
+    btn.style.background = 'rgba(66,165,245,0.2)';
+    btn.style.borderColor = 'rgba(66,165,245,0.5)';
+    btn.style.color = 'var(--sky3)';
+
+    const eraserRadius = 18;
+    canvas.onpointerdown = e => {
+      if(!WBDRAW.active || !WBDRAW.ctx) return;
+      e.preventDefault();
+      const { x, y } = cmDrawCoords(e, canvas);
+      WBDRAW.painting = true;
+      if(WBDRAW.tool === 'eraser'){
+        WBDRAW.ctx.clearRect(x - eraserRadius, y - eraserRadius, eraserRadius * 2, eraserRadius * 2);
+      }else{
+        WBDRAW.ctx.beginPath();
+        WBDRAW.ctx.moveTo(x, y);
+      }
+      canvas.setPointerCapture(e.pointerId);
+    };
+    canvas.onpointermove = e => {
+      if(!WBDRAW.active || !WBDRAW.ctx || !WBDRAW.painting) return;
+      const { x, y } = cmDrawCoords(e, canvas);
+      if(WBDRAW.tool === 'eraser'){
+        WBDRAW.ctx.clearRect(x - eraserRadius, y - eraserRadius, eraserRadius * 2, eraserRadius * 2);
+        return;
+      }
+      const ctx = WBDRAW.ctx;
+      ctx.strokeStyle = document.getElementById('cmWbDrawColor')?.value || '#42a5f5';
+      ctx.lineWidth = parseInt(document.getElementById('cmWbDrawSize')?.value || '4', 10) || 4;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.lineTo(x, y);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+    };
+    const endPointer = e => {
+      WBDRAW.painting = false;
+      try { if(e.pointerId != null) canvas.releasePointerCapture(e.pointerId); } catch(_){}
+    };
+    canvas.onpointerup = endPointer;
+    canvas.onpointercancel = endPointer;
+    canvas.onpointerleave = endPointer;
+  } else {
+    canvas.style.display = 'none';
+    canvas.classList.remove('cm-draw-open','cm-cursor-pen','cm-cursor-eraser');
+    btn.textContent = '✏️ تشغيل القلم';
+    btn.style.background = '';
+    btn.style.borderColor = '';
+    btn.style.color = '';
+    WBDRAW.painting = false;
+  }
+}
+
 // ═══════════════════════════════════════════
 // CLEAR FUNCTIONS
 // ═══════════════════════════════════════════
@@ -9384,6 +9666,7 @@ function cmClearVideo(){
 }
 
 function cmClearImages(){
+  cmReleaseSlideObjectUrls();
   SLIDES.images = []; SLIDES.currentIdx = 0;
   const b = document.getElementById('cmClearImgBtn');
   const n = document.getElementById('cmImgCount');
@@ -9411,6 +9694,7 @@ function cmClearPdf(){
 }
 
 function cmClearPptx(){
+  cmReleaseSlideObjectUrls();
   SLIDES.images = []; SLIDES.currentIdx = 0;
   const b = document.getElementById('cmClearPptxBtn');
   const s = document.getElementById('cmPptxStatus');
@@ -9434,29 +9718,30 @@ async function cmLoadPptx(input){
   if(!file) return;
   const status = document.getElementById('cmPptxStatus');
   if(!/\.pptx$/i.test(file.name)){
-    status.textContent = '❌ يدعم التطبيق PPTX فقط (ليس .ppt القديم)';
-    toast('احفظ العرض كـ PPTX أو صدّره PDF','error');
+    status.textContent = 'PPTX only (.ppt is not supported)';
+    toast('Save as PPTX or export to PDF','error');
     input.value='';
     return;
   }
-  status.textContent = '⏳ جارٍ تحليل الملف...';
+  status.textContent = 'Analyzing file...';
   if(typeof JSZip === 'undefined'){
-    status.textContent = '❌ مكتبة الملف غير جاهزة — أعد تحميل الصفحة';
-    toast('أعد تحميل الصفحة ثم جرّب مجدداً','error');
+    status.textContent = 'File library not ready. Reload page.';
+    toast('Reload page then try again','error');
     return;
   }
   try{
+    cmReleaseSlideObjectUrls();
     const buf = await file.arrayBuffer();
     const zip = await JSZip.loadAsync(buf);
     const mediaExts = /\.(png|jpg|jpeg|gif|bmp|webp|tif|tiff)$/i;
     const entries = [];
     zip.forEach((relPath, zf)=>{
-      if(relPath.startsWith('ppt/media/') && !zf.dir && mediaExts.test(relPath)) entries.push(relPath);
+      if((relPath.startsWith('ppt/media/') || relPath.startsWith('ppt/slides/media/')) && !zf.dir && mediaExts.test(relPath)) entries.push(relPath);
     });
     entries.sort((a,b)=>a.localeCompare(b, undefined, {numeric:true, sensitivity:'base'}));
     if(!entries.length){
-      status.textContent = '❌ لا توجد صور قابلة للعرض داخل الملف';
-      toast('صدّر العرض كـ PDF أو كصور، أو استخدم شرائح Google','error');
+      status.textContent = 'No displayable images found inside this PPTX';
+      toast('Export presentation to PDF/images, or use Google Slides','error');
       input.value='';
       return;
     }
@@ -9466,13 +9751,9 @@ async function cmLoadPptx(input){
       const node = zip.file(rel);
       if(!node) continue;
       const blob = await node.async('blob');
-      const b64 = await new Promise((resolve, reject)=>{
-        const fr = new FileReader();
-        fr.onload = ()=>resolve(fr.result);
-        fr.onerror = reject;
-        fr.readAsDataURL(blob);
-      });
-      SLIDES.images.push(b64);
+      const url = URL.createObjectURL(blob);
+      SLIDES.images.push(url);
+      SLIDES.objectUrls.push(url);
     }
     SLIDES.mode = 'images';
     const frame = document.getElementById('cmSlidesFrame');
@@ -9487,22 +9768,21 @@ async function cmLoadPptx(input){
     if(imgV){ imgV.style.display='flex'; imgV.style.alignItems='center'; imgV.style.justifyContent='center'; }
     cmShowImgSlide(0);
     cmUpdateSlidesNav();
-    status.textContent = '✅ ' + file.name + ' — ' + SLIDES.images.length + ' شريحة';
+    status.textContent = 'Loaded ' + SLIDES.images.length + ' slide images';
     const cpb = document.getElementById('cmClearPptxBtn');
     if(cpb) cpb.style.display='block';
     const cib = document.getElementById('cmClearImgBtn');
     if(cib) cib.style.display='block';
     const ic = document.getElementById('cmImgCount');
-    if(ic) ic.textContent = SLIDES.images.length + ' شريحة (من PPTX)';
-    toast('✅ تم تحميل العرض','success');
+    if(ic) ic.textContent = SLIDES.images.length + ' slides (from PPTX)';
+    toast('Presentation loaded','success');
   }catch(err){
     console.warn(err);
-    status.textContent = '❌ تعذّر القراءة — جرّب PDF أو صور';
-    toast('تعذّر تحميل PPTX — استخدم PDF','error');
+    status.textContent = 'Could not read this file (protected or unsupported format)';
+    toast('PPTX failed. Try PDF.','error');
     input.value='';
   }
 }
-
 function cmAiGeminiExtract(data){
   const c = data?.candidates?.[0];
   if(!c){
@@ -9998,6 +10278,7 @@ function cmSwitchView(view){
   if(view==='honor')  { cmBuildHonorView(); }
   if(view==='games')  { if(!CM.games) cmGamesInit(); cmRenderGame(CM.games.activeGame||'quiz'); }
   if(view==='slides') { cmSlidesInit(); }
+  if(view==='whiteboard') { setTimeout(cmWbInit, 20); }
   if(view==='lessonprep') { lpLoad(); }
 }
 
@@ -12070,9 +12351,18 @@ function initClassMeta(){
 
 const SLIDES = {
   mode: null,       // 'url' | 'images' | 'pdf'
-  images: [],       // base64 images
+  images: [],       // object URLs or base64 images
+  objectUrls: [],   // URLs created via URL.createObjectURL
   currentIdx: 0,
 };
+
+function cmReleaseSlideObjectUrls(){
+  if(!SLIDES.objectUrls || !SLIDES.objectUrls.length) return;
+  for(const u of SLIDES.objectUrls){
+    try{ URL.revokeObjectURL(u); }catch(e){}
+  }
+  SLIDES.objectUrls = [];
+}
 
 function cmSlidesInit(){
   if(typeof cmRenderBagBooksInClassroom==='function') cmRenderBagBooksInClassroom();
@@ -12240,6 +12530,7 @@ function cmSlidesFullscreen(){
 }
 
 function cmClearSlides(){
+  cmReleaseSlideObjectUrls();
   SLIDES.mode=null; SLIDES.images=[]; SLIDES.currentIdx=0;
   const frame = document.getElementById('cmSlidesFrame');
   const empty = document.getElementById('cmSlidesEmpty');
@@ -12532,16 +12823,36 @@ function renderCompare(){
 }
 
 // ══════════════════════════════════════════════════════════════
-// 🔑 LICENSE SYSTEM — نظام التفعيل
+// 🔑 LICENSE SYSTEM — نظام التفعيل (مفتاح ALB26 لمرة واحدة عند تفعيل Firebase)
 // ══════════════════════════════════════════════════════════════
 
 const _PH=(()=>{return ['30303030','30303030','34613731','61343063'].map(x=>{let s='';for(let i=0;i<x.length;i+=2)s+=String.fromCharCode(parseInt(x.substr(i,2),16));return s;}).join('');})();
 const _SALT='albushra_2025_secure';
 const _LIC_SECRET=(()=>{return ['616c6275736872615f76656e646f725f','6c6963656e73655f7632'].map(x=>{let s='';for(let i=0;i<x.length;i+=2)s+=String.fromCharCode(parseInt(x.substr(i,2),16));return s;}).join('');})();
+/* Firebase: أنشئ مشروعاً من console.firebase.google.com → فعّل Firestore (وضع الاختبار أو قواعد مخصّصة). عيّن هنا كائن الإعداد من إعدادات المشروع:
+   const FIREBASE_CONFIG={ apiKey:'...', authDomain:'...', projectId:'...', storageBucket:'...', messagingSenderId:'...', appId:'...' };
+   قواعد الأمان المقترحة للمجموعة albushra_used_licenses:
+   allow read: if false; allow create: if !exists(/databases/$(database)/documents/albushra_used_licenses/$(docId)); allow update, delete: if false; */
+const FIREBASE_CONFIG=null;
+const _LIC_FIRESTORE_COLLECTION='albushra_used_licenses';
+let _fbApp=null;
 function _hashStr(str){let h1=0xdeadbeef,h2=0x41c6ce57;for(let i=0;i<str.length;i++){const ch=str.charCodeAt(i);h1=Math.imul(h1^ch,2654435761);h2=Math.imul(h2^ch,1597334677);}h1=Math.imul(h1^(h1>>>16),2246822507)^Math.imul(h2^(h2>>>13),3266489909);h2=Math.imul(h2^(h2>>>16),2246822507)^Math.imul(h1^(h1>>>13),3266489909);return(4294967296*(2097151&h2)+h1>>>0).toString(16).padStart(16,'0');}
 function _normalizeLicenseKey(s){return String(s||'').replace(/\s+/g,'').toUpperCase();}
 function _licChecksum(serial4){return _hashStr(_LIC_SECRET+serial4+_LIC_SECRET).slice(-8).toUpperCase();}
 function _validateLicenseKey(raw){const k=_normalizeLicenseKey(raw);const m=/^ALB26-([A-Z0-9]{4})-([A-F0-9]{8})$/.exec(k);if(!m)return false;return _licChecksum(m[1])===m[2];}
+function _licenseFingerprint(norm){return _hashStr(_LIC_SECRET+norm+_LIC_SECRET+'fp_v1').slice(0,24);}
+function _loadUsedLicenseFps(){try{const raw=localStorage.getItem('bs_license_used_fps');if(!raw)return[];const a=JSON.parse(raw);return Array.isArray(a)?a:[];}catch(e){return[];}}
+function _isLicenseFingerprintUsed(fp){return _loadUsedLicenseFps().includes(fp);}
+function _markLicenseFingerprintUsed(fp){try{const a=_loadUsedLicenseFps();if(!a.includes(fp)){a.push(fp);localStorage.setItem('bs_license_used_fps',JSON.stringify(a));}}catch(e){}}
+function _getFirestore(){if(!FIREBASE_CONFIG||typeof firebase==='undefined')return null;if(_fbApp)return firebase.firestore(_fbApp);_fbApp=firebase.apps.length?firebase.app():firebase.initializeApp(FIREBASE_CONFIG);return firebase.firestore(_fbApp);}
+async function _consumeLicenseOneTime(normKey){
+  if(!FIREBASE_CONFIG)return;
+  const db=_getFirestore();
+  if(!db)throw new Error('NO_FIREBASE');
+  const docId=_hashStr(_LIC_SECRET+normKey+_LIC_SECRET+'srv').slice(0,16);
+  const ref=db.collection(_LIC_FIRESTORE_COLLECTION).doc(docId);
+  await db.runTransaction(async (tx)=>{const snap=await tx.get(ref);if(snap.exists)throw Object.assign(new Error('ALREADY_USED'),{code:'ALREADY_USED'});tx.set(ref,{used:true,t:firebase.firestore.FieldValue.serverTimestamp()});});
+}
 function _savePass(h){try{localStorage.setItem('bs_pass',h);}catch(e){}try{sessionStorage.setItem('bs_pass',h);}catch(e){}}
 function _loadPass(){try{const v=localStorage.getItem('bs_pass');if(v)return v;}catch(e){}try{const v=sessionStorage.getItem('bs_pass');if(v)return v;}catch(e){}return null;}
 function _saveLicenseKey(k){try{localStorage.setItem('bs_license',k);}catch(e){}try{sessionStorage.setItem('bs_license',k);}catch(e){}}
@@ -12549,6 +12860,7 @@ function _loadLicenseKey(){try{const v=localStorage.getItem('bs_license');if(v)r
 function checkLicense(){
   const lic=_loadLicenseKey();
   if(lic&&_validateLicenseKey(lic)){
+    try{const fp=_licenseFingerprint(lic);if(!_isLicenseFingerprintUsed(fp))_markLicenseFingerprintUsed(fp);}catch(e){}
     document.getElementById('licenseScreen').style.display='none';
     return true;
   }
@@ -12562,13 +12874,39 @@ function checkLicense(){
   const _li=document.getElementById('licLogoImg');if(_li)_li.src=SCHOOL_LOGO;
   return false;
 }
-function activateLicense(){
+async function activateLicense(){
   const input=document.getElementById('licKeyInput')?.value.trim();
   const errEl=document.getElementById('licError');
   errEl.style.display='none';
   if(!input){ errEl.textContent='أدخل مفتاح الترخيص'; errEl.style.display='block'; return; }
   const norm=_normalizeLicenseKey(input);
   if(_validateLicenseKey(norm)){
+    const fp=_licenseFingerprint(norm);
+    if(_isLicenseFingerprintUsed(fp)&&_loadLicenseKey()!==norm){
+      errEl.textContent='❌ هذا المفتاح مستخدم مسبقاً على هذا الجهاز';
+      errEl.style.display='block';
+      try{SFX.play('wrong');}catch(e){}
+      return;
+    }
+    if(FIREBASE_CONFIG){
+      try{
+        await _consumeLicenseOneTime(norm);
+      }catch(e){
+        const code=e&&e.code;
+        const msg=(e&&e.message)||'';
+        if(code==='ALREADY_USED'||msg==='ALREADY_USED'||(typeof msg==='string'&&msg.includes('ALREADY_USED'))){
+          errEl.textContent='❌ هذا المفتاح مستخدم مسبقاً (لا يمكن استخدامه أكثر من مرة)';
+          errEl.style.display='block';
+          try{SFX.play('wrong');}catch(e2){}
+          return;
+        }
+        errEl.textContent='❌ تعذّر التحقق من المفتاح. تحقق من الإنترنت أو إعدادات Firebase.';
+        errEl.style.display='block';
+        try{SFX.play('wrong');}catch(e3){}
+        return;
+      }
+    }
+    _markLicenseFingerprintUsed(fp);
     _saveLicenseKey(norm);
     try{ localStorage.removeItem('bs_pass'); sessionStorage.removeItem('bs_pass'); }catch(e){}
     const expEl=document.getElementById('licExpiry');
