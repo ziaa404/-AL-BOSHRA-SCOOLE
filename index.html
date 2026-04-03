@@ -2479,6 +2479,14 @@ body.theme-rose .dark-toggle::before {
 <style>
 /* ══ MOBILE IMPROVEMENTS ══ */
 @media (max-width: 960px) {
+  /* سكرول سلس للمحتوى الرئيسي */
+  #mainContent {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
+    scroll-behavior: smooth;
+  }
+  /* منع الـ bounce الزيادة */
+  body { overscroll-behavior: none; }
   .topbar { padding: 0 10px; gap: 6px; }
   .tb-brand { gap: 8px; min-width: 0; flex: 1; overflow: hidden; }
   .tb-title { font-size: 0.80rem !important; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 120px; }
@@ -5775,24 +5783,27 @@ function initReportCharts(){
   setTimeout(()=>{
     const activeSubs=_getActiveSubs();
 
-    // Chart 1: Level distribution (pie)
+    // Chart 1: Level distribution (doughnut)
     const levels={e:0,g:0,n:0};
     S.students.forEach(s=>{
       const p=_filteredMastery(s.id).pct;
       if(p>=70)levels.e++; else if(p>=40)levels.g++; else levels.n++;
     });
     const c1=document.getElementById('repChart1');
-    if(c1) new Chart(c1,{
-      type:'doughnut',
-      data:{labels:['ممتاز (70%+)','جيد (40-70%)','في بداية رحلته 🌱'],
-        datasets:[{data:[levels.e,levels.g,levels.n],
-          backgroundColor:['#059669','#1565c0','#10b981'],
-          borderWidth:0,hoverOffset:10}]},
-      options:{responsive:true,maintainAspectRatio:false,
-        plugins:{legend:{position:'bottom',labels:{font:{family:'Tajawal',size:12},padding:14}}}}
-    });
+    if(c1){
+      const ex1=Chart.getChart(c1); if(ex1) ex1.destroy();
+      new Chart(c1,{
+        type:'doughnut',
+        data:{labels:['ممتاز (70%+)','جيد (40-70%)','في بداية رحلته 🌱'],
+          datasets:[{data:[levels.e,levels.g,levels.n],
+            backgroundColor:['#059669','#1565c0','#10b981'],
+            borderWidth:0,hoverOffset:10}]},
+        options:{responsive:true,maintainAspectRatio:false,
+          plugins:{legend:{position:'bottom',labels:{font:{family:'Tajawal',size:12},padding:14}}}}
+      });
+    }
 
-    // Chart 2: Top 10 students bar (per section)
+    // Chart 2: Top 10 students bar
     const stuNames=S.students.slice(0,10).map(s=>s.name.split(' ')[0]);
     const palette=['rgba(21,101,192,0.80)','rgba(16,185,129,0.80)','rgba(245,158,11,0.80)','rgba(124,58,237,0.80)','rgba(239,68,68,0.80)'];
     const datasets=[];
@@ -5813,16 +5824,19 @@ function initReportCharts(){
       });
     });
     const c2=document.getElementById('repChart2');
-    if(c2) new Chart(c2,{
-      type:'bar',
-      data:{labels:stuNames,datasets},
-      options:{responsive:true,maintainAspectRatio:false,
-        plugins:{legend:{position:'bottom',labels:{font:{family:'Tajawal',size:10},padding:8,boxWidth:12}}},
-        scales:{
-          y:{min:0,max:100,ticks:{stepSize:25,font:{family:'Tajawal'},callback:v=>v+'%'}},
-          x:{ticks:{font:{family:'Tajawal',size:10}}}
-        }}
-    });
+    if(c2){
+      const ex2=Chart.getChart(c2); if(ex2) ex2.destroy();
+      new Chart(c2,{
+        type:'bar',
+        data:{labels:stuNames,datasets},
+        options:{responsive:true,maintainAspectRatio:false,
+          plugins:{legend:{position:'bottom',labels:{font:{family:'Tajawal',size:10},padding:8,boxWidth:12}}},
+          scales:{
+            y:{min:0,max:100,ticks:{stepSize:25,font:{family:'Tajawal'},callback:v=>v+'%'}},
+            x:{ticks:{font:{family:'Tajawal',size:10}}}
+          }}
+      });
+    }
   },80);
 }
 
@@ -9350,20 +9364,25 @@ function closeMoreSheet(){
   document.body.style.overflow='';
 }
 
-// ── Swipe to go back ─────────────────────────────────────────
-let _swipeStartX=0, _swipeStartY=0;
+// ── Swipe to open more sheet ─────────────────────────────────
+let _swipeStartX=0, _swipeStartY=0, _swipeLocked=false;
 document.addEventListener('touchstart', e=>{
   _swipeStartX=e.touches[0].clientX;
   _swipeStartY=e.touches[0].clientY;
+  _swipeLocked=false;
 }, {passive:true});
 document.addEventListener('touchend', e=>{
+  if(_swipeLocked) return;
   const dx=e.changedTouches[0].clientX-_swipeStartX;
   const dy=e.changedTouches[0].clientY-_swipeStartY;
-  // Swipe right (RTL: go back) — only if horizontal swipe > 80px and not in modal
-  if(Math.abs(dx)>80 && Math.abs(dx)>Math.abs(dy)*2){
-    const inModal=document.querySelector('.modal-bg.open');
+  // عشّق الـ threshold لـ 120px ونسبة أفقية صارمة — يمنع الفتح العرضي
+  if(Math.abs(dx)>120 && Math.abs(dx)>Math.abs(dy)*3){
+    const inModal=document.querySelector('.modal-bg.open, #moreSheet.open');
     if(inModal){ closeMoreSheet(); return; }
-    if(dx>0 && isMobile()) openMoreSheet(); // swipe right = open menu
+    // فقط لو السحب من أقصى اليمين (آخر 30px من الشاشة)
+    if(dx>0 && isMobile() && _swipeStartX > window.innerWidth - 30){
+      openMoreSheet();
+    }
   }
 }, {passive:true});
 
@@ -9372,12 +9391,18 @@ let _pullStart=0, _pulling=false;
 const content = document.getElementById('mainContent');
 if(content){
   content.addEventListener('touchstart', e=>{
-    if(content.scrollTop===0) _pullStart=e.touches[0].clientY;
+    // فقط لو في الأعلى خالص وإصبع واحد
+    if(content.scrollTop===0 && e.touches.length===1){
+      _pullStart=e.touches[0].clientY;
+    } else {
+      _pullStart=0;
+    }
   }, {passive:true});
   content.addEventListener('touchmove', e=>{
     if(_pullStart>0 && content.scrollTop===0){
       const pull=e.touches[0].clientY-_pullStart;
-      if(pull>60 && !_pulling){
+      // تأكد إن الحركة للأسفل وأكبر من 80px قبل الـ trigger
+      if(pull>80 && !_pulling){
         _pulling=true;
         const ind=document.createElement('div');
         ind.id='pullInd';
@@ -9429,10 +9454,13 @@ function fixViewportHeight(){
 window.addEventListener('resize', fixViewportHeight);
 fixViewportHeight();
 
-// ── Prevent double-tap zoom on buttons ───────────────────────
+// ── Prevent double-tap zoom على الأزرار فقط (مش السكرول) ──────
 document.addEventListener('touchend', e=>{
   const tapEl=e.target.closest('button,.btn,.bn-item,.nav-btn');
   if(!tapEl) return;
+  // لو كان فيه حركة عمودية = سكرول، متمنعش
+  const dy = Math.abs(e.changedTouches[0].clientY - _swipeStartY);
+  if(dy > 10) return;
   e.preventDefault();
   tapEl.click();
 }, {passive:false});
