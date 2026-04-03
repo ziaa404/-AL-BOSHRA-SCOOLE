@@ -3256,13 +3256,8 @@ body.theme-rose .dark-toggle::before {
             اكتب الدرس هنا ثم اضغط «عرض النص»
           </div>
           <div style="display:flex;gap:8px;">
-            <button class="cm-btn cm-btn-primary" style="flex:1;justify-content:center;" onclick="cmWbApplyText()">عرض النص</button>
-            <button class="cm-btn cm-btn-ghost" style="flex:1;justify-content:center;" onclick="cmWbClearText()">مسح النص</button>
-          </div>
-          <div style="display:flex;gap:6px;flex-wrap:wrap;">
-            <button class="cm-btn cm-btn-ghost" style="font-size:0.75rem;padding:6px 10px;" onclick="cmWbSetTextPos('top')">⬆️ أعلى</button>
-            <button class="cm-btn cm-btn-ghost" style="font-size:0.75rem;padding:6px 10px;" onclick="cmWbSetTextPos('center')">⏺️ وسط</button>
-            <button class="cm-btn cm-btn-ghost" style="font-size:0.75rem;padding:6px 10px;" onclick="cmWbSetTextPos('bottom')">⬇️ أسفل</button>
+            <button class="cm-btn cm-btn-primary" style="flex:1;justify-content:center;" onclick="cmWbAddBox()">➕ إضافة مربع</button>
+            <button class="cm-btn cm-btn-ghost" style="flex:1;justify-content:center;" onclick="cmWbClearAllBoxes()">🗑️ مسح الكل</button>
           </div>
           <div style="height:1px;background:rgba(255,255,255,0.10);margin:4px 0;"></div>
           <div class="cm-card-title" style="margin-bottom:0;">✏️ الرسم بالقلم</div>
@@ -3278,9 +3273,9 @@ body.theme-rose .dark-toggle::before {
           </div>
         </div>
         <div id="cmWbMain" style="position:relative;background:#f3f4f6;border:1px solid #e5e7eb;border-radius:14px;overflow:hidden;">
-          <div id="cmWbTextDisplay" style="position:absolute;top:24px;right:24px;max-width:calc(100% - 48px);min-width:180px;padding:14px 16px;white-space:pre-wrap;word-wrap:break-word;line-height:1.9;color:#1f2937;font-size:1.45rem;font-weight:700;font-family:'Tajawal',sans-serif;background:rgba(255,255,255,0.55);border:1px dashed rgba(31,41,55,0.18);border-radius:12px;cursor:grab;user-select:none;touch-action:none;z-index:3;"></div>
-          <canvas id="cmWbDrawCanvas" style="position:absolute;inset:0;width:100%;height:100%;display:none;touch-action:none;"></canvas>
-          <div style="position:absolute;left:12px;bottom:10px;font-size:0.70rem;color:#6b7280;">يمكنك الكتابة بالنص ثم التوضيح بالقلم فوقه</div>
+          <div id="cmWbBoxesLayer" style="position:absolute;inset:0;z-index:3;pointer-events:none;"></div>
+          <canvas id="cmWbDrawCanvas" style="position:absolute;inset:0;width:100%;height:100%;display:none;touch-action:none;z-index:4;"></canvas>
+          <div style="position:absolute;left:12px;bottom:10px;font-size:0.70rem;color:#6b7280;z-index:2;">اضغط «إضافة مربع» لإضافة نص — القلم يرسم بينها</div>
         </div>
       </div>
     </div>
@@ -9882,67 +9877,104 @@ function cmDrawClear(){
 function cmWbInit(){
   const main = document.getElementById('cmWbMain');
   const canvas = document.getElementById('cmWbDrawCanvas');
-  const textOut = document.getElementById('cmWbTextDisplay');
-  if(!main || !canvas || !textOut) return;
+  if(!main || !canvas) return;
+  const textOut = null; // replaced by multi-box system
   const r = main.getBoundingClientRect();
   canvas.width = Math.max(1, Math.floor(r.width));
   canvas.height = Math.max(1, Math.floor(r.height));
   WBDRAW.ctx = canvas.getContext('2d');
+
+}
+
+// ═══ نظام مربعات النص المتعددة ═══
+let _wbBoxes = [];
+let _wbBoxIdCounter = 0;
+
+function cmWbAddBox(){
   const editor = document.getElementById('cmWbEditor');
-  if(editor && textOut && !textOut.textContent.trim()){
-    textOut.innerHTML = editor.innerHTML || '';
-  }
-  cmWbClampTextPos();
-  if(!WBTEXT.bound){
-    const onMove = e => {
-      if(!WBTEXT.dragging) return;
-      const rr = main.getBoundingClientRect();
-      const px = (e.clientX || 0) - rr.left;
-      const py = (e.clientY || 0) - rr.top;
-      WBTEXT.x = px - WBTEXT.dx;
-      WBTEXT.y = py - WBTEXT.dy;
-      cmWbClampTextPos();
-    };
-    const onUp = () => {
-      if(!WBTEXT.dragging) return;
-      WBTEXT.dragging = false;
-      textOut.style.cursor = 'grab';
-      textOut.style.opacity = '1';
-    };
-    textOut.onpointerdown = e => {
-      if(!textOut.textContent.trim()) return;
-      e.preventDefault();
-      const tr = textOut.getBoundingClientRect();
-      WBTEXT.dragging = true;
-      WBTEXT.dx = (e.clientX || 0) - tr.left;
-      WBTEXT.dy = (e.clientY || 0) - tr.top;
-      textOut.style.cursor = 'grabbing';
-      textOut.style.opacity = '0.92';
-      try{textOut.setPointerCapture(e.pointerId);}catch(_){}
-    };
-    textOut.onpointermove = onMove;
-    textOut.onpointerup = onUp;
-    textOut.onpointercancel = onUp;
-    main.addEventListener('pointermove', onMove);
-    main.addEventListener('pointerup', onUp);
-    WBTEXT.bound = true;
-  }
+  const layer = document.getElementById('cmWbBoxesLayer');
+  const main = document.getElementById('cmWbMain');
+  if(!layer || !main) return;
+  const html = editor ? (editor.innerHTML || '') : '';
+  const text = editor ? (editor.innerText || '').trim() : '';
+  if(!text){ alert('اكتب نصاً في المحرر أولاً'); return; }
+
+  const id = ++_wbBoxIdCounter;
+  const box = document.createElement('div');
+  box.id = 'cmWbBox_' + id;
+  box.style.cssText = [
+    'position:absolute',
+    'top:' + (20 + (_wbBoxes.length % 5) * 40) + 'px',
+    'right:' + (20 + (_wbBoxes.length % 3) * 30) + 'px',
+    'max-width:calc(100% - 48px)',
+    'min-width:140px',
+    'padding:12px 14px',
+    'white-space:pre-wrap',
+    'word-wrap:break-word',
+    'line-height:1.8',
+    'color:#1f2937',
+    'font-size:1.35rem',
+    'font-weight:700',
+    'font-family:Tajawal,sans-serif',
+    'background:rgba(255,255,255,0.88)',
+    'border:1.5px dashed rgba(31,41,55,0.25)',
+    'border-radius:12px',
+    'cursor:grab',
+    'user-select:none',
+    'touch-action:none',
+    'pointer-events:all',
+    'z-index:3',
+    'box-shadow:0 2px 8px rgba(0,0,0,0.08)'
+  ].join(';');
+  box.innerHTML = html;
+
+  // زر حذف
+  const del = document.createElement('button');
+  del.textContent = '✕';
+  del.style.cssText = 'position:absolute;top:-10px;left:-10px;width:22px;height:22px;border-radius:50%;border:none;background:#ef4444;color:white;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;padding:0;pointer-events:all;';
+  del.onclick = (e) => { e.stopPropagation(); box.remove(); _wbBoxes = _wbBoxes.filter(b=>b.id!==id); };
+  box.appendChild(del);
+
+  // سحب وإفلات
+  let dx=0, dy=0, dragging=false;
+  box.onpointerdown = e => {
+    if(e.target === del) return;
+    e.preventDefault(); e.stopPropagation();
+    dragging = true;
+    const r = box.getBoundingClientRect();
+    dx = e.clientX - r.left;
+    dy = e.clientY - r.top;
+    box.style.cursor = 'grabbing';
+    box.style.opacity = '0.92';
+    box.setPointerCapture(e.pointerId);
+  };
+  box.onpointermove = e => {
+    if(!dragging) return;
+    e.preventDefault();
+    const mr = main.getBoundingClientRect();
+    let nx = e.clientX - mr.left - dx;
+    let ny = e.clientY - mr.top - dy;
+    nx = Math.max(0, Math.min(nx, main.clientWidth - box.offsetWidth));
+    ny = Math.max(0, Math.min(ny, main.clientHeight - box.offsetHeight));
+    box.style.right = 'auto';
+    box.style.left = nx + 'px';
+    box.style.top = ny + 'px';
+  };
+  const endDrag = e => { dragging=false; box.style.cursor='grab'; box.style.opacity='1'; try{box.releasePointerCapture(e.pointerId);}catch(_){} };
+  box.onpointerup = endDrag;
+  box.onpointercancel = endDrag;
+
+  layer.appendChild(box);
+  _wbBoxes.push({id, el: box});
+
+  // مسح المحرر
+  if(editor) editor.innerHTML = '';
 }
 
-function cmWbApplyText(){
-  const input = document.getElementById('cmWbEditor');
-  const out = document.getElementById('cmWbTextDisplay');
-  if(!input || !out) return;
-  out.innerHTML = input.innerHTML || '';
-  out.style.display = (out.textContent.trim() ? 'block' : 'none');
-  cmWbClampTextPos();
-}
-
-function cmWbClearText(){
-  const input = document.getElementById('cmWbEditor');
-  const out = document.getElementById('cmWbTextDisplay');
-  if(input) input.innerHTML = '';
-  if(out){ out.textContent = ''; out.style.display='none'; }
+function cmWbClearAllBoxes(){
+  const layer = document.getElementById('cmWbBoxesLayer');
+  if(layer) layer.innerHTML = '';
+  _wbBoxes = [];
 }
 
 function cmWbEditorCmd(cmd){
@@ -9952,32 +9984,11 @@ function cmWbEditorCmd(cmd){
   try{ document.execCommand(cmd, false, null); }catch(_){}
 }
 
-function cmWbClampTextPos(){
-  const main = document.getElementById('cmWbMain');
-  const out = document.getElementById('cmWbTextDisplay');
-  if(!main || !out) return;
-  out.style.display = (out.textContent.trim() ? 'block' : 'none');
-  if(out.style.display==='none') return;
-  const maxX = Math.max(6, main.clientWidth - out.offsetWidth - 6);
-  const maxY = Math.max(6, main.clientHeight - out.offsetHeight - 6);
-  WBTEXT.x = Math.max(6, Math.min(WBTEXT.x, maxX));
-  WBTEXT.y = Math.max(6, Math.min(WBTEXT.y, maxY));
-  out.style.right = 'auto';
-  out.style.left = WBTEXT.x + 'px';
-  out.style.top = WBTEXT.y + 'px';
-}
-
-function cmWbSetTextPos(where){
-  const main = document.getElementById('cmWbMain');
-  const out = document.getElementById('cmWbTextDisplay');
-  if(!main || !out) return;
-  const maxX = Math.max(6, main.clientWidth - out.offsetWidth - 6);
-  const maxY = Math.max(6, main.clientHeight - out.offsetHeight - 6);
-  if(where==='top'){ WBTEXT.y = 12; WBTEXT.x = Math.min(WBTEXT.x, maxX); }
-  else if(where==='center'){ WBTEXT.y = Math.max(6, Math.floor((main.clientHeight - out.offsetHeight)/2)); WBTEXT.x = Math.max(6, Math.floor((main.clientWidth - out.offsetWidth)/2)); }
-  else if(where==='bottom'){ WBTEXT.y = maxY; WBTEXT.x = Math.min(WBTEXT.x, maxX); }
-  cmWbClampTextPos();
-}
+// دوال قديمة للتوافق
+function cmWbApplyText(){ cmWbAddBox(); }
+function cmWbClearText(){ cmWbClearAllBoxes(); }
+function cmWbClampTextPos(){}
+function cmWbSetTextPos(){}
 
 function cmWbDrawSetTool(tool){
   WBDRAW.tool = (tool==='eraser' ? 'eraser' : 'pen');
@@ -10001,6 +10012,8 @@ function cmWbToggleDraw(){
   if(WBDRAW.active){
     cmWbInit();
     canvas.style.display = 'block';
+    canvas.style.zIndex = '10';
+    canvas.style.pointerEvents = 'all';
     canvas.classList.add('cm-draw-open');
     btn.textContent = '🛑 إيقاف القلم';
     cmWbDrawSetTool(WBDRAW.tool);
@@ -10048,6 +10061,8 @@ function cmWbToggleDraw(){
     canvas.onpointerleave = endPointer;
   } else {
     canvas.style.display = 'none';
+    canvas.style.zIndex = '4';
+    canvas.style.pointerEvents = 'none';
     canvas.classList.remove('cm-draw-open','cm-cursor-pen','cm-cursor-eraser');
     btn.textContent = '✏️ تشغيل القلم';
     btn.style.background = '';
