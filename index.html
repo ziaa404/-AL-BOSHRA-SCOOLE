@@ -13235,44 +13235,34 @@ function renderCompare(){
 }
 
 // ══════════════════════════════════════════════════════════════
-// 🔑 LICENSE SYSTEM — نظام التفعيل (مفتاح ALB26 لمرة واحدة عند تفعيل Firebase)
+// 🔑 LICENSE SYSTEM — نظام التفعيل بمفتاح لمرة واحدة عبر Google Sheets
 // ══════════════════════════════════════════════════════════════
 
+const _GS_URL='https://script.google.com/macros/s/AKfycbx8vEfX8JLUkzTWF3iCJ2nZFudKIKNlQiauctEknaCwGnm89yFpQk-3i2lAGIbXlZhYpQ/exec';
+const _GS_SECRET='albushra_2025_verify';
 const _PH=(()=>{return ['30303030','30303030','34613731','61343063'].map(x=>{let s='';for(let i=0;i<x.length;i+=2)s+=String.fromCharCode(parseInt(x.substr(i,2),16));return s;}).join('');})();
 const _SALT='albushra_2025_secure';
 const _LIC_SECRET=(()=>{return ['616c6275736872615f76656e646f725f','6c6963656e73655f7632'].map(x=>{let s='';for(let i=0;i<x.length;i+=2)s+=String.fromCharCode(parseInt(x.substr(i,2),16));return s;}).join('');})();
-/* Firebase: أنشئ مشروعاً من console.firebase.google.com → فعّل Firestore (وضع الاختبار أو قواعد مخصّصة). عيّن هنا كائن الإعداد من إعدادات المشروع:
-   const FIREBASE_CONFIG={ apiKey:'...', authDomain:'...', projectId:'...', storageBucket:'...', messagingSenderId:'...', appId:'...' };
-   قواعد الأمان المقترحة للمجموعة albushra_used_licenses:
-   allow read: if false; allow create: if !exists(/databases/$(database)/documents/albushra_used_licenses/$(docId)); allow update, delete: if false; */
-const FIREBASE_CONFIG=null;
-const _LIC_FIRESTORE_COLLECTION='albushra_used_licenses';
-let _fbApp=null;
+
 function _hashStr(str){let h1=0xdeadbeef,h2=0x41c6ce57;for(let i=0;i<str.length;i++){const ch=str.charCodeAt(i);h1=Math.imul(h1^ch,2654435761);h2=Math.imul(h2^ch,1597334677);}h1=Math.imul(h1^(h1>>>16),2246822507)^Math.imul(h2^(h2>>>13),3266489909);h2=Math.imul(h2^(h2>>>16),2246822507)^Math.imul(h1^(h1>>>13),3266489909);return(4294967296*(2097151&h2)+h1>>>0).toString(16).padStart(16,'0');}
 function _normalizeLicenseKey(s){return String(s||'').replace(/\s+/g,'').toUpperCase();}
 function _licChecksum(serial4){return _hashStr(_LIC_SECRET+serial4+_LIC_SECRET).slice(-8).toUpperCase();}
 function _validateLicenseKey(raw){const k=_normalizeLicenseKey(raw);const m=/^ALB26-([A-Z0-9]{4})-([A-F0-9]{8})$/.exec(k);if(!m)return false;return _licChecksum(m[1])===m[2];}
-function _licenseFingerprint(norm){return _hashStr(_LIC_SECRET+norm+_LIC_SECRET+'fp_v1').slice(0,24);}
-function _loadUsedLicenseFps(){try{const raw=localStorage.getItem('bs_license_used_fps');if(!raw)return[];const a=JSON.parse(raw);return Array.isArray(a)?a:[];}catch(e){return[];}}
-function _isLicenseFingerprintUsed(fp){return _loadUsedLicenseFps().includes(fp);}
-function _markLicenseFingerprintUsed(fp){try{const a=_loadUsedLicenseFps();if(!a.includes(fp)){a.push(fp);localStorage.setItem('bs_license_used_fps',JSON.stringify(a));}}catch(e){}}
-function _getFirestore(){if(!FIREBASE_CONFIG||typeof firebase==='undefined')return null;if(_fbApp)return firebase.firestore(_fbApp);_fbApp=firebase.apps.length?firebase.app():firebase.initializeApp(FIREBASE_CONFIG);return firebase.firestore(_fbApp);}
-async function _consumeLicenseOneTime(normKey){
-  if(!FIREBASE_CONFIG)return;
-  const db=_getFirestore();
-  if(!db)throw new Error('NO_FIREBASE');
-  const docId=_hashStr(_LIC_SECRET+normKey+_LIC_SECRET+'srv').slice(0,16);
-  const ref=db.collection(_LIC_FIRESTORE_COLLECTION).doc(docId);
-  await db.runTransaction(async (tx)=>{const snap=await tx.get(ref);if(snap.exists)throw Object.assign(new Error('ALREADY_USED'),{code:'ALREADY_USED'});tx.set(ref,{used:true,t:firebase.firestore.FieldValue.serverTimestamp()});});
+function _gsSign(key){
+  // توقيع بسيط متوافق مع Apps Script
+  const raw=_GS_SECRET+key+_GS_SECRET;
+  let h=0;for(let i=0;i<raw.length;i++){h=Math.imul(31,h)+raw.charCodeAt(i)|0;}
+  const h2=_hashStr(raw);
+  return h2.slice(0,16);
 }
 function _savePass(h){try{localStorage.setItem('bs_pass',h);}catch(e){}try{sessionStorage.setItem('bs_pass',h);}catch(e){}}
 function _loadPass(){try{const v=localStorage.getItem('bs_pass');if(v)return v;}catch(e){}try{const v=sessionStorage.getItem('bs_pass');if(v)return v;}catch(e){}return null;}
 function _saveLicenseKey(k){try{localStorage.setItem('bs_license',k);}catch(e){}try{sessionStorage.setItem('bs_license',k);}catch(e){}}
 function _loadLicenseKey(){try{const v=localStorage.getItem('bs_license');if(v)return v;}catch(e){}try{const v=sessionStorage.getItem('bs_license');if(v)return v;}catch(e){}return null;}
+
 function checkLicense(){
   const lic=_loadLicenseKey();
   if(lic&&_validateLicenseKey(lic)){
-    try{const fp=_licenseFingerprint(lic);if(!_isLicenseFingerprintUsed(fp))_markLicenseFingerprintUsed(fp);}catch(e){}
     document.getElementById('licenseScreen').style.display='none';
     return true;
   }
@@ -13286,62 +13276,73 @@ function checkLicense(){
   const _li=document.getElementById('licLogoImg');if(_li)_li.src=SCHOOL_LOGO;
   return false;
 }
+
 async function activateLicense(){
   const input=document.getElementById('licKeyInput')?.value.trim();
   const errEl=document.getElementById('licError');
+  const expEl=document.getElementById('licExpiry');
+  const btn=document.querySelector('.lic-btn');
   errEl.style.display='none';
-  if(!input){ errEl.textContent='أدخل مفتاح الترخيص'; errEl.style.display='block'; return; }
+  expEl.style.display='none';
+  if(!input){errEl.textContent='أدخل مفتاح الترخيص';errEl.style.display='block';return;}
   const norm=_normalizeLicenseKey(input);
-  if(_validateLicenseKey(norm)){
-    const fp=_licenseFingerprint(norm);
-    if(_isLicenseFingerprintUsed(fp)&&_loadLicenseKey()!==norm){
-      errEl.textContent='❌ هذا المفتاح مستخدم مسبقاً على هذا الجهاز';
+
+  // تحقق من صيغة المفتاح أولاً
+  if(!_validateLicenseKey(norm)){
+    // جرب كلمة السر القديمة
+    const hashed=_hashStr(_SALT+input+_SALT);
+    if(hashed!==_PH){
+      errEl.textContent='❌ المفتاح غير صحيح';
       errEl.style.display='block';
       try{SFX.play('wrong');}catch(e){}
       return;
     }
-    if(FIREBASE_CONFIG){
-      try{
-        await _consumeLicenseOneTime(norm);
-      }catch(e){
-        const code=e&&e.code;
-        const msg=(e&&e.message)||'';
-        if(code==='ALREADY_USED'||msg==='ALREADY_USED'||(typeof msg==='string'&&msg.includes('ALREADY_USED'))){
-          errEl.textContent='❌ هذا المفتاح مستخدم مسبقاً (لا يمكن استخدامه أكثر من مرة)';
-          errEl.style.display='block';
-          try{SFX.play('wrong');}catch(e2){}
-          return;
-        }
-        errEl.textContent='❌ تعذّر التحقق من المفتاح. تحقق من الإنترنت أو إعدادات Firebase.';
-        errEl.style.display='block';
-        try{SFX.play('wrong');}catch(e3){}
-        return;
-      }
-    }
-    _markLicenseFingerprintUsed(fp);
-    _saveLicenseKey(norm);
-    try{ localStorage.removeItem('bs_pass'); sessionStorage.removeItem('bs_pass'); }catch(e){}
-    const expEl=document.getElementById('licExpiry');
-    expEl.textContent='✅ تم تفعيل الترخيص بنجاح';
+    _savePass(hashed);
+    try{localStorage.removeItem('bs_license');sessionStorage.removeItem('bs_license');}catch(e){}
+    expEl.textContent='✅ تم الدخول بنجاح';
     expEl.style.display='block';
     try{SFX.play('confetti');}catch(e){}
     setTimeout(()=>{document.getElementById('licenseScreen').style.display='none';document.getElementById('loginScreen').style.display='flex';},1200);
     return;
   }
-  const hashed=_hashStr(_SALT+input+_SALT);
-  if(hashed!==_PH){
-    errEl.textContent='❌ المفتاح غير صحيح';
+
+  // المفتاح صيغته صحيحة — تحقق من Google Sheets
+  if(btn){btn.textContent='⏳ جاري التحقق...';btn.disabled=true;}
+  try{
+    const sig=_gsSign(norm);
+    const resp=await fetch(_GS_URL,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({key:norm,sig})
+    });
+    const data=await resp.json();
+    if(btn){btn.textContent='تفعيل الترخيص';btn.disabled=false;}
+
+    if(data.ok){
+      // المفتاح صالح وتم حذفه من الشيت
+      _saveLicenseKey(norm);
+      try{localStorage.removeItem('bs_pass');sessionStorage.removeItem('bs_pass');}catch(e){}
+      expEl.textContent='✅ تم تفعيل الترخيص بنجاح';
+      expEl.style.display='block';
+      try{SFX.play('confetti');}catch(e){}
+      setTimeout(()=>{document.getElementById('licenseScreen').style.display='none';document.getElementById('loginScreen').style.display='flex';},1200);
+    } else if(data.err==='NOT_FOUND'){
+      errEl.textContent='❌ هذا المفتاح مستخدم مسبقاً أو غير موجود';
+      errEl.style.display='block';
+      try{SFX.play('wrong');}catch(e){}
+    } else if(data.err==='INVALID_SIG'){
+      errEl.textContent='❌ خطأ في التحقق — حاول مجدداً';
+      errEl.style.display='block';
+    } else {
+      errEl.textContent='❌ خطأ في الخادم — حاول مجدداً';
+      errEl.style.display='block';
+    }
+  } catch(e){
+    if(btn){btn.textContent='تفعيل الترخيص';btn.disabled=false;}
+    errEl.textContent='❌ تعذّر الاتصال — تحقق من الإنترنت وحاول مجدداً';
     errEl.style.display='block';
-    try{SFX.play('wrong');}catch(e){}
-    return;
+    try{SFX.play('wrong');}catch(e2){}
   }
-  _savePass(hashed);
-  try{ localStorage.removeItem('bs_license'); sessionStorage.removeItem('bs_license'); }catch(e){}
-  const expEl=document.getElementById('licExpiry');
-  expEl.textContent='✅ تم الدخول بنجاح';
-  expEl.style.display='block';
-  try{SFX.play('confetti');}catch(e){}
-  setTimeout(()=>{document.getElementById('licenseScreen').style.display='none';document.getElementById('loginScreen').style.display='flex';},1200);
 }
 // ══════════════════════════════════════════════
 // WELCOME SPLASH SCREEN
