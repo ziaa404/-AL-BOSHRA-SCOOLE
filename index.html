@@ -13238,7 +13238,7 @@ function renderCompare(){
 // 🔑 LICENSE SYSTEM — نظام التفعيل بمفتاح لمرة واحدة عبر Google Sheets
 // ══════════════════════════════════════════════════════════════
 
-const _GS_URL='https://script.google.com/macros/s/AKfycbx8vEfX8JLUkzTWF3iCJ2nZFudKIKNlQiauctEknaCwGnm89yFpQk-3i2lAGIbXlZhYpQ/exec';
+const _GS_URL='https://script.google.com/macros/s/AKfycby57F0Z6H7C0uY6rhBeILJxFjFemAn4_aWAbimBeg048oBf9vG7GyWYE6WQTr61qashiw/exec';
 const _GS_SECRET='albushra_2025_verify';
 const _PH=(()=>{return ['30303030','30303030','34613731','61343063'].map(x=>{let s='';for(let i=0;i<x.length;i+=2)s+=String.fromCharCode(parseInt(x.substr(i,2),16));return s;}).join('');})();
 const _SALT='albushra_2025_secure';
@@ -13306,16 +13306,18 @@ async function activateLicense(){
     return;
   }
 
-  // المفتاح صيغته صحيحة — تحقق من Google Sheets
+  // المفتاح صيغته صحيحة — تحقق من Google Sheets عبر JSONP
   if(btn){btn.textContent='⏳ جاري التحقق...';btn.disabled=true;}
   try{
-    const sig=_gsSign(norm);
-    const resp=await fetch(_GS_URL,{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({key:norm,sig})
+    const data=await new Promise((resolve,reject)=>{
+      const cbName='_gscb_'+Date.now();
+      const script=document.createElement('script');
+      const timer=setTimeout(()=>{delete window[cbName];script.remove();reject(new Error('TIMEOUT'));},12000);
+      window[cbName]=function(d){clearTimeout(timer);delete window[cbName];script.remove();resolve(d);};
+      script.src=_GS_URL+'?cb='+cbName+'&key='+encodeURIComponent(norm);
+      script.onerror=()=>{clearTimeout(timer);delete window[cbName];script.remove();reject(new Error('SCRIPT_ERROR'));};
+      document.head.appendChild(script);
     });
-    const data=await resp.json();
     if(btn){btn.textContent='تفعيل الترخيص';btn.disabled=false;}
 
     if(data.ok){
