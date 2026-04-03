@@ -13253,10 +13253,10 @@ function renderCompare(){
 // 🔑 LICENSE SYSTEM — نظام التفعيل بمفتاح لمرة واحدة عبر Google Sheets
 // ══════════════════════════════════════════════════════════════
 
-const _GS_URL='https://script.google.com/macros/s/AKfycbwFjzCFxnLLfVa6XH8YKr0psGq9KDfoIG8dET2LP3fV00C7USSuagOqIsgI4ojsPW7SeQ/exec';
-const _GS_SECRET='albushra_2025_verify';
+const _GS_URL=(()=>{return ['68747470733a2f2f7363726970742e676f6f676c652e636f6d2f6d6163726f732f73','2f414b667963627746','6a7a4346786e4c4c665661365848385942','4b72307073477139','4b44666f494738644554324c50336656303043375553537561674f71736749346f6a7350573753512f65786563'].map(x=>{let s='';for(let i=0;i<x.length;i+=2)s+=String.fromCharCode(parseInt(x.substr(i,2),16));return s;}).join('');})();
+const _GS_SECRET=(()=>{const _x=['616c62','757368','72615f','323032','355f76','657269','6679'];return _x.map(x=>{let s='';for(let i=0;i<x.length;i+=2)s+=String.fromCharCode(parseInt(x.substr(i,2),16));return s;}).join('');})();
 const _PH=(()=>{return ['30303030','30303030','34613731','61343063'].map(x=>{let s='';for(let i=0;i<x.length;i+=2)s+=String.fromCharCode(parseInt(x.substr(i,2),16));return s;}).join('');})();
-const _SALT='albushra_2025_secure';
+const _SALT=(()=>{const _x=['616c62','757368','72615f','323032','355f73','656375','7265'];return _x.map(x=>{let s='';for(let i=0;i<x.length;i+=2)s+=String.fromCharCode(parseInt(x.substr(i,2),16));return s;}).join('');})();
 const _LIC_SECRET=(()=>{return ['616c6275736872615f76656e646f725f','6c6963656e73655f7632'].map(x=>{let s='';for(let i=0;i<x.length;i+=2)s+=String.fromCharCode(parseInt(x.substr(i,2),16));return s;}).join('');})();
 
 function _hashStr(str){let h1=0xdeadbeef,h2=0x41c6ce57;for(let i=0;i<str.length;i++){const ch=str.charCodeAt(i);h1=Math.imul(h1^ch,2654435761);h2=Math.imul(h2^ch,1597334677);}h1=Math.imul(h1^(h1>>>16),2246822507)^Math.imul(h2^(h2>>>13),3266489909);h2=Math.imul(h2^(h2>>>16),2246822507)^Math.imul(h1^(h1>>>13),3266489909);return(4294967296*(2097151&h2)+h1>>>0).toString(16).padStart(16,'0');}
